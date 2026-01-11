@@ -1,0 +1,15 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Gemini API Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'api_key' => env('GEMINI_API_KEY'),
+    
+    'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+    
+    'endpoint' => 'https://generativelanguage.googleapis.com/v1beta/models/',
+];
