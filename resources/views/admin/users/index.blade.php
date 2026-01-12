@@ -8,13 +8,74 @@
                 <h2 class="text-2xl font-bold text-[hsl(var(--foreground))]">Daftar User</h2>
                 <p class="text-[hsl(var(--muted-foreground))]">Kelola semua user dalam aplikasi.</p>
             </div>
-            <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Tambah User
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('admin.users.template') }}" class="btn btn-secondary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Template Excel
+                </a>
+                <button type="button" onclick="document.getElementById('importModal').showModal()" class="btn btn-secondary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Import Excel
+                </button>
+                <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Tambah User
+                </a>
+            </div>
         </div>
+
+        <!-- Import Modal -->
+        <dialog id="importModal" class="modal rounded-xl shadow-2xl p-0 backdrop:bg-black/50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Import User dari Excel</h3>
+                    <button type="button" onclick="document.getElementById('importModal').close()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form action="{{ route('admin.users.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">File Excel</label>
+                        <input 
+                            type="file" 
+                            name="file" 
+                            accept=".xlsx,.xls,.csv" 
+                            required
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Format: .xlsx, .xls, .csv (Maks. 5MB)</p>
+                    </div>
+                    
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                        <p class="text-sm text-amber-800">
+                            <strong>Tips:</strong> Download template terlebih dahulu untuk memastikan format yang benar.
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="document.getElementById('importModal').close()" class="btn btn-secondary">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                            </svg>
+                            Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
 
         <!-- User List -->
         <x-ui.card class="p-0">

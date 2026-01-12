@@ -32,6 +32,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Admin Routes
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class);
+        Route::get('users-template', [UserController::class, 'downloadTemplate'])->name('users.template');
+        Route::post('users-import', [UserController::class, 'import'])->name('users.import');
     });
 });
 
