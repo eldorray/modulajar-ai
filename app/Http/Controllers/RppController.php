@@ -196,5 +196,252 @@ class RppController extends Controller
             ->route('rpp.index')
             ->with('success', 'RPP berhasil dihapus.');
     }
+
+    /**
+     * Show the form for editing the specified RPP.
+     */
+    public function edit(Rpp $rpp)
+    {
+        if ($rpp->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        if ($rpp->status !== 'completed') {
+            return redirect()->route('rpp.show', $rpp)
+                ->with('error', 'Modul Ajar belum selesai di-generate.');
+        }
+
+        return view('rpp.edit', compact('rpp'));
+    }
+
+    /**
+     * Update the specified RPP content.
+     */
+    public function update(Request $request, Rpp $rpp)
+    {
+        if ($rpp->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'content_result' => 'required|array',
+        ]);
+
+        $rpp->update([
+            'content_result' => $validated['content_result'],
+        ]);
+
+        return redirect()->route('rpp.show', $rpp)
+            ->with('success', 'Modul Ajar berhasil diperbarui.');
+    }
+
+    /**
+     * Download RPP as Word document.
+     */
+    public function downloadWord(Rpp $rpp)
+    {
+        if ($rpp->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        if ($rpp->status !== 'completed' || !$rpp->content_result) {
+            return redirect()->route('rpp.show', $rpp)
+                ->with('error', 'Modul Ajar belum selesai di-generate.');
+        }
+
+        $schoolSettings = SchoolSetting::getSettings();
+        $content = $rpp->content_result;
+
+        // Create new PHPWord instance
+        $phpWord = new \PhpOffice\PhpWord\PhpWord();
+        
+        // Set default font
+        $phpWord->setDefaultFontName('Times New Roman');
+        $phpWord->setDefaultFontSize(12);
+
+        // Add a section
+        $section = $phpWord->addSection([
+            'marginTop' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(3),
+            'marginBottom' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(2.5),
+            'marginLeft' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(3),
+            'marginRight' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(2.5),
+        ]);
+
+        // Title styles
+        $titleStyle = ['bold' => true, 'size' => 14, 'allCaps' => true];
+        $headingStyle = ['bold' => true, 'size' => 12];
+        $subHeadingStyle = ['bold' => true, 'size' => 11];
+
+        // Title
+        $section->addText('MODUL AJAR', $titleStyle, ['alignment' => 'center']);
+        $section->addText($rpp->mata_pelajaran, $titleStyle, ['alignment' => 'center']);
+        $section->addTextBreak(1);
+
+        // Informasi Umum
+        $section->addText('INFORMASI UMUM', $headingStyle);
+        $section->addText('Nama Penyusun: ' . $rpp->nama_guru);
+        $section->addText('Mata Pelajaran: ' . $rpp->mata_pelajaran);
+        $section->addText('Fase/Kelas: ' . $rpp->fase . ($rpp->kelas ? ' / Kelas ' . $rpp->kelas : ''));
+        $section->addText('Alokasi Waktu: ' . $rpp->alokasi_waktu);
+        $section->addText('Model Pembelajaran: ' . $rpp->model_pembelajaran);
+        if ($rpp->kurikulum) {
+            $section->addText('Kurikulum: ' . $rpp->kurikulum);
+        }
+        $section->addTextBreak(1);
+
+        // Kompetensi Awal
+        if (isset($content['kompetensi_awal']) && $content['kompetensi_awal']) {
+            $section->addText('KOMPETENSI AWAL', $headingStyle);
+            $section->addText($content['kompetensi_awal']);
+            $section->addTextBreak(1);
+        }
+
+        // Profil Pelajar Pancasila
+        if (isset($content['profil_pelajar_pancasila'])) {
+            $section->addText('PROFIL PELAJAR PANCASILA', $headingStyle);
+            foreach ($content['profil_pelajar_pancasila'] as $profil) {
+                if (is_array($profil)) {
+                    $section->addListItem(($profil['dimensi'] ?? '') . ': ' . ($profil['deskripsi'] ?? ''));
+                } else {
+                    $section->addListItem($profil);
+                }
+            }
+            $section->addTextBreak(1);
+        }
+
+        // Tujuan Pembelajaran
+        if (isset($content['tujuan_pembelajaran'])) {
+            $section->addText('TUJUAN PEMBELAJARAN', $headingStyle);
+            foreach ($content['tujuan_pembelajaran'] as $tujuan) {
+                $section->addListItem($tujuan);
+            }
+            $section->addTextBreak(1);
+        }
+
+        // Pemahaman Bermakna
+        if (isset($content['pemahaman_bermakna']) && $content['pemahaman_bermakna']) {
+            $section->addText('PEMAHAMAN BERMAKNA', $headingStyle);
+            $section->addText($content['pemahaman_bermakna']);
+            $section->addTextBreak(1);
+        }
+
+        // Pertanyaan Pemantik
+        if (isset($content['pertanyaan_pemantik'])) {
+            $section->addText('PERTANYAAN PEMANTIK', $headingStyle);
+            foreach ($content['pertanyaan_pemantik'] as $i => $pertanyaan) {
+                $section->addListItem($pertanyaan, 0, null, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_NUMBER]);
+            }
+            $section->addTextBreak(1);
+        }
+
+        // Kegiatan Pembelajaran
+        if (isset($content['kegiatan_pembelajaran'])) {
+            $section->addText('KEGIATAN PEMBELAJARAN', $headingStyle);
+            
+            // Pendahuluan
+            if (isset($content['kegiatan_pembelajaran']['pendahuluan'])) {
+                $pendahuluan = $content['kegiatan_pembelajaran']['pendahuluan'];
+                $section->addText('A. Pendahuluan (' . ($pendahuluan['durasi'] ?? '') . ')', $subHeadingStyle);
+                $aktivitas = $pendahuluan['aktivitas'] ?? [];
+                foreach ($aktivitas as $akt) {
+                    if (is_array($akt)) {
+                        $section->addText('• Guru: ' . ($akt['kegiatan_guru'] ?? ''));
+                        $section->addText('  Siswa: ' . ($akt['kegiatan_siswa'] ?? ''));
+                    } else {
+                        $section->addListItem($akt);
+                    }
+                }
+            }
+
+            // Inti
+            if (isset($content['kegiatan_pembelajaran']['inti'])) {
+                $inti = $content['kegiatan_pembelajaran']['inti'];
+                $section->addTextBreak(1);
+                $section->addText('B. Kegiatan Inti (' . ($inti['durasi'] ?? '') . ')', $subHeadingStyle);
+                $aktivitas = $inti['aktivitas'] ?? [];
+                foreach ($aktivitas as $akt) {
+                    if (is_array($akt)) {
+                        if (isset($akt['fase_sintaks'])) {
+                            $section->addText($akt['fase_sintaks'], ['italic' => true]);
+                        }
+                        $section->addText('• Guru: ' . ($akt['kegiatan_guru'] ?? ''));
+                        $section->addText('  Siswa: ' . ($akt['kegiatan_siswa'] ?? ''));
+                    } else {
+                        $section->addListItem($akt);
+                    }
+                }
+            }
+
+            // Penutup
+            if (isset($content['kegiatan_pembelajaran']['penutup'])) {
+                $penutup = $content['kegiatan_pembelajaran']['penutup'];
+                $section->addTextBreak(1);
+                $section->addText('C. Penutup (' . ($penutup['durasi'] ?? '') . ')', $subHeadingStyle);
+                $aktivitas = $penutup['aktivitas'] ?? [];
+                foreach ($aktivitas as $akt) {
+                    if (is_array($akt)) {
+                        $section->addText('• Guru: ' . ($akt['kegiatan_guru'] ?? ''));
+                        $section->addText('  Siswa: ' . ($akt['kegiatan_siswa'] ?? ''));
+                    } else {
+                        $section->addListItem($akt);
+                    }
+                }
+            }
+            $section->addTextBreak(1);
+        }
+
+        // Asesmen
+        if (isset($content['asesmen'])) {
+            $section->addText('ASESMEN', $headingStyle);
+            $section->addText('Jenis: ' . ($content['asesmen']['jenis'] ?? '-'));
+            $teknik = $content['asesmen']['teknik'] ?? '-';
+            if (is_array($teknik)) {
+                $teknik = implode(', ', $teknik);
+            }
+            $section->addText('Teknik: ' . $teknik);
+            if (isset($content['asesmen']['bentuk'])) {
+                $section->addText('Bentuk: ' . $content['asesmen']['bentuk']);
+            }
+            $section->addTextBreak(1);
+        }
+
+        // Refleksi
+        if (isset($content['refleksi'])) {
+            $section->addText('REFLEKSI', $headingStyle);
+            if (isset($content['refleksi']['refleksi_siswa'])) {
+                $section->addText('Refleksi Siswa:', $subHeadingStyle);
+                foreach ($content['refleksi']['refleksi_siswa'] as $item) {
+                    $section->addListItem($item);
+                }
+            }
+            if (isset($content['refleksi']['refleksi_guru'])) {
+                $section->addText('Refleksi Guru:', $subHeadingStyle);
+                foreach ($content['refleksi']['refleksi_guru'] as $item) {
+                    $section->addListItem($item);
+                }
+            }
+            $section->addTextBreak(1);
+        }
+
+        // Daftar Pustaka
+        if (isset($content['daftar_pustaka']) && count($content['daftar_pustaka']) > 0) {
+            $section->addText('DAFTAR PUSTAKA', $headingStyle);
+            foreach ($content['daftar_pustaka'] as $pustaka) {
+                $section->addListItem($pustaka);
+            }
+        }
+
+        // Generate filename
+        $filename = 'ModulAjar_' . str_replace(' ', '_', $rpp->mata_pelajaran) . '_' . $rpp->id . '.docx';
+
+        // Save to temp file and download
+        $tempFile = tempnam(sys_get_temp_dir(), 'word');
+        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($tempFile);
+
+        return response()->download($tempFile, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ])->deleteFileAfterSend(true);
+    }
 }
 
