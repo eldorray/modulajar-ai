@@ -16,7 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // RPP Management
-    Route::resource('rpp', RppController::class);
+    Route::resource('rpp', RppController::class)->except(['edit', 'update']);
     Route::get('rpp/{rpp}/pdf', [RppController::class, 'downloadPdf'])->name('rpp.pdf');
     Route::get('rpp/{rpp}/word', [RppController::class, 'downloadWord'])->name('rpp.word');
 

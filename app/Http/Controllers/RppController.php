@@ -198,44 +198,6 @@ class RppController extends Controller
     }
 
     /**
-     * Show the form for editing the specified RPP.
-     */
-    public function edit(Rpp $rpp)
-    {
-        if ($rpp->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
-        if ($rpp->status !== 'completed') {
-            return redirect()->route('rpp.show', $rpp)
-                ->with('error', 'Modul Ajar belum selesai di-generate.');
-        }
-
-        return view('rpp.edit', compact('rpp'));
-    }
-
-    /**
-     * Update the specified RPP content.
-     */
-    public function update(Request $request, Rpp $rpp)
-    {
-        if ($rpp->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
-        $validated = $request->validate([
-            'content_result' => 'required|array',
-        ]);
-
-        $rpp->update([
-            'content_result' => $validated['content_result'],
-        ]);
-
-        return redirect()->route('rpp.show', $rpp)
-            ->with('success', 'Modul Ajar berhasil diperbarui.');
-    }
-
-    /**
      * Download RPP as Word document.
      */
     public function downloadWord(Rpp $rpp)
