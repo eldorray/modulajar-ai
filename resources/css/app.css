@@ -30,7 +30,7 @@
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
-    
+
     /* Apple-inspired additions */
     --gradient-start: 220 100% 97%;
     --gradient-end: 240 100% 98%;
@@ -70,7 +70,9 @@
 
 body {
     @apply bg-white text-gray-900;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+        "rlig" 1,
+        "calt" 1;
 }
 
 /*
@@ -81,12 +83,19 @@ body {
 
 @layer base {
     html {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+        font-family:
+            ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+            "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         @apply font-semibold tracking-tight;
         line-height: 1.2;
     }
@@ -157,7 +166,8 @@ body {
 }
 
 @keyframes float {
-    0%, 100% {
+    0%,
+    100% {
         transform: translateY(0);
     }
     50% {
@@ -186,11 +196,21 @@ body {
 }
 
 /* Stagger animation delays */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
+.delay-100 {
+    animation-delay: 100ms;
+}
+.delay-200 {
+    animation-delay: 200ms;
+}
+.delay-300 {
+    animation-delay: 300ms;
+}
+.delay-400 {
+    animation-delay: 400ms;
+}
+.delay-500 {
+    animation-delay: 500ms;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -226,12 +246,32 @@ body {
 }
 
 .gradient-mesh {
-    background-image: 
-        radial-gradient(at 40% 20%, hsla(220, 100%, 95%, 1) 0px, transparent 50%),
-        radial-gradient(at 80% 0%, hsla(240, 100%, 97%, 1) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, hsla(200, 100%, 95%, 1) 0px, transparent 50%),
-        radial-gradient(at 80% 50%, hsla(260, 100%, 97%, 1) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, hsla(240, 100%, 95%, 1) 0px, transparent 50%);
+    background-image:
+        radial-gradient(
+            at 40% 20%,
+            hsla(220, 100%, 95%, 1) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 80% 0%,
+            hsla(240, 100%, 97%, 1) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 0% 50%,
+            hsla(200, 100%, 95%, 1) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 80% 50%,
+            hsla(260, 100%, 97%, 1) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 0% 100%,
+            hsla(240, 100%, 95%, 1) 0px,
+            transparent 50%
+        );
 }
 
 /*
@@ -250,7 +290,9 @@ body {
 
 .card-premium {
     @apply bg-gradient-to-br from-white to-gray-50 border-gray-200/50;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.1) inset;
+    box-shadow:
+        0 1px 2px 0 rgb(0 0 0 / 0.05),
+        0 0 0 1px rgb(255 255 255 / 0.1) inset;
 }
 
 /*
@@ -278,6 +320,10 @@ body {
 
     .btn-outline {
         @apply border border-gray-200 bg-transparent text-gray-900 hover:bg-gray-100;
+    }
+
+    .btn-blue {
+        @apply border border-blue-500 bg-blue-500 text-white hover:bg-blue-600;
     }
 
     .btn-ghost {
@@ -427,7 +473,7 @@ body {
 }
 
 .timeline::before {
-    content: '';
+    content: "";
     @apply absolute left-[7px] top-0 bottom-0 w-0.5 bg-gray-200;
 }
 
@@ -436,9 +482,9 @@ body {
 }
 
 .timeline-item::before {
-    content: '';
+    content: "";
     @apply absolute -left-[25px] top-1 w-3 h-3 bg-gray-900 rounded-full border-2 border-white;
-    box-shadow: 0 0 0 2px theme('colors.gray.900');
+    box-shadow: 0 0 0 2px theme("colors.gray.900");
 }
 
 /*
