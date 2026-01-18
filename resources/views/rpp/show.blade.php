@@ -107,6 +107,85 @@
         </x-ui.card>
         @endif
 
+        <!-- Nilai-Nilai Cinta (Kurikulum Berbasis Cinta Kemenag) -->
+        @if(isset($content['nilai_nilai_cinta']))
+        <x-ui.card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">💕</span>
+                    <h3 class="text-lg font-semibold">Nilai-Nilai Cinta</h3>
+                </div>
+                <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Kurikulum Berbasis Cinta - Kemenag</p>
+            </x-slot>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                @foreach($content['nilai_nilai_cinta'] as $nilai)
+                    @if(is_array($nilai))
+                    <div class="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg border border-pink-100">
+                        <p class="font-semibold text-rose-700">{{ $nilai['dimensi'] ?? '' }}</p>
+                        <p class="text-sm text-rose-600 mt-2">{{ $nilai['deskripsi'] ?? '' }}</p>
+                    </div>
+                    @else
+                    <x-ui.badge variant="secondary">{{ $nilai }}</x-ui.badge>
+                    @endif
+                @endforeach
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Profil Lulusan Madrasah (Kurikulum Berbasis Cinta Kemenag) -->
+        @if(isset($content['profil_lulusan_madrasah']))
+        <x-ui.card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🎓</span>
+                    <h3 class="text-lg font-semibold">Profil Lulusan Madrasah</h3>
+                </div>
+            </x-slot>
+            <div class="space-y-3">
+                @foreach($content['profil_lulusan_madrasah'] as $profil)
+                    @if(is_array($profil))
+                    <div class="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
+                        <p class="font-semibold text-emerald-700">{{ $profil['dimensi'] ?? '' }}</p>
+                        <p class="text-sm text-emerald-600 mt-1">{{ $profil['deskripsi'] ?? '' }}</p>
+                    </div>
+                    @else
+                    <x-ui.badge variant="secondary">{{ $profil }}</x-ui.badge>
+                    @endif
+                @endforeach
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Moderasi Beragama (Kurikulum Berbasis Cinta Kemenag) -->
+        @if(isset($content['moderasi_beragama']))
+        <x-ui.card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">☪️</span>
+                    <h3 class="text-lg font-semibold">Moderasi Beragama (Wasathiyah)</h3>
+                </div>
+            </x-slot>
+            <div class="space-y-4">
+                @if(isset($content['moderasi_beragama']['nilai_wasathiyah']))
+                <div class="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
+                    <p class="font-medium text-amber-800">Nilai Wasathiyah</p>
+                    <p class="text-sm text-amber-700 mt-2">{{ $content['moderasi_beragama']['nilai_wasathiyah'] }}</p>
+                </div>
+                @endif
+                @if(isset($content['moderasi_beragama']['implementasi']))
+                <div>
+                    <p class="text-sm font-medium text-[hsl(var(--muted-foreground))] mb-2">Implementasi</p>
+                    <ul class="list-disc list-inside space-y-1 text-[hsl(var(--foreground))]">
+                        @foreach($content['moderasi_beragama']['implementasi'] as $item)
+                        <li>{{ $item }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+            </div>
+        </x-ui.card>
+        @endif
+
         <!-- Profil Pelajar Pancasila -->
         @if(isset($content['profil_pelajar_pancasila']))
         <x-ui.card>
@@ -127,6 +206,7 @@
             </div>
         </x-ui.card>
         @endif
+
 
         <!-- Sarana Prasarana -->
         @if(isset($content['sarana_prasarana']))

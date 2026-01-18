@@ -77,7 +77,7 @@
 
                         <x-ui.select
                             name="fase"
-                            label="Fase"
+                            label="Fase/Jenjang"
                             :options="[
                                 'A' => 'Fase A (Kelas 1-2 SD)',
                                 'B' => 'Fase B (Kelas 3-4 SD)',
@@ -85,8 +85,13 @@
                                 'D' => 'Fase D (Kelas 7-9 SMP)',
                                 'E' => 'Fase E (Kelas 10 SMA)',
                                 'F' => 'Fase F (Kelas 11-12 SMA)',
+                                'RA' => 'RA (Raudhatul Athfal)',
+                                'MI Rendah' => 'MI Kelas 1-3 (Madrasah Ibtidaiyah)',
+                                'MI Tinggi' => 'MI Kelas 4-6 (Madrasah Ibtidaiyah)',
+                                'MTs' => 'MTs Kelas 7-9 (Madrasah Tsanawiyah)',
+                                'MA' => 'MA Kelas 10-12 (Madrasah Aliyah)',
                             ]"
-                            placeholder="Pilih Fase"
+                            placeholder="Pilih Fase/Jenjang"
                             :value="old('fase')"
                             :error="$errors->first('fase')"
                             required
@@ -206,9 +211,10 @@
                         name="kurikulum"
                         label="Jenis Kurikulum"
                         :options="[
-                            'Kurikulum Merdeka' => 'Kurikulum Merdeka',
-                            'Kurikulum Merdeka Belajar' => 'Kurikulum Merdeka Belajar',
-                            'Kurikulum Merdeka Deep Learning' => 'Kurikulum Merdeka Deep Learning',
+                            'Kurikulum Merdeka' => 'Kurikulum Merdeka (Kemdikbud)',
+                            'Kurikulum Merdeka Belajar' => 'Kurikulum Merdeka Belajar (Kemdikbud)',
+                            'Kurikulum Merdeka Deep Learning' => 'Kurikulum Merdeka Deep Learning (Kemdikbud)',
+                            'Kurikulum Berbasis Cinta' => 'Kurikulum Berbasis Cinta (Kemenag - Madrasah)',
                         ]"
                         placeholder="Pilih Kurikulum"
                         :value="old('kurikulum', 'Kurikulum Merdeka')"

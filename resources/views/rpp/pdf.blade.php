@@ -505,10 +505,73 @@
     </div>
     @endif
 
-    <!-- F. PROFIL PELAJAR PANCASILA -->
+    <!-- F. NILAI-NILAI CINTA (KBC - Kemenag) -->
+    @if(isset($content['nilai_nilai_cinta']))
+    <div class="section">
+        <div class="section-header" style="background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);">F. NILAI-NILAI CINTA (Kurikulum Berbasis Cinta)</div>
+        <div class="section-body">
+            <p class="mb-10">Dimensi nilai-nilai cinta yang dikembangkan dalam pembelajaran:</p>
+            @foreach($content['nilai_nilai_cinta'] as $nilai)
+                @if(is_array($nilai))
+                <div class="profil-item" style="background: #fdf2f8; border-left-color: #ec4899;">
+                    <h4 style="color: #be185d;">{{ $nilai['dimensi'] ?? '' }}</h4>
+                    <p>{{ $nilai['deskripsi'] ?? '' }}</p>
+                </div>
+                @else
+                <span class="badge" style="background: #fce7f3; color: #be185d; border-color: #f9a8d4;">{{ $nilai }}</span>
+                @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- G. PROFIL LULUSAN MADRASAH (KBC - Kemenag) -->
+    @if(isset($content['profil_lulusan_madrasah']))
+    <div class="section">
+        <div class="section-header" style="background: linear-gradient(135deg, #059669 0%, #14b8a6 100%);">G. PROFIL LULUSAN MADRASAH</div>
+        <div class="section-body">
+            <p class="mb-10">Dimensi Profil Lulusan Madrasah yang dikembangkan:</p>
+            @foreach($content['profil_lulusan_madrasah'] as $profil)
+                @if(is_array($profil))
+                <div class="profil-item" style="background: #ecfdf5; border-left-color: #059669;">
+                    <h4 style="color: #047857;">{{ $profil['dimensi'] ?? '' }}</h4>
+                    <p>{{ $profil['deskripsi'] ?? '' }}</p>
+                </div>
+                @else
+                <span class="badge" style="background: #d1fae5; color: #047857; border-color: #6ee7b7;">{{ $profil }}</span>
+                @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- H. MODERASI BERAGAMA (KBC - Kemenag) -->
+    @if(isset($content['moderasi_beragama']))
+    <div class="section">
+        <div class="section-header" style="background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);">H. MODERASI BERAGAMA (Wasathiyah)</div>
+        <div class="section-body">
+            @if(isset($content['moderasi_beragama']['nilai_wasathiyah']))
+            <div style="margin-bottom: 15px; padding: 15px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 6px 6px 0;">
+                <p><strong style="color: #b45309;">Nilai Wasathiyah:</strong></p>
+                <p style="margin-top: 8px;">{{ $content['moderasi_beragama']['nilai_wasathiyah'] }}</p>
+            </div>
+            @endif
+            @if(isset($content['moderasi_beragama']['implementasi']))
+            <p class="text-bold">Implementasi dalam Pembelajaran:</p>
+            <ul class="mt-10">
+                @foreach($content['moderasi_beragama']['implementasi'] as $item)
+                <li>{{ $item }}</li>
+                @endforeach
+            </ul>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    <!-- I. PROFIL PELAJAR PANCASILA -->
     @if(isset($content['profil_pelajar_pancasila']))
     <div class="section">
-        <div class="section-header">F. PROFIL PELAJAR PANCASILA</div>
+        <div class="section-header">I. PROFIL PELAJAR PANCASILA</div>
         <div class="section-body">
             <p class="mb-10">Dimensi Profil Pelajar Pancasila yang dikembangkan:</p>
             @foreach($content['profil_pelajar_pancasila'] as $profil)
