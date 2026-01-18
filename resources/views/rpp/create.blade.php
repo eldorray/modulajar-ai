@@ -8,7 +8,7 @@
                 <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Isi data lengkap di bawah ini untuk menghasilkan Modul Ajar sesuai format Kemdikbud.</p>
             </x-slot>
 
-            <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-6" x-data="{ loading: false }" @submit="loading = true">
+            <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-6" x-data="{ loading: false }">
                 @csrf
 
                 <!-- Identitas Guru & Sekolah -->
@@ -256,67 +256,258 @@
             </form>
         </x-ui.card>
 
-        <!-- Loading Overlay -->
-        <div x-data="{ show: false }" 
-             x-init="document.getElementById('rpp-form').addEventListener('submit', () => { show = true })"
+        <!-- Loading Overlay with Progress Bar -->
+        <div x-data="progressLoader()" 
              x-show="show" 
              x-cloak
              class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-md mx-4 text-center">
-                <!-- Loading GIF dari folder refrensi -->
-                <div class="mb-6">
-                    <img src="{{ asset('refrensi/loading.gif') }}" alt="Loading Animation" class="w-48 h-48 mx-auto object-contain">
+            <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-md mx-4 text-center w-full">
+                
+                <!-- Processing State -->
+                <template x-if="!isComplete && !hasError">
+                    <div>
+                        <!-- Loading GIF -->
+                        <div class="mb-6">
+                            <img src="{{ asset('refrensi/loading.gif') }}" alt="Loading Animation" class="w-40 h-40 mx-auto object-contain">
+                        </div>
+                        
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">🎓 AI Sedang Bekerja</h3>
+                        <p class="text-gray-500 mb-6" x-text="currentStep"></p>
+                    </div>
+                </template>
+                
+                <!-- Completed State -->
+                <template x-if="isComplete">
+                    <div>
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-green-600 mb-2">✅ Selesai!</h3>
+                        <p class="text-gray-500 mb-6">Modul Ajar berhasil dibuat. Mengalihkan...</p>
+                    </div>
+                </template>
+                
+                <!-- Error State -->
+                <template x-if="hasError">
+                    <div>
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-red-600 mb-2">❌ Gagal</h3>
+                        <p class="text-gray-500 mb-6" x-text="errorMessage"></p>
+                        <button @click="retry()" class="btn btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Coba Lagi
+                        </button>
+                    </div>
+                </template>
+                
+                <!-- Progress Bar (always visible except on error) -->
+                <div class="mb-4" x-show="!hasError">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">Progress</span>
+                        <span class="text-sm font-bold" :class="isComplete ? 'text-green-600' : 'text-blue-600'" x-text="Math.round(progress) + '%'"></span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                        <div class="h-4 rounded-full transition-all duration-300 ease-out"
+                             :class="isComplete ? 'bg-green-500' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'"
+                             :style="'width: ' + progress + '%'">
+                            <div class="h-full w-full bg-white/20" :class="!isComplete ? 'animate-pulse' : ''"></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <h3 class="text-2xl font-bold text-gray-900 mb-2">🎓 AI Sedang Bekerja</h3>
-                <p class="text-gray-500 mb-6">Mohon tunggu, AI sedang menyusun Modul Ajar untuk Anda...</p>
-                
-                <!-- Progress indicator -->
-                <div class="space-y-3 text-left bg-gray-50 rounded-xl p-5">
-                    <div class="flex items-center gap-3" x-data="{ done: false }" x-init="setTimeout(() => done = true, 2000)">
-                        <div :class="done ? 'text-green-500' : 'text-gray-400'">
-                            <svg x-show="done" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+
+                <!-- Step indicators (visible during processing) -->
+                <div class="space-y-2 text-left bg-gray-50 rounded-xl p-4 mt-4" x-show="!hasError">
+                    <div class="flex items-center gap-3" :class="progress >= 15 ? 'text-green-600' : 'text-gray-400'">
+                        <template x-if="progress >= 15">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <div x-show="!done" class="w-5 h-5 border-2 border-gray-300 rounded-full animate-pulse"></div>
-                        </div>
-                        <span :class="done ? 'text-gray-800 font-medium' : 'text-gray-400'" class="text-sm">📋 Menganalisis informasi umum...</span>
+                        </template>
+                        <template x-if="progress < 15">
+                            <div class="w-4 h-4 border-2 border-current rounded-full animate-pulse flex-shrink-0"></div>
+                        </template>
+                        <span class="text-sm" :class="progress >= 15 ? 'font-medium' : ''">📋 Menganalisis informasi umum</span>
                     </div>
                     
-                    <div class="flex items-center gap-3" x-data="{ done: false }" x-init="setTimeout(() => done = true, 5000)">
-                        <div :class="done ? 'text-green-500' : 'text-gray-400'">
-                            <svg x-show="done" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="flex items-center gap-3" :class="progress >= 35 ? 'text-green-600' : 'text-gray-400'">
+                        <template x-if="progress >= 35">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <div x-show="!done" class="w-5 h-5 border-2 border-gray-300 rounded-full animate-pulse"></div>
-                        </div>
-                        <span :class="done ? 'text-gray-800 font-medium' : 'text-gray-400'" class="text-sm">📝 Menyusun kegiatan pembelajaran...</span>
+                        </template>
+                        <template x-if="progress < 35">
+                            <div class="w-4 h-4 border-2 border-current rounded-full animate-pulse flex-shrink-0"></div>
+                        </template>
+                        <span class="text-sm" :class="progress >= 35 ? 'font-medium' : ''">📝 Menyusun kegiatan pembelajaran</span>
                     </div>
                     
-                    <div class="flex items-center gap-3" x-data="{ done: false }" x-init="setTimeout(() => done = true, 8000)">
-                        <div :class="done ? 'text-green-500' : 'text-gray-400'">
-                            <svg x-show="done" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="flex items-center gap-3" :class="progress >= 60 ? 'text-green-600' : 'text-gray-400'">
+                        <template x-if="progress >= 60">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                             </svg>
-                            <div x-show="!done" class="w-5 h-5 border-2 border-gray-300 rounded-full animate-pulse"></div>
-                        </div>
-                        <span :class="done ? 'text-gray-800 font-medium' : 'text-gray-400'" class="text-sm">✅ Membuat asesmen & rubrik...</span>
+                        </template>
+                        <template x-if="progress < 60">
+                            <div class="w-4 h-4 border-2 border-current rounded-full animate-pulse flex-shrink-0"></div>
+                        </template>
+                        <span class="text-sm" :class="progress >= 60 ? 'font-medium' : ''">✅ Membuat asesmen & rubrik</span>
                     </div>
                     
-                    <div class="flex items-center gap-3">
-                        <div class="text-blue-500">
-                            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-3" :class="progress >= 100 ? 'text-green-600' : (progress >= 85 ? 'text-green-600' : 'text-blue-500')">
+                        <template x-if="progress >= 100">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </template>
+                        <template x-if="progress >= 85 && progress < 100">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </template>
+                        <template x-if="progress < 85">
+                            <svg class="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                             </svg>
-                        </div>
-                        <span class="text-sm text-blue-600 font-semibold">🚀 Menyelesaikan modul ajar...</span>
+                        </template>
+                        <span class="text-sm" :class="progress >= 85 ? 'font-medium text-green-600' : 'font-semibold'">🚀 Menyelesaikan modul ajar</span>
                     </div>
                 </div>
                 
-                <p class="text-xs text-gray-400 mt-5">⏱️ Proses ini membutuhkan waktu 30-60 detik</p>
+                <p class="text-xs text-gray-400 mt-4" x-show="!isComplete && !hasError">⏱️ Estimasi waktu: 30-60 detik</p>
             </div>
         </div>
+
+        <script>
+            function progressLoader() {
+                return {
+                    show: false,
+                    progress: 0,
+                    currentStep: 'Memulai proses...',
+                    interval: null,
+                    isComplete: false,
+                    redirectUrl: null,
+                    hasError: false,
+                    errorMessage: '',
+                    
+                    init() {
+                        const form = document.getElementById('rpp-form');
+                        form.addEventListener('submit', (e) => {
+                            e.preventDefault();
+                            this.submitForm(form);
+                        });
+                    },
+                    
+                    async submitForm(form) {
+                        this.show = true;
+                        this.progress = 0;
+                        this.isComplete = false;
+                        this.hasError = false;
+                        this.startProgress();
+                        
+                        try {
+                            const formData = new FormData(form);
+                            const response = await fetch(form.action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json',
+                                },
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                this.completeProgress(data.redirect_url);
+                            } else {
+                                this.showError(data.error || 'Terjadi kesalahan. Silakan coba lagi.');
+                            }
+                        } catch (error) {
+                            console.error('Submit error:', error);
+                            this.showError('Terjadi kesalahan koneksi. Silakan coba lagi.');
+                        }
+                    },
+                    
+                    startProgress() {
+                        const steps = [
+                            { at: 5, text: 'Mengirim data ke AI...' },
+                            { at: 15, text: 'Menganalisis informasi umum...' },
+                            { at: 35, text: 'Menyusun kegiatan pembelajaran...' },
+                            { at: 60, text: 'Membuat asesmen & rubrik...' },
+                            { at: 85, text: 'Menyelesaikan modul ajar...' },
+                            { at: 95, text: 'Hampir selesai...' },
+                        ];
+                        
+                        this.interval = setInterval(() => {
+                            if (this.progress < 95 && !this.isComplete) {
+                                let increment = this.progress < 30 ? 2 : 
+                                               this.progress < 60 ? 1.5 : 
+                                               this.progress < 85 ? 1 : 0.5;
+                                
+                                this.progress = Math.min(95, this.progress + increment);
+                                
+                                for (let i = steps.length - 1; i >= 0; i--) {
+                                    if (this.progress >= steps[i].at) {
+                                        this.currentStep = steps[i].text;
+                                        break;
+                                    }
+                                }
+                            }
+                        }, 500);
+                    },
+                    
+                    completeProgress(url) {
+                        if (this.interval) {
+                            clearInterval(this.interval);
+                        }
+                        
+                        this.redirectUrl = url;
+                        
+                        // Animate to 100%
+                        const completeInterval = setInterval(() => {
+                            if (this.progress < 100) {
+                                this.progress = Math.min(100, this.progress + 3);
+                            } else {
+                                clearInterval(completeInterval);
+                                this.isComplete = true;
+                                this.currentStep = '✅ Selesai! Modul Ajar berhasil dibuat';
+                                
+                                // Wait 1.5 seconds then redirect
+                                setTimeout(() => {
+                                    window.location.href = this.redirectUrl;
+                                }, 1500);
+                            }
+                        }, 50);
+                    },
+                    
+                    showError(message) {
+                        if (this.interval) {
+                            clearInterval(this.interval);
+                        }
+                        this.hasError = true;
+                        this.errorMessage = message;
+                        this.currentStep = '❌ ' + message;
+                    },
+                    
+                    retry() {
+                        this.show = false;
+                        this.progress = 0;
+                        this.hasError = false;
+                        this.isComplete = false;
+                    }
+                }
+            }
+        </script>
+
 
         <div class="mt-6">
             <x-ui.alert type="info">

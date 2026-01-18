@@ -111,6 +111,15 @@ class RppController extends Controller
                 'status' => 'completed',
             ]);
 
+            // Return JSON for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect_url' => route('rpp.show', $rpp),
+                    'message' => 'RPP berhasil dibuat!',
+                ]);
+            }
+
             return redirect()
                 ->route('rpp.show', $rpp)
                 ->with('success', 'RPP berhasil dibuat!');
@@ -118,9 +127,19 @@ class RppController extends Controller
 
         $rpp->update(['status' => 'failed']);
 
+        $errorMessage = $result['error'] ?? 'Gagal membuat RPP. Silakan coba lagi.';
+
+        // Return JSON for AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'error' => $errorMessage,
+            ], 422);
+        }
+
         return back()
             ->withInput()
-            ->with('error', $result['error'] ?? 'Gagal membuat RPP. Silakan coba lagi.');
+            ->with('error', $errorMessage);
     }
 
     /**
@@ -178,3 +197,4 @@ class RppController extends Controller
             ->with('success', 'RPP berhasil dihapus.');
     }
 }
+
