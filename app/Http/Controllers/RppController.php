@@ -57,7 +57,7 @@ class RppController extends Controller
             'kota' => 'nullable|string|max:100',
             'tanggal' => 'nullable|date',
             'mata_pelajaran' => 'required|string|max:255',
-            'fase' => 'required|string|in:A,B,C,D,E,F',
+            'fase' => 'required|string|in:A,B,C,D,E,F,RA,MI Rendah,MI Tinggi,MTs,MA',
             'kelas' => 'nullable|string|max:20',
             'semester' => 'nullable|string|in:Ganjil,Genap',
             'target_peserta_didik' => 'nullable|string|max:100',
