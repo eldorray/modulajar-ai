@@ -317,260 +317,54 @@ PROMPT;
         $jenjang = $data['fase'] ?? '';
         $kelas = $data['kelas'] ?? '';
         $semester = $data['semester'] ?? '';
-        $targetPesertaDidik = $data['target_peserta_didik'] ?? 'Reguler';
         $topik = $data['topik'] ?? '';
         $alokasiWaktu = $data['alokasi_waktu'] ?? '';
         $jumlahPertemuan = $data['jumlah_pertemuan'] ?? 1;
-        $kompetensiAwal = $data['kompetensi_awal'] ?? '';
-        $kataKunci = $data['kata_kunci'] ?? '';
         $modelPembelajaran = $data['model_pembelajaran'] ?? 'Problem Based Learning';
         $jenisAsesmen = $data['jenis_asesmen'] ?? 'Formatif dan Sumatif';
 
         return <<<PROMPT
-Anda adalah seorang ahli pengembangan kurikulum madrasah dan penyusun Modul Ajar di Indonesia dengan pengalaman lebih dari 20 tahun di lingkungan Kementerian Agama. Tugas Anda adalah membuat Modul Ajar yang LENGKAP dan BERKUALITAS sesuai standar **Kurikulum Berbasis Cinta (KBC) Kemenag** berdasarkan Kepdirjen Pendis Nomor 6077 Tahun 2025.
+Anda ahli kurikulum madrasah. Buat Modul Ajar sesuai **Kurikulum Berbasis Cinta (KBC) Kemenag**.
 
-## DATA INPUT MODUL AJAR
+## INPUT
+- Mapel: {$mataPelajaran} | Jenjang: {$jenjang} | Kelas: {$kelas} | Semester: {$semester}
+- Topik: {$topik} | Waktu: {$alokasiWaktu} | Pertemuan: {$jumlahPertemuan}
+- Model: {$modelPembelajaran} | Asesmen: {$jenisAsesmen}
 
-**Informasi Umum:**
-- Mata Pelajaran: {$mataPelajaran}
-- Jenjang Madrasah: {$jenjang}
-- Kelas: {$kelas}
-- Semester: {$semester}
-- Target Peserta Didik: {$targetPesertaDidik}
-- Model Pembelajaran: {$modelPembelajaran}
-- Kurikulum: Kurikulum Berbasis Cinta (Kemenag)
-
-**Komponen Inti:**
-- Topik/Materi: {$topik}
-- Alokasi Waktu: {$alokasiWaktu}
-- Jumlah Pertemuan: {$jumlahPertemuan}
-- Kompetensi Awal: {$kompetensiAwal}
-- Kata Kunci: {$kataKunci}
-- Jenis Asesmen: {$jenisAsesmen}
-
-## PRINSIP KURIKULUM BERBASIS CINTA
-
-Kurikulum Berbasis Cinta menekankan nilai-nilai:
-1. **Cinta kepada Allah SWT** - Menumbuhkan keimanan, ketakwaan, dan ibadah
-2. **Cinta kepada Rasulullah SAW** - Meneladani akhlak dan sunnah Rasul
-3. **Cinta kepada Sesama** - Toleransi, empati, ukhuwah Islamiyah, dan kerukunan
-4. **Cinta kepada Ilmu** - Semangat belajar, rasa ingin tahu, dan pengembangan diri
-5. **Cinta kepada Lingkungan** - Menjaga dan melestarikan alam sebagai khalifah
-
-## INSTRUKSI PENTING
-
-1. Buat modul ajar yang KOMPREHENSIF dan bernuansa ISLAMI
-2. Integrasikan nilai-nilai cinta dalam setiap kegiatan pembelajaran
-3. Terapkan prinsip moderasi beragama (wasathiyah)
-4. Sesuaikan dengan tingkat perkembangan peserta didik sesuai jenjang madrasah
-5. Gunakan pendekatan pembelajaran yang menyenangkan dan bermakna
-6. Pastikan tujuan pembelajaran terukur dan Islami
-7. Kegiatan pembelajaran harus detail dengan sentuhan nilai-nilai agama
-8. Asesmen harus selaras dengan tujuan pembelajaran
+## NILAI CINTA KBC
+1. Cinta Allah - keimanan & ibadah
+2. Cinta Rasul - akhlak & sunnah
+3. Cinta Sesama - toleransi & ukhuwah
+4. Cinta Ilmu - semangat belajar
+5. Cinta Lingkungan - menjaga alam
 
 ## OUTPUT JSON
-
-Berikan output dalam format JSON VALID dengan struktur berikut:
-
+```json
 {
-    "informasi_umum": {
-        "mata_pelajaran": "{$mataPelajaran}",
-        "jenjang": "{$jenjang}",
-        "kelas": "{$kelas}",
-        "semester": "{$semester}",
-        "alokasi_waktu": "{$alokasiWaktu}",
-        "jumlah_pertemuan": {$jumlahPertemuan},
-        "model_pembelajaran": "{$modelPembelajaran}",
-        "target_peserta_didik": "{$targetPesertaDidik}",
-        "kurikulum": "Kurikulum Berbasis Cinta (Kemenag)"
-    },
-    "kompetensi_awal": "Tuliskan prasyarat pengetahuan/keterampilan yang harus dimiliki siswa sebelum mempelajari materi ini",
-    "nilai_nilai_cinta": [
-        {
-            "dimensi": "Cinta kepada Allah SWT",
-            "deskripsi": "Penjelasan bagaimana dimensi cinta kepada Allah dikembangkan dalam pembelajaran ini"
-        },
-        {
-            "dimensi": "Cinta kepada Rasulullah SAW",
-            "deskripsi": "Penjelasan bagaimana dimensi cinta kepada Rasul dikembangkan"
-        },
-        {
-            "dimensi": "Cinta kepada Sesama",
-            "deskripsi": "Penjelasan bagaimana dimensi cinta kepada sesama dikembangkan"
-        },
-        {
-            "dimensi": "Cinta kepada Ilmu",
-            "deskripsi": "Penjelasan bagaimana dimensi cinta kepada ilmu dikembangkan"
-        },
-        {
-            "dimensi": "Cinta kepada Lingkungan",
-            "deskripsi": "Penjelasan bagaimana dimensi cinta kepada lingkungan dikembangkan"
-        }
-    ],
-    "profil_lulusan_madrasah": [
-        {
-            "dimensi": "Beriman dan Bertakwa kepada Allah SWT",
-            "deskripsi": "Penjelasan bagaimana dimensi ini dikembangkan dalam pembelajaran"
-        },
-        {
-            "dimensi": "Berakhlak Mulia",
-            "deskripsi": "Penjelasan pengembangan akhlakul karimah"
-        },
-        {
-            "dimensi": "Moderat dalam Beragama (Wasathiyah)",
-            "deskripsi": "Penjelasan penerapan moderasi beragama"
-        },
-        {
-            "dimensi": "Mandiri dan Kreatif",
-            "deskripsi": "Penjelasan pengembangan kemandirian dan kreativitas"
-        },
-        {
-            "dimensi": "Bergotong Royong",
-            "deskripsi": "Penjelasan pengembangan sikap gotong royong dan ukhuwah"
-        }
-    ],
-    "moderasi_beragama": {
-        "nilai_wasathiyah": "Penjelasan nilai jalan tengah (wasathiyah) yang diterapkan dalam pembelajaran ini",
-        "implementasi": [
-            "Kegiatan implementasi moderasi beragama 1",
-            "Kegiatan implementasi moderasi beragama 2"
-        ]
-    },
-    "sarana_prasarana": {
-        "alat": ["Alat yang dibutuhkan"],
-        "bahan": ["Bahan yang dibutuhkan"],
-        "media": ["Media pembelajaran"],
-        "sumber_belajar": ["Sumber belajar (buku, Al-Quran, Hadits, website, dll)"]
-    },
-    "tujuan_pembelajaran": [
-        "Tujuan pembelajaran 1 yang SMART dengan nuansa Islami",
-        "Tujuan pembelajaran 2 yang SMART dengan nuansa Islami"
-    ],
-    "pemahaman_bermakna": "Penjelasan tentang manfaat dan relevansi materi dengan kehidupan nyata peserta didik serta nilai-nilai Islami",
-    "pertanyaan_pemantik": [
-        "Pertanyaan pemantik 1 yang memancing rasa ingin tahu dan refleksi keagamaan",
-        "Pertanyaan pemantik 2 yang mendorong berpikir kritis",
-        "Pertanyaan pemantik 3 yang menghubungkan dengan pengalaman dan nilai Islam"
-    ],
-    "kegiatan_pembelajaran": {
-        "pendahuluan": {
-            "durasi": "15 menit",
-            "aktivitas": [
-                {
-                    "langkah": 1,
-                    "kegiatan_guru": "Membuka dengan salam, doa, dan tadarus/muraja'ah",
-                    "kegiatan_siswa": "Menjawab salam, berdoa bersama, dan mengikuti tadarus"
-                }
-            ]
-        },
-        "inti": {
-            "durasi": "Sesuaikan dengan alokasi waktu",
-            "sintaks_model": "{$modelPembelajaran}",
-            "aktivitas": [
-                {
-                    "fase_sintaks": "Nama fase sesuai model pembelajaran",
-                    "langkah": 1,
-                    "kegiatan_guru": "Apa yang dilakukan guru secara detail dengan integrasi nilai-nilai cinta",
-                    "kegiatan_siswa": "Apa yang dilakukan siswa secara detail",
-                    "durasi": "X menit",
-                    "nilai_cinta": "Dimensi cinta yang dikembangkan"
-                }
-            ]
-        },
-        "penutup": {
-            "durasi": "10 menit",
-            "aktivitas": [
-                {
-                    "langkah": 1,
-                    "kegiatan_guru": "Refleksi pembelajaran, penguatan nilai-nilai cinta, dan doa penutup",
-                    "kegiatan_siswa": "Menyampaikan refleksi dan berdoa bersama"
-                }
-            ]
-        }
-    },
-    "asesmen": {
-        "jenis": "{$jenisAsesmen}",
-        "teknik": ["Teknik asesmen 1", "Teknik asesmen 2"],
-        "bentuk": "Bentuk asesmen (tes tertulis, kinerja, proyek, dll)",
-        "instrumen": [
-            {
-                "jenis": "Jenis instrumen",
-                "deskripsi": "Deskripsi instrumen",
-                "contoh_soal": ["Contoh soal/tugas 1", "Contoh soal/tugas 2"]
-            }
-        ],
-        "rubrik_penilaian": [
-            {
-                "kriteria": "Kriteria penilaian",
-                "skor_4": "Deskriptor Sangat Baik",
-                "skor_3": "Deskriptor Baik",
-                "skor_2": "Deskriptor Cukup",
-                "skor_1": "Deskriptor Perlu Perbaikan"
-            }
-        ]
-    },
-    "pengayaan_remedial": {
-        "pengayaan": {
-            "sasaran": "Peserta didik dengan pencapaian tinggi",
-            "kegiatan": ["Kegiatan pengayaan 1", "Kegiatan pengayaan 2"]
-        },
-        "remedial": {
-            "sasaran": "Peserta didik dengan kesulitan belajar",
-            "kegiatan": ["Kegiatan remedial 1", "Kegiatan remedial 2"]
-        }
-    },
-    "refleksi": {
-        "refleksi_siswa": [
-            "Pertanyaan refleksi untuk siswa tentang pemahaman materi dan nilai-nilai yang dipelajari",
-            "Pertanyaan refleksi tentang penerapan nilai-nilai cinta dalam kehidupan"
-        ],
-        "refleksi_guru": [
-            "Pertanyaan refleksi untuk guru tentang efektivitas pembelajaran",
-            "Pertanyaan refleksi tentang ketercapaian penanaman nilai-nilai cinta"
-        ]
-    },
-    "lkpd": {
-        "judul": "Lembar Kerja Peserta Didik - {$topik}",
-        "tujuan": "Tujuan LKPD yang selaras dengan tujuan pembelajaran dan nilai-nilai Islami",
-        "petunjuk_umum": [
-            "Awali dengan membaca Bismillah",
-            "Petunjuk pengerjaan lainnya"
-        ],
-        "kegiatan": [
-            {
-                "nomor": 1,
-                "judul_kegiatan": "Nama kegiatan",
-                "petunjuk": "Petunjuk khusus kegiatan ini",
-                "soal_tugas": [
-                    {
-                        "nomor": "1",
-                        "pertanyaan": "Pertanyaan atau instruksi",
-                        "tipe": "essay/pilihan_ganda/praktik"
-                    }
-                ]
-            }
-        ],
-        "kesimpulan": "Bagian untuk siswa menuliskan kesimpulan pembelajaran dan hikmah yang dipetik"
-    },
-    "glosarium": [
-        {
-            "istilah": "Istilah penting 1",
-            "definisi": "Definisi istilah"
-        }
-    ],
-    "daftar_pustaka": [
-        "Al-Quran dan terjemahannya",
-        "Sumber referensi lainnya (format APA)"
-    ]
+  "informasi_umum": {"mata_pelajaran":"","jenjang":"","kelas":"","semester":"","alokasi_waktu":"","jumlah_pertemuan":0,"model_pembelajaran":"","kurikulum":"KBC Kemenag"},
+  "kompetensi_awal": "prasyarat pengetahuan",
+  "nilai_nilai_cinta": [{"dimensi":"Cinta kepada Allah SWT","deskripsi":""}],
+  "profil_lulusan_madrasah": [{"dimensi":"Beriman Bertakwa","deskripsi":""}],
+  "moderasi_beragama": {"nilai_wasathiyah":"","implementasi":[""]},
+  "sarana_prasarana": {"alat":[""],"bahan":[""],"media":[""],"sumber_belajar":[""]},
+  "tujuan_pembelajaran": ["tujuan SMART Islami"],
+  "pemahaman_bermakna": "relevansi materi",
+  "pertanyaan_pemantik": ["pertanyaan"],
+  "kegiatan_pembelajaran": {
+    "pendahuluan": {"durasi":"15 menit","aktivitas":[{"langkah":1,"kegiatan_guru":"salam, doa, tadarus","kegiatan_siswa":"menjawab salam, berdoa"}]},
+    "inti": {"durasi":"","sintaks_model":"","aktivitas":[{"fase_sintaks":"","langkah":1,"kegiatan_guru":"","kegiatan_siswa":"","durasi":""}]},
+    "penutup": {"durasi":"10 menit","aktivitas":[{"langkah":1,"kegiatan_guru":"refleksi, doa","kegiatan_siswa":"refleksi, berdoa"}]}
+  },
+  "asesmen": {"jenis":"","teknik":[""],"bentuk":"","instrumen":[{"jenis":"","deskripsi":"","contoh_soal":[""]}],"rubrik_penilaian":[{"kriteria":"","skor_4":"","skor_3":"","skor_2":"","skor_1":""}]},
+  "pengayaan_remedial": {"pengayaan":{"sasaran":"","kegiatan":[""]},"remedial":{"sasaran":"","kegiatan":[""]}},
+  "refleksi": {"refleksi_siswa":[""],"refleksi_guru":[""]},
+  "lkpd": {"judul":"LKPD - {$topik}","tujuan":"","petunjuk_umum":["Bismillah"],"kegiatan":[{"nomor":1,"judul_kegiatan":"","petunjuk":"","soal_tugas":[{"nomor":"1","pertanyaan":"","tipe":"essay"}]}],"kesimpulan":""},
+  "glosarium": [{"istilah":"","definisi":""}],
+  "daftar_pustaka": ["Al-Quran"]
 }
+```
 
-PENTING: 
-- Pastikan JSON valid dan lengkap
-- Isi setiap bagian dengan konten yang substantif, berkualitas, dan bernuansa Islami
-- Integrasikan nilai-nilai cinta dalam setiap komponen pembelajaran
-- Terapkan prinsip moderasi beragama (tidak ekstrem kanan maupun kiri)
-- Sesuaikan tingkat kesulitan dengan jenjang madrasah yang diminta
-- Gunakan bahasa Indonesia yang baik, benar, dan santun
+Isi SEMUA field dengan konten substantif sesuai topik. Integrasikan nilai-nilai cinta. Output JSON VALID saja.
 PROMPT;
     }
 
