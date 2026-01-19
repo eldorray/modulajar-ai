@@ -419,4 +419,122 @@ PROMPT;
             Log::error('Failed to log AI usage', ['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Generate STS (Sumatif Tengah Semester) questions using DeepSeek AI.
+     */
+    public function generateSTS(array $data, ?int $userId = null, ?int $stsId = null): array
+    {
+        $prompt = $this->buildSTSPrompt($data);
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(180)->post($this->endpoint, [
+                'model' => $this->model,
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'Anda adalah seorang Guru Profesional dan Ahli Kurikulum yang berpengalaman dalam menyusun asesmen sesuai Kurikulum Merdeka. Berikan output dalam format JSON yang valid.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ],
+                'temperature' => 0.7,
+                'max_tokens' => 8192,
+                'response_format' => [
+                    'type' => 'json_object'
+                ],
+            ]);
+
+            if ($response->failed()) {
+                Log::error('DeepSeek STS API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                
+                $errorMessage = match ($response->status()) {
+                    429 => 'Batas kuota API tercapai. Silakan tunggu beberapa saat dan coba lagi.',
+                    401 => 'API Key tidak valid. Periksa konfigurasi DEEPSEEK_API_KEY.',
+                    403 => 'Akses ditolak. API Key tidak memiliki izin.',
+                    404 => 'Endpoint tidak ditemukan. Periksa konfigurasi.',
+                    500, 503 => 'Server AI sedang tidak tersedia. Silakan coba lagi nanti.',
+                    default => 'Gagal menghasilkan soal STS. Silakan coba lagi.',
+                };
+                
+                return [
+                    'success' => false,
+                    'error' => $errorMessage,
+                ];
+            }
+
+            $result = $response->json();
+            $content = $this->extractContent($result);
+
+            // Log usage (reuse existing method)
+            $this->logUsage($result, $userId, $stsId);
+
+            return [
+                'success' => true,
+                'content' => $content,
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('DeepSeek STS Service Exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Build the prompt for STS question generation.
+     */
+    protected function buildSTSPrompt(array $data): string
+    {
+        $mataPelajaran = $data['mata_pelajaran'] ?? '';
+        $kelas = $data['kelas'] ?? '';
+        $fase = $data['fase'] ?? '';
+        $topik = $data['topik'] ?? '';
+        $tujuanPembelajaran = $data['tujuan_pembelajaran'] ?? '';
+        $jumlahPG = $data['jumlah_pg'] ?? 10;
+        $jumlahPGKompleks = $data['jumlah_pg_kompleks'] ?? 3;
+        $jumlahMenjodohkan = $data['jumlah_menjodohkan'] ?? 5;
+        $jumlahUraian = $data['jumlah_uraian'] ?? 2;
+        $materi = $data['materi'] ?? '';
+
+        $totalSoal = $jumlahPG + $jumlahPGKompleks + $jumlahMenjodohkan + $jumlahUraian;
+
+        return <<<PROMPT
+Buat soal STS/PTS untuk: {$mataPelajaran}, Kelas {$kelas}/{$fase}, Topik: {$topik}
+
+Spesifikasi: {$jumlahPG} PG, {$jumlahPGKompleks} PG Kompleks, {$jumlahMenjodohkan} Menjodohkan, {$jumlahUraian} Uraian
+TP: {$tujuanPembelajaran}
+Materi: {$materi}
+
+Output JSON:
+```json
+{
+  "kisi_kisi":[{"nomor_soal":"1","tujuan_pembelajaran":"","materi":"","level_kognitif":"C1-C6","bentuk_soal":""}],
+  "soal_pilihan_ganda":[{"nomor":1,"pertanyaan":"","pilihan":{"A":"","B":"","C":"","D":""}}],
+  "soal_pg_kompleks":[{"nomor":1,"pertanyaan":"","pernyataan":[{"teks":"","benar":true}]}],
+  "soal_menjodohkan":[{"nomor":1,"soal":"","jawaban":""}],
+  "soal_uraian":[{"nomor":1,"pertanyaan":""}],
+  "kunci_jawaban":{"pilihan_ganda":["A"],"pg_kompleks":[{"nomor":1,"jawaban":"Benar:1|Salah:2"}],"menjodohkan":["1-A"],"uraian":[{"nomor":1,"jawaban":""}]},
+  "rubrik_penilaian":[{"nomor_soal":1,"kriteria":[{"deskripsi":"Sangat Baik","skor":4},{"deskripsi":"Baik","skor":3},{"deskripsi":"Cukup","skor":2},{"deskripsi":"Kurang","skor":1}]}]
 }
+```
+
+Isi SEMUA soal sesuai jumlah. Proporsi: LOTS 30%, MOTS 40%, HOTS 30%. JSON valid saja.
+PROMPT;
+    }
+}
+

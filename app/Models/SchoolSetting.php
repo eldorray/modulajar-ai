@@ -12,6 +12,8 @@ class SchoolSetting extends Model
         'nsm',
         'npsn',
         'alamat',
+        'kop_surat',
+        'logo_kanan',
     ];
 
     /**
