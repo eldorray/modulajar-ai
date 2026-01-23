@@ -431,7 +431,7 @@ PROMPT;
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(180)->post($this->endpoint, [
+            ])->timeout(120)->post($this->endpoint, [
                 'model' => $this->model,
                 'messages' => [
                     [

@@ -48,7 +48,7 @@ class StsController extends Controller
     public function store(Request $request)
     {
         // Extend PHP execution time for AI processing
-        set_time_limit(300);
+        set_time_limit(180);
 
         $validated = $request->validate([
             'mata_pelajaran' => 'required|string|max:255',
