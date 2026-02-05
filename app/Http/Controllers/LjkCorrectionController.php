@@ -4,11 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\LjkAnswerKey;
 use App\Models\LjkResult;
+use App\Services\GroqService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class LjkCorrectionController extends Controller
 {
+    protected GroqService $groqService;
+
+    public function __construct(GroqService $groqService)
+    {
+        $this->groqService = $groqService;
+    }
+
+    /**
+     * Analyze LJK image using AI
+     */
+    public function analyzeImage(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'ljk_answer_key_id' => ['required', 'exists:ljk_answer_keys,id'],
+            'image' => ['required', 'string'], // base64 image
+        ]);
+
+        $answerKey = LjkAnswerKey::findOrFail($validated['ljk_answer_key_id']);
+
+        $result = $this->groqService->analyzeJawaban(
+            $validated['image'],
+            $answerKey->jumlah_soal,
+            $answerKey->jumlah_pilihan
+        );
+
+        return response()->json($result);
+    }
+
     /**
      * Display the correction home page.
      */

@@ -607,14 +607,44 @@
             }
 
             async function analyzeImageWithCrop(imageData, cropLeft, cropTop, cropWidth, cropHeight) {
+                // Call Groq API for accurate image analysis
+                try {
+                    const response = await fetch('{{ route('ljk.correction.analyze') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ljk_answer_key_id: {{ $answerKey->id }},
+                            image: imageData,
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        throw new Error(result.error || 'Gagal menganalisis gambar');
+                    }
+
+                    // Return answers array from Groq
+                    return result.answers || [];
+                } catch (error) {
+                    console.error('Groq API error:', error);
+                    // Fallback to client-side detection
+                    return fallbackClientSideDetection(imageData, cropLeft, cropTop, cropWidth, cropHeight);
+                }
+            }
+
+            // Fallback client-side detection if API fails
+            async function fallbackClientSideDetection(imageData, cropLeft, cropTop, cropWidth, cropHeight) {
                 return new Promise((resolve) => {
                     const img = new Image();
                     img.onload = function() {
-                        // Create canvas for cropped area
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
 
-                        // Calculate crop in pixels
                         const sx = Math.floor(img.width * cropLeft);
                         const sy = Math.floor(img.height * cropTop);
                         const sw = Math.floor(img.width * cropWidth);
@@ -622,15 +652,11 @@
 
                         canvas.width = sw;
                         canvas.height = sh;
-
-                        // Draw cropped area
                         ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
 
-                        // Get image data
                         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         const pixels = imgData.data;
 
-                        // Convert to grayscale
                         const grayscale = [];
                         for (let i = 0; i < pixels.length; i += 4) {
                             const gray = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i +
@@ -638,81 +664,62 @@
                             grayscale.push(gray);
                         }
 
-                        // Calculate adaptive threshold (Otsu's method simplified)
                         const sortedGray = [...grayscale].sort((a, b) => a - b);
                         const medianGray = sortedGray[Math.floor(sortedGray.length / 2)];
-                        const threshold = Math.min(medianGray * 0.7, 120); // Adaptive threshold
+                        const threshold = Math.min(medianGray * 0.7, 120);
 
-                        // Detect answers from the cropped grid
-                        const detectedAnswers = detectFromCroppedGrid(grayscale, canvas.width,
-                            canvas.height, threshold);
-                        resolve(detectedAnswers);
+                        const answers = [];
+                        const columns = 5;
+                        const rowsPerColumn = Math.ceil(jumlahSoal / columns);
+                        const columnWidth = canvas.width / columns;
+                        const rowHeight = canvas.height / rowsPerColumn;
+
+                        for (let q = 0; q < jumlahSoal; q++) {
+                            const col = Math.floor(q / rowsPerColumn);
+                            const row = q % rowsPerColumn;
+                            const cellX = col * columnWidth;
+                            const cellY = row * rowHeight;
+                            const bubbleStartX = cellX + (columnWidth * 0.18);
+                            const bubbleSpacing = (columnWidth * 0.75) / jumlahPilihan;
+
+                            let darkestOption = null;
+                            let darkestValue = 255;
+
+                            for (let opt = 0; opt < jumlahPilihan; opt++) {
+                                const bubbleX = Math.floor(bubbleStartX + (opt * bubbleSpacing) + (
+                                    bubbleSpacing * 0.2));
+                                const bubbleY = Math.floor(cellY + (rowHeight * 0.25));
+                                const bubbleW = Math.max(8, Math.floor(bubbleSpacing * 0.6));
+                                const bubbleH = Math.max(8, Math.floor(rowHeight * 0.5));
+
+                                let totalIntensity = 0;
+                                let pixelCount = 0;
+
+                                for (let y = bubbleY; y < bubbleY + bubbleH && y < canvas
+                                    .height; y++) {
+                                    for (let x = bubbleX; x < bubbleX + bubbleW && x < canvas
+                                        .width; x++) {
+                                        const idx = y * canvas.width + x;
+                                        if (idx >= 0 && idx < grayscale.length) {
+                                            totalIntensity += grayscale[idx];
+                                            pixelCount++;
+                                        }
+                                    }
+                                }
+
+                                const avgIntensity = pixelCount > 0 ? totalIntensity / pixelCount :
+                                    255;
+                                if (avgIntensity < threshold && avgIntensity < darkestValue) {
+                                    darkestValue = avgIntensity;
+                                    darkestOption = optionLabels[opt];
+                                }
+                            }
+                            answers.push(darkestOption);
+                        }
+                        resolve(answers);
                     };
                     img.src = imageData;
                 });
-            }
-
-            function detectFromCroppedGrid(grayscale, width, height, threshold) {
-                const answers = [];
-
-                // LJK has 5 columns layout: questions 1-4, 5-8, 9-12, 13-16, 17-20
-                // Each column has up to ceil(jumlahSoal/5) rows
-                const columns = 5;
-                const rowsPerColumn = Math.ceil(jumlahSoal / columns);
-
-                const columnWidth = width / columns;
-                const rowHeight = height / rowsPerColumn;
-
-                // Analyze each question position
-                for (let q = 0; q < jumlahSoal; q++) {
-                    const col = Math.floor(q / rowsPerColumn);
-                    const row = q % rowsPerColumn;
-
-                    const cellX = col * columnWidth;
-                    const cellY = row * rowHeight;
-
-                    // Within each cell, bubbles are typically after the question number
-                    // Estimate bubble positions (A, B, C, D, E)
-                    const bubbleStartX = cellX + (columnWidth * 0.18); // Skip number
-                    const bubbleAreaWidth = columnWidth * 0.75;
-                    const bubbleSpacing = bubbleAreaWidth / jumlahPilihan;
-
-                    let darkestOption = null;
-                    let darkestValue = 255;
-
-                    for (let opt = 0; opt < jumlahPilihan; opt++) {
-                        const bubbleX = Math.floor(bubbleStartX + (opt * bubbleSpacing) + (bubbleSpacing * 0.2));
-                        const bubbleY = Math.floor(cellY + (rowHeight * 0.25));
-                        const bubbleW = Math.max(8, Math.floor(bubbleSpacing * 0.6));
-                        const bubbleH = Math.max(8, Math.floor(rowHeight * 0.5));
-
-                        // Calculate average intensity in bubble area
-                        let totalIntensity = 0;
-                        let pixelCount = 0;
-
-                        for (let y = bubbleY; y < bubbleY + bubbleH && y < height; y++) {
-                            for (let x = bubbleX; x < bubbleX + bubbleW && x < width; x++) {
-                                const idx = y * width + x;
-                                if (idx >= 0 && idx < grayscale.length) {
-                                    totalIntensity += grayscale[idx];
-                                    pixelCount++;
-                                }
-                            }
-                        }
-
-                        const avgIntensity = pixelCount > 0 ? totalIntensity / pixelCount : 255;
-
-                        // Check if this is the darkest (and below threshold)
-                        if (avgIntensity < threshold && avgIntensity < darkestValue) {
-                            darkestValue = avgIntensity;
-                            darkestOption = optionLabels[opt];
-                        }
-                    }
-
-                    answers.push(darkestOption);
-                }
-
-                return answers;
             }
 
             // ============================================

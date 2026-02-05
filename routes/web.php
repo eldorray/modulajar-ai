@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [LjkCorrectionController::class, 'index'])->name('index');
         Route::get('/scan/{answerKey}', [LjkCorrectionController::class, 'scan'])->name('scan');
         Route::get('/manual/{answerKey}', [LjkCorrectionController::class, 'manual'])->name('manual');
+        Route::post('/analyze', [LjkCorrectionController::class, 'analyzeImage'])->name('analyze');
         Route::post('/process', [LjkCorrectionController::class, 'process'])->name('process');
         Route::get('/result/{result}', [LjkCorrectionController::class, 'result'])->name('result');
         Route::get('/results', [LjkCorrectionController::class, 'results'])->name('results');
