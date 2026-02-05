@@ -33,33 +33,48 @@ class GroqService
         $optionLabels = array_slice(['A', 'B', 'C', 'D', 'E'], 0, $jumlahPilihan);
         $optionsStr = implode(', ', $optionLabels);
 
-        // Build prompt for LJK analysis
+        // Build prompt for LJK analysis - very specific instructions
+        $rowsPerColumn = (int) ceil($jumlahSoal / 5);
+        $col2Start = $rowsPerColumn + 1;
+        $col2End = $rowsPerColumn * 2;
+        $col3Start = $rowsPerColumn * 2 + 1;
+        $col3End = $rowsPerColumn * 3;
+        $col4Start = $rowsPerColumn * 3 + 1;
+        $col4End = $rowsPerColumn * 4;
+        $col5Start = $rowsPerColumn * 4 + 1;
+        
         $prompt = <<<PROMPT
-Kamu adalah sistem OCR untuk membaca Lembar Jawaban Komputer (LJK) Indonesia.
+You are an OCR system for reading Indonesian LJK (Answer Sheets).
 
-Gambar ini adalah foto LJK yang sudah diisi siswa. Pada bagian "JAWABAN", terdapat grid jawaban dengan {$jumlahSoal} soal.
-Setiap soal memiliki pilihan {$optionsStr}. Jawaban yang dipilih siswa ditandai dengan kotak yang dihitamkan/diarsir.
+TASK: Read the filled answers from the "JAWABAN" (Answer) section grid.
 
-STRUKTUR GRID:
-- Grid jawaban disusun dalam 5 kolom
-- Kolom 1: soal 1-4, Kolom 2: soal 5-8, Kolom 3: soal 9-12, Kolom 4: soal 13-16, Kolom 5: soal 17-20
-- Setiap baris memiliki nomor soal di kiri diikuti kotak-kotak pilihan {$optionsStr}
+GRID STRUCTURE:
+- The answer grid has 5 columns and {$rowsPerColumn} rows
+- Column 1: Questions 1-{$rowsPerColumn}
+- Column 2: Questions {$col2Start}-{$col2End}
+- Column 3: Questions {$col3Start}-{$col3End}
+- Column 4: Questions {$col4Start}-{$col4End}
+- Column 5: Questions {$col5Start}-{$jumlahSoal}
 
-TUGAS:
-1. Identifikasi bagian "JAWABAN" pada gambar
-2. Untuk setiap nomor soal 1-{$jumlahSoal}, tentukan kotak mana yang dihitamkan
-3. Jawaban yang dihitamkan terlihat lebih gelap/hitam dibanding kotak kosong
+Each cell format: [Number] [A] [B] [C] [D]
+- The filled/marked box is SOLID BLACK or heavily shaded
+- Empty boxes are WHITE with just the letter inside
 
-OUTPUT (JSON SAJA, TANPA PENJELASAN):
-{
-    "answers": ["A", "C", "B", null, "D", ...],
-    "confidence": 0.85
-}
+READING ORDER (left to right, top row first):
+Row 1: Q1, Q5, Q9, Q13, Q17
+Row 2: Q2, Q6, Q10, Q14, Q18
+Row 3: Q3, Q7, Q11, Q15, Q19
+Row 4: Q4, Q8, Q12, Q16, Q20
 
-Dimana:
-- "answers" adalah array dengan panjang {$jumlahSoal}
-- Setiap elemen berisi pilihan jawaban ({$optionsStr}) atau null jika tidak terdeteksi/kosong
-- "confidence" adalah tingkat keyakinan deteksi (0-1)
+For each question 1-{$jumlahSoal}, identify which letter ({$optionsStr}) is filled/blackened.
+
+OUTPUT FORMAT (JSON only, no explanation):
+{"answers":["B","C","D","D","B","C","C","B","B","D","B","B","A","B","C","D","B","B","A","C"],"confidence":0.9}
+
+IMPORTANT:
+- Look for the BLACKENED/FILLED box, not empty ones
+- Return exactly {$jumlahSoal} answers in order from Q1 to Q{$jumlahSoal}
+- Use null only if truly unreadable
 PROMPT;
 
         try {
