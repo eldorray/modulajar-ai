@@ -609,11 +609,13 @@
             async function analyzeImageWithCrop(imageData, cropLeft, cropTop, cropWidth, cropHeight) {
                 // Call Groq API for accurate image analysis
                 try {
+                    console.log('Calling Groq API...');
                     const response = await fetch('{{ route('ljk.correction.analyze') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.content || '{{ csrf_token() }}',
                             'Accept': 'application/json',
                         },
                         body: JSON.stringify({
@@ -622,16 +624,29 @@
                         }),
                     });
 
+                    console.log('Response status:', response.status);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API Response error:', errorText);
+                        throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+                    }
+
                     const result = await response.json();
+                    console.log('Groq result:', result);
 
                     if (!result.success) {
-                        throw new Error(result.error || 'Gagal menganalisis gambar');
+                        console.error('Groq API returned error:', result.error);
+                        // Show error to user instead of silent fallback
+                        alert('Error dari AI: ' + (result.error || 'Gagal menganalisis gambar'));
+                        return fallbackClientSideDetection(imageData, cropLeft, cropTop, cropWidth, cropHeight);
                     }
 
                     // Return answers array from Groq
                     return result.answers || [];
                 } catch (error) {
                     console.error('Groq API error:', error);
+                    alert('Gagal menghubungi AI: ' + error.message + '\n\nMenggunakan deteksi lokal.');
                     // Fallback to client-side detection
                     return fallbackClientSideDetection(imageData, cropLeft, cropTop, cropWidth, cropHeight);
                 }
