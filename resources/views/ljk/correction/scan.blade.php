@@ -18,12 +18,33 @@
             </x-ui.card-header>
         </x-ui.card>
 
-        <!-- Camera Section -->
-        <x-ui.card id="cameraCard">
+        <!-- Step Indicator -->
+        <div class="flex items-center justify-center gap-4 text-sm">
+            <div id="step1Indicator" class="flex items-center gap-2 text-primary font-medium">
+                <span
+                    class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">1</span>
+                Foto/Upload
+            </div>
+            <div class="w-8 h-px bg-gray-300"></div>
+            <div id="step2Indicator" class="flex items-center gap-2 text-gray-400">
+                <span
+                    class="w-6 h-6 rounded-full bg-gray-300 text-white flex items-center justify-center text-xs">2</span>
+                Pilih Area Jawaban
+            </div>
+            <div class="w-8 h-px bg-gray-300"></div>
+            <div id="step3Indicator" class="flex items-center gap-2 text-gray-400">
+                <span
+                    class="w-6 h-6 rounded-full bg-gray-300 text-white flex items-center justify-center text-xs">3</span>
+                Koreksi
+            </div>
+        </div>
+
+        <!-- Step 1: Camera/Upload Section -->
+        <x-ui.card id="step1Card">
             <x-ui.card-header>
-                <x-ui.card-title>Scan Lembar Jawaban</x-ui.card-title>
-                <x-ui.card-description>Arahkan kamera ke LJK yang sudah diisi. Pastikan pencahayaan cukup dan LJK
-                    terlihat jelas.</x-ui.card-description>
+                <x-ui.card-title>Langkah 1: Foto/Upload LJK</x-ui.card-title>
+                <x-ui.card-description>Arahkan kamera ke LJK atau upload foto. Pastikan pencahayaan
+                    cukup.</x-ui.card-description>
             </x-ui.card-header>
             <x-ui.card-content>
                 <div class="space-y-4">
@@ -71,31 +92,6 @@
                         <video id="videoPreview"
                             class="w-full max-w-2xl mx-auto rounded-lg border-2 border-dashed border-gray-300" autoplay
                             playsinline></video>
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div class="border-2 border-primary/50 rounded-lg w-4/5 h-4/5"></div>
-                        </div>
-                    </div>
-
-                    <!-- Captured Image -->
-                    <div id="capturedContainer" class="hidden">
-                        <img id="capturedImage" class="w-full max-w-2xl mx-auto rounded-lg border-2 border-primary">
-                        <div class="flex items-center justify-center gap-2 mt-4">
-                            <button type="button" id="btnRetake" class="btn btn-secondary">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                    </path>
-                                </svg>
-                                Ambil Ulang
-                            </button>
-                            <button type="button" id="btnProceed" class="btn btn-primary">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7"></path>
-                                </svg>
-                                Lanjut Input Jawaban
-                            </button>
-                        </div>
                     </div>
 
                     <canvas id="captureCanvas" class="hidden"></canvas>
@@ -103,18 +99,75 @@
             </x-ui.card-content>
         </x-ui.card>
 
-        <!-- Manual Answer Input (shown after capture or directly) -->
-        <x-ui.card id="answerInputCard" class="hidden">
+        <!-- Step 2: Crop/Select Area -->
+        <x-ui.card id="step2Card" class="hidden">
             <x-ui.card-header>
-                <x-ui.card-title>Input Jawaban Siswa</x-ui.card-title>
-                <x-ui.card-description>Klik pada pilihan jawaban sesuai dengan yang diisi siswa pada
-                    LJK.</x-ui.card-description>
+                <x-ui.card-title>Langkah 2: Pilih Area Jawaban</x-ui.card-title>
+                <x-ui.card-description>Geser kotak untuk memilih area grid jawaban (bagian "JAWABAN"). Pastikan semua
+                    nomor 1-{{ $answerKey->jumlah_soal }} termasuk dalam area.</x-ui.card-description>
+            </x-ui.card-header>
+            <x-ui.card-content>
+                <div class="space-y-4">
+                    <!-- Crop Container -->
+                    <div id="cropContainer"
+                        class="relative w-full max-w-2xl mx-auto overflow-hidden rounded-lg border-2 border-gray-300">
+                        <img id="cropImage" class="w-full" style="display: block;">
+                        <!-- Selection Box -->
+                        <div id="selectionBox" class="absolute border-2 border-primary bg-primary/10 cursor-move"
+                            style="left: 10%; top: 50%; width: 80%; height: 40%;">
+                            <!-- Resize Handles -->
+                            <div class="absolute w-4 h-4 bg-primary rounded-full -top-2 -left-2 cursor-nw-resize"
+                                data-handle="tl"></div>
+                            <div class="absolute w-4 h-4 bg-primary rounded-full -top-2 -right-2 cursor-ne-resize"
+                                data-handle="tr"></div>
+                            <div class="absolute w-4 h-4 bg-primary rounded-full -bottom-2 -left-2 cursor-sw-resize"
+                                data-handle="bl"></div>
+                            <div class="absolute w-4 h-4 bg-primary rounded-full -bottom-2 -right-2 cursor-se-resize"
+                                data-handle="br"></div>
+                            <!-- Label -->
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span class="bg-primary text-white px-2 py-1 rounded text-xs font-medium">Area
+                                    Jawaban</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-2">
+                        <button type="button" id="btnBackToStep1" class="btn btn-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            Ambil Ulang
+                        </button>
+                        <button type="button" id="btnAnalyze" class="btn btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            Analisis Jawaban
+                        </button>
+                    </div>
+                </div>
+            </x-ui.card-content>
+        </x-ui.card>
+
+        <!-- Step 3: Answer Input -->
+        <x-ui.card id="step3Card" class="hidden">
+            <x-ui.card-header>
+                <x-ui.card-title>Langkah 3: Periksa & Koreksi Jawaban</x-ui.card-title>
+                <x-ui.card-description>Periksa jawaban yang terdeteksi. Klik untuk mengubah jika ada yang
+                    salah.</x-ui.card-description>
             </x-ui.card-header>
             <x-ui.card-content>
                 <form action="{{ route('ljk.correction.process') }}" method="POST" id="correctionForm">
                     @csrf
                     <input type="hidden" name="ljk_answer_key_id" value="{{ $answerKey->id }}">
                     <input type="hidden" name="scan_image" id="scanImageInput">
+
+                    <!-- Detection Result Message -->
+                    <div id="detectionResultMsg"
+                        class="mb-4 p-3 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hidden"></div>
 
                     <!-- Student Info -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -144,8 +197,17 @@
 
                     <!-- Submit -->
                     <div class="flex items-center justify-between">
-                        <p class="text-sm text-[hsl(var(--muted-foreground))]" id="progressText">0 dari
-                            {{ $answerKey->jumlah_soal }} jawaban diisi</p>
+                        <div>
+                            <button type="button" id="btnBackToStep2" class="btn btn-ghost">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                                Pilih Ulang Area
+                            </button>
+                            <span class="text-sm text-[hsl(var(--muted-foreground))] ml-4" id="progressText">0 dari
+                                {{ $answerKey->jumlah_soal }} jawaban diisi</span>
+                        </div>
                         <button type="submit" class="btn btn-primary" id="btnSubmit">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -173,50 +235,402 @@
             const jumlahPilihan = {{ $answerKey->jumlah_pilihan }};
             const optionLabels = ['A', 'B', 'C', 'D', 'E'].slice(0, jumlahPilihan);
 
-            // Elements
+            // Elements - Step 1
+            const step1Card = document.getElementById('step1Card');
             const btnStartCamera = document.getElementById('btnStartCamera');
             const btnCapture = document.getElementById('btnCapture');
             const btnSwitchCamera = document.getElementById('btnSwitchCamera');
-            const btnRetake = document.getElementById('btnRetake');
-            const btnProceed = document.getElementById('btnProceed');
             const videoPreview = document.getElementById('videoPreview');
             const cameraContainer = document.getElementById('cameraContainer');
-            const capturedContainer = document.getElementById('capturedContainer');
-            const capturedImage = document.getElementById('capturedImage');
             const captureCanvas = document.getElementById('captureCanvas');
             const fileInput = document.getElementById('fileInput');
-            const answerInputCard = document.getElementById('answerInputCard');
+
+            // Elements - Step 2
+            const step2Card = document.getElementById('step2Card');
+            const cropContainer = document.getElementById('cropContainer');
+            const cropImage = document.getElementById('cropImage');
+            const selectionBox = document.getElementById('selectionBox');
+            const btnBackToStep1 = document.getElementById('btnBackToStep1');
+            const btnAnalyze = document.getElementById('btnAnalyze');
+
+            // Elements - Step 3
+            const step3Card = document.getElementById('step3Card');
             const studentAnswerGrid = document.getElementById('studentAnswerGrid');
             const scanImageInput = document.getElementById('scanImageInput');
             const progressText = document.getElementById('progressText');
+            const detectionResultMsg = document.getElementById('detectionResultMsg');
+            const btnBackToStep2 = document.getElementById('btnBackToStep2');
+
+            // Step Indicators
+            const step1Indicator = document.getElementById('step1Indicator');
+            const step2Indicator = document.getElementById('step2Indicator');
+            const step3Indicator = document.getElementById('step3Indicator');
 
             let stream = null;
             let facingMode = 'environment';
-            let filledCount = 0;
-            let isAnalyzing = false;
+            let currentImageData = null;
+
+            // Selection box state
+            let isDragging = false;
+            let isResizing = false;
+            let activeHandle = null;
+            let startX, startY, startLeft, startTop, startWidth, startHeight;
 
             // ============================================
-            // OMR (Optical Mark Recognition) Functions
+            // Step Navigation
             // ============================================
 
-            /**
-             * Analyze the LJK image and detect filled bubbles
-             */
-            async function analyzeImage(imageData) {
+            function goToStep(step) {
+                // Hide all
+                step1Card.classList.add('hidden');
+                step2Card.classList.add('hidden');
+                step3Card.classList.add('hidden');
+
+                // Reset indicators
+                [step1Indicator, step2Indicator, step3Indicator].forEach((ind, i) => {
+                    const num = i + 1;
+                    if (num < step) {
+                        ind.classList.remove('text-gray-400', 'text-primary');
+                        ind.classList.add('text-green-600');
+                        ind.querySelector('span').classList.remove('bg-gray-300', 'bg-primary');
+                        ind.querySelector('span').classList.add('bg-green-600');
+                    } else if (num === step) {
+                        ind.classList.remove('text-gray-400', 'text-green-600');
+                        ind.classList.add('text-primary');
+                        ind.querySelector('span').classList.remove('bg-gray-300', 'bg-green-600');
+                        ind.querySelector('span').classList.add('bg-primary');
+                    } else {
+                        ind.classList.remove('text-primary', 'text-green-600');
+                        ind.classList.add('text-gray-400');
+                        ind.querySelector('span').classList.remove('bg-primary', 'bg-green-600');
+                        ind.querySelector('span').classList.add('bg-gray-300');
+                    }
+                });
+
+                // Show current step
+                if (step === 1) {
+                    step1Card.classList.remove('hidden');
+                } else if (step === 2) {
+                    step2Card.classList.remove('hidden');
+                } else if (step === 3) {
+                    step3Card.classList.remove('hidden');
+                }
+            }
+
+            // ============================================
+            // Step 1: Camera/Upload
+            // ============================================
+
+            async function startCamera() {
+                try {
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: facingMode,
+                            width: {
+                                ideal: 1920
+                            },
+                            height: {
+                                ideal: 1080
+                            }
+                        }
+                    });
+
+                    videoPreview.srcObject = stream;
+                    cameraContainer.classList.remove('hidden');
+                    btnStartCamera.classList.add('hidden');
+                    btnCapture.classList.remove('hidden');
+                    btnSwitchCamera.classList.remove('hidden');
+                } catch (err) {
+                    console.error('Camera error:', err);
+                    alert('Tidak dapat mengakses kamera. Gunakan upload foto.');
+                }
+            }
+
+            function captureImage() {
+                const context = captureCanvas.getContext('2d');
+                captureCanvas.width = videoPreview.videoWidth;
+                captureCanvas.height = videoPreview.videoHeight;
+                context.drawImage(videoPreview, 0, 0);
+
+                currentImageData = captureCanvas.toDataURL('image/jpeg', 0.9);
+                scanImageInput.value = currentImageData;
+
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Go to step 2
+                cropImage.src = currentImageData;
+                cropImage.onload = function() {
+                    initSelectionBox();
+                    goToStep(2);
+                };
+            }
+
+            function switchCamera() {
+                facingMode = facingMode === 'environment' ? 'user' : 'environment';
+                startCamera();
+            }
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        currentImageData = event.target.result;
+                        scanImageInput.value = currentImageData;
+
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+
+                        // Go to step 2
+                        cropImage.src = currentImageData;
+                        cropImage.onload = function() {
+                            initSelectionBox();
+                            goToStep(2);
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            btnStartCamera.addEventListener('click', startCamera);
+            btnCapture.addEventListener('click', captureImage);
+            btnSwitchCamera.addEventListener('click', switchCamera);
+
+            // ============================================
+            // Step 2: Crop/Select Area
+            // ============================================
+
+            function initSelectionBox() {
+                // Set initial position (bottom 45% of image for answer area)
+                const containerRect = cropContainer.getBoundingClientRect();
+                selectionBox.style.left = '5%';
+                selectionBox.style.top = '50%';
+                selectionBox.style.width = '90%';
+                selectionBox.style.height = '40%';
+            }
+
+            // Mouse/Touch events for selection box
+            selectionBox.addEventListener('mousedown', startDrag);
+            selectionBox.addEventListener('touchstart', startDrag, {
+                passive: false
+            });
+
+            document.querySelectorAll('[data-handle]').forEach(handle => {
+                handle.addEventListener('mousedown', startResize);
+                handle.addEventListener('touchstart', startResize, {
+                    passive: false
+                });
+            });
+
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag, {
+                passive: false
+            });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+
+            function getEventCoords(e) {
+                if (e.touches && e.touches.length > 0) {
+                    return {
+                        x: e.touches[0].clientX,
+                        y: e.touches[0].clientY
+                    };
+                }
+                return {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            }
+
+            function startDrag(e) {
+                if (e.target.hasAttribute('data-handle')) return;
+                e.preventDefault();
+                isDragging = true;
+                const coords = getEventCoords(e);
+                startX = coords.x;
+                startY = coords.y;
+                startLeft = parseFloat(selectionBox.style.left) || 0;
+                startTop = parseFloat(selectionBox.style.top) || 0;
+            }
+
+            function startResize(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                isResizing = true;
+                activeHandle = e.target.dataset.handle;
+                const coords = getEventCoords(e);
+                startX = coords.x;
+                startY = coords.y;
+                startLeft = parseFloat(selectionBox.style.left) || 0;
+                startTop = parseFloat(selectionBox.style.top) || 0;
+                startWidth = parseFloat(selectionBox.style.width) || 0;
+                startHeight = parseFloat(selectionBox.style.height) || 0;
+            }
+
+            function onDrag(e) {
+                if (!isDragging && !isResizing) return;
+                e.preventDefault();
+
+                const containerRect = cropContainer.getBoundingClientRect();
+                const coords = getEventCoords(e);
+                const dx = ((coords.x - startX) / containerRect.width) * 100;
+                const dy = ((coords.y - startY) / containerRect.height) * 100;
+
+                if (isDragging) {
+                    let newLeft = startLeft + dx;
+                    let newTop = startTop + dy;
+                    const boxWidth = parseFloat(selectionBox.style.width) || 80;
+                    const boxHeight = parseFloat(selectionBox.style.height) || 40;
+
+                    // Constrain
+                    newLeft = Math.max(0, Math.min(100 - boxWidth, newLeft));
+                    newTop = Math.max(0, Math.min(100 - boxHeight, newTop));
+
+                    selectionBox.style.left = newLeft + '%';
+                    selectionBox.style.top = newTop + '%';
+                }
+
+                if (isResizing && activeHandle) {
+                    let newLeft = startLeft;
+                    let newTop = startTop;
+                    let newWidth = startWidth;
+                    let newHeight = startHeight;
+
+                    if (activeHandle.includes('r')) {
+                        newWidth = Math.max(20, Math.min(100 - startLeft, startWidth + dx));
+                    }
+                    if (activeHandle.includes('l')) {
+                        const potentialWidth = startWidth - dx;
+                        if (potentialWidth >= 20 && startLeft + dx >= 0) {
+                            newLeft = startLeft + dx;
+                            newWidth = potentialWidth;
+                        }
+                    }
+                    if (activeHandle.includes('b')) {
+                        newHeight = Math.max(10, Math.min(100 - startTop, startHeight + dy));
+                    }
+                    if (activeHandle.includes('t')) {
+                        const potentialHeight = startHeight - dy;
+                        if (potentialHeight >= 10 && startTop + dy >= 0) {
+                            newTop = startTop + dy;
+                            newHeight = potentialHeight;
+                        }
+                    }
+
+                    selectionBox.style.left = newLeft + '%';
+                    selectionBox.style.top = newTop + '%';
+                    selectionBox.style.width = newWidth + '%';
+                    selectionBox.style.height = newHeight + '%';
+                }
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                isResizing = false;
+                activeHandle = null;
+            }
+
+            btnBackToStep1.addEventListener('click', function() {
+                cameraContainer.classList.add('hidden');
+                btnStartCamera.classList.remove('hidden');
+                btnCapture.classList.add('hidden');
+                btnSwitchCamera.classList.add('hidden');
+                goToStep(1);
+            });
+
+            btnAnalyze.addEventListener('click', function() {
+                analyzeSelectedArea();
+            });
+
+            // ============================================
+            // OMR Analysis (Improved with crop)
+            // ============================================
+
+            async function analyzeSelectedArea() {
+                btnAnalyze.innerHTML =
+                    '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menganalisis...';
+                btnAnalyze.disabled = true;
+
+                await new Promise(r => setTimeout(r, 100));
+
+                try {
+                    // Get selection coordinates
+                    const left = parseFloat(selectionBox.style.left) / 100;
+                    const top = parseFloat(selectionBox.style.top) / 100;
+                    const width = parseFloat(selectionBox.style.width) / 100;
+                    const height = parseFloat(selectionBox.style.height) / 100;
+
+                    // Crop and analyze
+                    const detectedAnswers = await analyzeImageWithCrop(currentImageData, left, top, width,
+                        height);
+
+                    // Generate grid and apply answers
+                    generateAnswerGrid();
+                    const detectedCount = applyDetectedAnswers(detectedAnswers);
+
+                    // Show result
+                    detectionResultMsg.classList.remove('hidden');
+                    if (detectedCount > 0) {
+                        detectionResultMsg.className =
+                            'mb-4 p-3 rounded-lg bg-green-50 text-green-700 border border-green-200';
+                        detectionResultMsg.innerHTML =
+                            `<strong>✓ Terdeteksi ${detectedCount} dari ${jumlahSoal} jawaban.</strong> Periksa dan koreksi jika ada yang salah.`;
+                    } else {
+                        detectionResultMsg.className =
+                            'mb-4 p-3 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200';
+                        detectionResultMsg.innerHTML =
+                            `<strong>⚠ Tidak dapat mendeteksi jawaban.</strong> Silakan input manual atau coba pilih ulang area.`;
+                    }
+
+                    goToStep(3);
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    generateAnswerGrid();
+                    detectionResultMsg.className =
+                        'mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200';
+                    detectionResultMsg.innerHTML =
+                        `<strong>Error:</strong> ${error.message}. Silakan input manual.`;
+                    detectionResultMsg.classList.remove('hidden');
+                    goToStep(3);
+                } finally {
+                    btnAnalyze.innerHTML =
+                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg> Analisis Jawaban';
+                    btnAnalyze.disabled = false;
+                }
+            }
+
+            async function analyzeImageWithCrop(imageData, cropLeft, cropTop, cropWidth, cropHeight) {
                 return new Promise((resolve) => {
                     const img = new Image();
                     img.onload = function() {
+                        // Create canvas for cropped area
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
+
+                        // Calculate crop in pixels
+                        const sx = Math.floor(img.width * cropLeft);
+                        const sy = Math.floor(img.height * cropTop);
+                        const sw = Math.floor(img.width * cropWidth);
+                        const sh = Math.floor(img.height * cropHeight);
+
+                        canvas.width = sw;
+                        canvas.height = sh;
+
+                        // Draw cropped area
+                        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
 
                         // Get image data
                         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         const pixels = imgData.data;
 
-                        // Convert to grayscale and calculate average brightness
+                        // Convert to grayscale
                         const grayscale = [];
                         for (let i = 0; i < pixels.length; i += 4) {
                             const gray = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i +
@@ -224,68 +638,53 @@
                             grayscale.push(gray);
                         }
 
-                        // Detect answers using grid-based analysis
-                        const detectedAnswers = detectAnswersFromGrid(grayscale, canvas.width,
-                            canvas.height);
+                        // Calculate adaptive threshold (Otsu's method simplified)
+                        const sortedGray = [...grayscale].sort((a, b) => a - b);
+                        const medianGray = sortedGray[Math.floor(sortedGray.length / 2)];
+                        const threshold = Math.min(medianGray * 0.7, 120); // Adaptive threshold
+
+                        // Detect answers from the cropped grid
+                        const detectedAnswers = detectFromCroppedGrid(grayscale, canvas.width,
+                            canvas.height, threshold);
                         resolve(detectedAnswers);
                     };
                     img.src = imageData;
                 });
             }
 
-            /**
-             * Detect answers by analyzing the grid structure
-             * This assumes the LJK has a standard format with answer bubbles arranged in columns
-             */
-            function detectAnswersFromGrid(grayscale, width, height) {
+            function detectFromCroppedGrid(grayscale, width, height, threshold) {
                 const answers = [];
 
-                // LJK Configuration - Based on standard LJK format
-                // The answer section is typically in the bottom portion of the LJK
-                const gridConfig = {
-                    // Approximate answer grid position (as percentage of image)
-                    startY: 0.55, // Start at 55% from top
-                    endY: 0.95, // End at 95% from top
-                    startX: 0.05, // Start at 5% from left
-                    endX: 0.95, // End at 95% from right
-                    columns: 5, // 5 columns of answers
-                    bubbleWidth: 0.015, // Bubble width as percentage
-                    bubbleHeight: 0.02, // Bubble height as percentage
-                };
+                // LJK has 5 columns layout: questions 1-4, 5-8, 9-12, 13-16, 17-20
+                // Each column has up to ceil(jumlahSoal/5) rows
+                const columns = 5;
+                const rowsPerColumn = Math.ceil(jumlahSoal / columns);
 
-                const gridStartY = Math.floor(height * gridConfig.startY);
-                const gridEndY = Math.floor(height * gridConfig.endY);
-                const gridStartX = Math.floor(width * gridConfig.startX);
-                const gridEndX = Math.floor(width * gridConfig.endX);
+                const columnWidth = width / columns;
+                const rowHeight = height / rowsPerColumn;
 
-                const gridHeight = gridEndY - gridStartY;
-                const gridWidth = gridEndX - gridStartX;
-
-                const questionsPerColumn = Math.ceil(jumlahSoal / gridConfig.columns);
-                const columnWidth = gridWidth / gridConfig.columns;
-                const rowHeight = gridHeight / questionsPerColumn;
-
-                // Analyze each question
+                // Analyze each question position
                 for (let q = 0; q < jumlahSoal; q++) {
-                    const col = Math.floor(q / questionsPerColumn);
-                    const row = q % questionsPerColumn;
+                    const col = Math.floor(q / rowsPerColumn);
+                    const row = q % rowsPerColumn;
 
-                    const baseX = gridStartX + (col * columnWidth);
-                    const baseY = gridStartY + (row * rowHeight);
+                    const cellX = col * columnWidth;
+                    const cellY = row * rowHeight;
 
-                    // Check each option (A, B, C, D, E)
-                    let lowestIntensity = 255;
-                    let selectedOption = null;
-                    const threshold = 150; // Threshold for considering a bubble as filled
+                    // Within each cell, bubbles are typically after the question number
+                    // Estimate bubble positions (A, B, C, D, E)
+                    const bubbleStartX = cellX + (columnWidth * 0.18); // Skip number
+                    const bubbleAreaWidth = columnWidth * 0.75;
+                    const bubbleSpacing = bubbleAreaWidth / jumlahPilihan;
 
-                    const bubbleStartX = baseX + (columnWidth * 0.15); // Skip question number
-                    const bubbleSpacing = (columnWidth * 0.7) / jumlahPilihan;
+                    let darkestOption = null;
+                    let darkestValue = 255;
 
                     for (let opt = 0; opt < jumlahPilihan; opt++) {
-                        const bubbleX = Math.floor(bubbleStartX + (opt * bubbleSpacing) + (bubbleSpacing * 0.3));
-                        const bubbleY = Math.floor(baseY + (rowHeight * 0.3));
-                        const bubbleW = Math.max(10, Math.floor(bubbleSpacing * 0.4));
-                        const bubbleH = Math.max(10, Math.floor(rowHeight * 0.4));
+                        const bubbleX = Math.floor(bubbleStartX + (opt * bubbleSpacing) + (bubbleSpacing * 0.2));
+                        const bubbleY = Math.floor(cellY + (rowHeight * 0.25));
+                        const bubbleW = Math.max(8, Math.floor(bubbleSpacing * 0.6));
+                        const bubbleH = Math.max(8, Math.floor(rowHeight * 0.5));
 
                         // Calculate average intensity in bubble area
                         let totalIntensity = 0;
@@ -294,7 +693,7 @@
                         for (let y = bubbleY; y < bubbleY + bubbleH && y < height; y++) {
                             for (let x = bubbleX; x < bubbleX + bubbleW && x < width; x++) {
                                 const idx = y * width + x;
-                                if (idx < grayscale.length) {
+                                if (idx >= 0 && idx < grayscale.length) {
                                     totalIntensity += grayscale[idx];
                                     pixelCount++;
                                 }
@@ -303,133 +702,25 @@
 
                         const avgIntensity = pixelCount > 0 ? totalIntensity / pixelCount : 255;
 
-                        // Check if this bubble is filled (darker than threshold)
-                        if (avgIntensity < threshold && avgIntensity < lowestIntensity) {
-                            lowestIntensity = avgIntensity;
-                            selectedOption = optionLabels[opt];
+                        // Check if this is the darkest (and below threshold)
+                        if (avgIntensity < threshold && avgIntensity < darkestValue) {
+                            darkestValue = avgIntensity;
+                            darkestOption = optionLabels[opt];
                         }
                     }
 
-                    answers.push(selectedOption);
+                    answers.push(darkestOption);
                 }
 
                 return answers;
             }
 
-            /**
-             * Apply detected answers to the answer grid UI
-             */
-            function applyDetectedAnswers(answers) {
-                // Reset all selections first
-                document.querySelectorAll('.answer-option.bg-primary').forEach(btn => {
-                    btn.classList.remove('bg-primary', 'text-white');
-                });
+            // ============================================
+            // Step 3: Answer Grid
+            // ============================================
 
-                let detectedCount = 0;
-
-                for (let i = 0; i < answers.length && i < jumlahSoal; i++) {
-                    const answer = answers[i];
-                    if (answer) {
-                        const questionNum = i + 1;
-                        const input = document.getElementById(`student_answer_${questionNum}`);
-                        if (input) {
-                            input.value = answer;
-                            input.dataset.filled = 'true';
-
-                            // Find and select the button
-                            const btn = document.querySelector(
-                                `.answer-option[data-number="${questionNum}"][data-option="${answer}"]`
-                            );
-                            if (btn) {
-                                btn.classList.add('bg-primary', 'text-white');
-                                detectedCount++;
-                            }
-                        }
-                    }
-                }
-
-                updateProgress();
-                return detectedCount;
-            }
-
-            /**
-             * Show loading state during analysis
-             */
-            function showAnalyzing(show) {
-                isAnalyzing = show;
-                if (show) {
-                    btnProceed.innerHTML = `
-                        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Menganalisis LJK...
-                    `;
-                    btnProceed.disabled = true;
-                } else {
-                    btnProceed.innerHTML = `
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                        Lanjut Input Jawaban
-                    `;
-                    btnProceed.disabled = false;
-                }
-            }
-
-            /**
-             * Process image and detect answers automatically
-             */
-            async function processImageWithOMR(imageData) {
-                showAnalyzing(true);
-
-                try {
-                    // Small delay to let UI update
-                    await new Promise(r => setTimeout(r, 100));
-
-                    // Analyze image
-                    const detectedAnswers = await analyzeImage(imageData);
-
-                    // Show input card
-                    answerInputCard.classList.remove('hidden');
-
-                    // Apply detected answers
-                    const detectedCount = applyDetectedAnswers(detectedAnswers);
-
-                    // Scroll to input card
-                    answerInputCard.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-
-                    // Show detection result message
-                    const resultMsg = document.createElement('div');
-                    resultMsg.className = 'mb-4 p-3 rounded-lg ' + (detectedCount > 0 ?
-                        'bg-green-50 text-green-700 border border-green-200' :
-                        'bg-yellow-50 text-yellow-700 border border-yellow-200');
-                    resultMsg.innerHTML = detectedCount > 0 ?
-                        `<strong>✓ Terdeteksi ${detectedCount} jawaban.</strong> Silakan periksa dan koreksi jika ada yang salah.` :
-                        `<strong>⚠ Tidak dapat mendeteksi jawaban otomatis.</strong> Silakan input manual.`;
-
-                    const existingMsg = answerInputCard.querySelector('.detection-result-msg');
-                    if (existingMsg) existingMsg.remove();
-                    resultMsg.classList.add('detection-result-msg');
-                    answerInputCard.querySelector('[class*="card-content"]').prepend(resultMsg);
-
-                } catch (error) {
-                    console.error('OMR Error:', error);
-                    answerInputCard.classList.remove('hidden');
-                    answerInputCard.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                } finally {
-                    showAnalyzing(false);
-                }
-            }
-
-            // Generate student answer grid
             function generateAnswerGrid() {
                 studentAnswerGrid.innerHTML = '';
-                filledCount = 0;
 
                 for (let i = 1; i <= jumlahSoal; i++) {
                     const itemDiv = document.createElement('div');
@@ -453,8 +744,6 @@
                         optionBtn.dataset.option = optionLabels[j];
 
                         optionBtn.addEventListener('click', function() {
-                            const wasSelected = this.classList.contains('bg-primary');
-
                             // Deselect all in this item
                             itemDiv.querySelectorAll('.answer-option').forEach(btn => {
                                 btn.classList.remove('bg-primary', 'text-white');
@@ -462,18 +751,11 @@
 
                             const input = document.getElementById(`student_answer_${i}`);
 
-                            if (wasSelected) {
-                                // Deselect
+                            if (this.classList.contains('bg-primary')) {
                                 input.value = '';
-                                filledCount--;
                             } else {
-                                // Select
                                 this.classList.add('bg-primary', 'text-white');
                                 input.value = optionLabels[j];
-                                if (!wasSelected && input.dataset.filled !== 'true') {
-                                    filledCount++;
-                                    input.dataset.filled = 'true';
-                                }
                             }
 
                             updateProgress();
@@ -494,136 +776,42 @@
                 }
             }
 
+            function applyDetectedAnswers(answers) {
+                let detectedCount = 0;
+
+                for (let i = 0; i < answers.length && i < jumlahSoal; i++) {
+                    const answer = answers[i];
+                    if (answer) {
+                        const questionNum = i + 1;
+                        const input = document.getElementById(`student_answer_${questionNum}`);
+                        if (input) {
+                            input.value = answer;
+
+                            const btn = document.querySelector(
+                                `.answer-option[data-number="${questionNum}"][data-option="${answer}"]`);
+                            if (btn) {
+                                btn.classList.add('bg-primary', 'text-white');
+                                detectedCount++;
+                            }
+                        }
+                    }
+                }
+
+                updateProgress();
+                return detectedCount;
+            }
+
             function updateProgress() {
                 const filled = document.querySelectorAll('.answer-option.bg-primary').length;
                 progressText.textContent = `${filled} dari ${jumlahSoal} jawaban diisi`;
             }
 
-            // Camera functions
-            async function startCamera() {
-                try {
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                    }
-
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: facingMode,
-                            width: {
-                                ideal: 1920
-                            },
-                            height: {
-                                ideal: 1080
-                            }
-                        }
-                    });
-
-                    videoPreview.srcObject = stream;
-                    cameraContainer.classList.remove('hidden');
-                    capturedContainer.classList.add('hidden');
-                    btnStartCamera.classList.add('hidden');
-                    btnCapture.classList.remove('hidden');
-                    btnSwitchCamera.classList.remove('hidden');
-                } catch (err) {
-                    console.error('Camera error:', err);
-                    alert(
-                        'Tidak dapat mengakses kamera. Pastikan browser memiliki izin kamera atau gunakan upload foto.'
-                        );
-                }
-            }
-
-            function captureImage() {
-                const context = captureCanvas.getContext('2d');
-                captureCanvas.width = videoPreview.videoWidth;
-                captureCanvas.height = videoPreview.videoHeight;
-                context.drawImage(videoPreview, 0, 0);
-
-                const imageData = captureCanvas.toDataURL('image/jpeg', 0.8);
-                capturedImage.src = imageData;
-                scanImageInput.value = imageData;
-
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                }
-
-                cameraContainer.classList.add('hidden');
-                capturedContainer.classList.remove('hidden');
-                btnCapture.classList.add('hidden');
-                btnSwitchCamera.classList.add('hidden');
-
-                // Auto-analyze the captured image
-                processImageWithOMR(imageData);
-            }
-
-            function switchCamera() {
-                facingMode = facingMode === 'environment' ? 'user' : 'environment';
-                startCamera();
-            }
-
-            function retakePhoto() {
-                capturedContainer.classList.add('hidden');
-                answerInputCard.classList.add('hidden');
-                scanImageInput.value = '';
-                btnStartCamera.classList.remove('hidden');
-
-                // Reset answers
-                document.querySelectorAll('.answer-option.bg-primary').forEach(btn => {
-                    btn.classList.remove('bg-primary', 'text-white');
-                });
-                document.querySelectorAll('[id^="student_answer_"]').forEach(input => {
-                    input.value = '';
-                    input.dataset.filled = '';
-                });
-                updateProgress();
-
-                // Remove detection message
-                const existingMsg = document.querySelector('.detection-result-msg');
-                if (existingMsg) existingMsg.remove();
-            }
-
-            function proceedToInput() {
-                if (!isAnalyzing) {
-                    answerInputCard.classList.remove('hidden');
-                    answerInputCard.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }
-            }
-
-            // File upload - with auto OMR
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        capturedImage.src = event.target.result;
-                        scanImageInput.value = event.target.result;
-                        cameraContainer.classList.add('hidden');
-                        capturedContainer.classList.remove('hidden');
-                        btnStartCamera.classList.add('hidden');
-                        btnCapture.classList.add('hidden');
-                        btnSwitchCamera.classList.add('hidden');
-
-                        if (stream) {
-                            stream.getTracks().forEach(track => track.stop());
-                        }
-
-                        // Auto-analyze the uploaded image
-                        processImageWithOMR(event.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
+            btnBackToStep2.addEventListener('click', function() {
+                goToStep(2);
             });
 
-            // Event listeners
-            btnStartCamera.addEventListener('click', startCamera);
-            btnCapture.addEventListener('click', captureImage);
-            btnSwitchCamera.addEventListener('click', switchCamera);
-            btnRetake.addEventListener('click', retakePhoto);
-            btnProceed.addEventListener('click', proceedToInput);
-
-            // Generate grid on load
-            generateAnswerGrid();
+            // Initialize
+            goToStep(1);
         });
     </script>
 </x-app-layout>
