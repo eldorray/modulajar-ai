@@ -183,329 +183,327 @@
         </x-ui.card>
     </div>
 
-    @push('scripts')
-        <script>
-            // Elements
-            const step1Card = document.getElementById('step1Card');
-            const step2Card = document.getElementById('step2Card');
-            const step1Indicator = document.getElementById('step1Indicator');
-            const step2Indicator = document.getElementById('step2Indicator');
+    <script>
+        // Elements
+        const step1Card = document.getElementById('step1Card');
+        const step2Card = document.getElementById('step2Card');
+        const step1Indicator = document.getElementById('step1Indicator');
+        const step2Indicator = document.getElementById('step2Indicator');
 
-            const videoPreview = document.getElementById('videoPreview');
-            const captureCanvas = document.getElementById('captureCanvas');
-            const cameraContainer = document.getElementById('cameraContainer');
-            const loadingIndicator = document.getElementById('loadingIndicator');
+        const videoPreview = document.getElementById('videoPreview');
+        const captureCanvas = document.getElementById('captureCanvas');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
 
-            const fileInput = document.getElementById('fileInput');
-            const btnStartCamera = document.getElementById('btnStartCamera');
-            const btnCapture = document.getElementById('btnCapture');
-            const btnSwitchCamera = document.getElementById('btnSwitchCamera');
-            const btnBackToScan = document.getElementById('btnBackToScan');
-            const btnScanNext = document.getElementById('btnScanNext');
+        const fileInput = document.getElementById('fileInput');
+        const btnStartCamera = document.getElementById('btnStartCamera');
+        const btnCapture = document.getElementById('btnCapture');
+        const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+        const btnBackToScan = document.getElementById('btnBackToScan');
+        const btnScanNext = document.getElementById('btnScanNext');
 
-            const detectionResultMsg = document.getElementById('detectionResultMsg');
-            const studentAnswerGrid = document.getElementById('studentAnswerGrid');
-            const scanImageInput = document.getElementById('scanImageInput');
-            const capturedImagePreview = document.getElementById('capturedImagePreview');
-            const correctionForm = document.getElementById('correctionForm');
+        const detectionResultMsg = document.getElementById('detectionResultMsg');
+        const studentAnswerGrid = document.getElementById('studentAnswerGrid');
+        const scanImageInput = document.getElementById('scanImageInput');
+        const capturedImagePreview = document.getElementById('capturedImagePreview');
+        const correctionForm = document.getElementById('correctionForm');
 
-            // State
-            let stream = null;
-            let facingMode = 'environment';
-            let currentImageData = null;
-            const jumlahSoal = {{ $answerKey->jumlah_soal }};
-            const jumlahPilihan = {{ count($answerKey->options) }};
-            const optionLabels = @json($answerKey->options);
+        // State
+        let stream = null;
+        let facingMode = 'environment';
+        let currentImageData = null;
+        const jumlahSoal = {{ $answerKey->jumlah_soal }};
+        const jumlahPilihan = {{ count($answerKey->options) }};
+        const optionLabels = @json($answerKey->options);
 
-            // ============================================
-            // Step Navigation (simplified to 2 steps)
-            // ============================================
+        // ============================================
+        // Step Navigation (simplified to 2 steps)
+        // ============================================
 
-            function goToStep(step) {
-                step1Card.classList.add('hidden');
-                step2Card.classList.add('hidden');
+        function goToStep(step) {
+            step1Card.classList.add('hidden');
+            step2Card.classList.add('hidden');
 
-                [step1Indicator, step2Indicator].forEach((ind, idx) => {
-                    const stepNum = idx + 1;
-                    if (stepNum < step) {
-                        ind.classList.remove('text-primary', 'text-gray-400');
-                        ind.classList.add('text-green-600');
-                        ind.querySelector('span').classList.remove('bg-gray-300', 'bg-primary');
-                        ind.querySelector('span').classList.add('bg-green-600');
-                    } else if (stepNum === step) {
-                        ind.classList.remove('text-gray-400', 'text-green-600');
-                        ind.classList.add('text-primary');
-                        ind.querySelector('span').classList.remove('bg-gray-300', 'bg-green-600');
-                        ind.querySelector('span').classList.add('bg-primary');
-                    } else {
-                        ind.classList.remove('text-primary', 'text-green-600');
-                        ind.classList.add('text-gray-400');
-                        ind.querySelector('span').classList.remove('bg-primary', 'bg-green-600');
-                        ind.querySelector('span').classList.add('bg-gray-300');
-                    }
-                });
-
-                if (step === 1) {
-                    step1Card.classList.remove('hidden');
-                } else if (step === 2) {
-                    step2Card.classList.remove('hidden');
-                }
-            }
-
-            // ============================================
-            // Camera Functions
-            // ============================================
-
-            async function startCamera() {
-                try {
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                    }
-
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: facingMode,
-                            width: {
-                                ideal: 1920
-                            },
-                            height: {
-                                ideal: 1080
-                            }
-                        }
-                    });
-
-                    videoPreview.srcObject = stream;
-                    cameraContainer.classList.remove('hidden');
-                    btnStartCamera.classList.add('hidden');
-                    btnCapture.classList.remove('hidden');
-                    btnSwitchCamera.classList.remove('hidden');
-                } catch (err) {
-                    console.error('Camera error:', err);
-                    alert('Tidak dapat mengakses kamera. Gunakan upload foto.');
-                }
-            }
-
-            async function captureAndAnalyze() {
-                const context = captureCanvas.getContext('2d');
-                captureCanvas.width = videoPreview.videoWidth;
-                captureCanvas.height = videoPreview.videoHeight;
-                context.drawImage(videoPreview, 0, 0);
-
-                currentImageData = captureCanvas.toDataURL('image/jpeg', 0.9);
-                scanImageInput.value = currentImageData;
-
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    cameraContainer.classList.add('hidden');
-                }
-
-                // Analyze directly
-                await analyzeImage(currentImageData);
-            }
-
-            function switchCamera() {
-                facingMode = facingMode === 'environment' ? 'user' : 'environment';
-                startCamera();
-            }
-
-            // File upload handler
-            fileInput.addEventListener('change', async function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = async function(event) {
-                        currentImageData = event.target.result;
-                        scanImageInput.value = currentImageData;
-
-                        if (stream) {
-                            stream.getTracks().forEach(track => track.stop());
-                            cameraContainer.classList.add('hidden');
-                        }
-
-                        // Analyze directly
-                        await analyzeImage(currentImageData);
-                    };
-                    reader.readAsDataURL(file);
+            [step1Indicator, step2Indicator].forEach((ind, idx) => {
+                const stepNum = idx + 1;
+                if (stepNum < step) {
+                    ind.classList.remove('text-primary', 'text-gray-400');
+                    ind.classList.add('text-green-600');
+                    ind.querySelector('span').classList.remove('bg-gray-300', 'bg-primary');
+                    ind.querySelector('span').classList.add('bg-green-600');
+                } else if (stepNum === step) {
+                    ind.classList.remove('text-gray-400', 'text-green-600');
+                    ind.classList.add('text-primary');
+                    ind.querySelector('span').classList.remove('bg-gray-300', 'bg-green-600');
+                    ind.querySelector('span').classList.add('bg-primary');
+                } else {
+                    ind.classList.remove('text-primary', 'text-green-600');
+                    ind.classList.add('text-gray-400');
+                    ind.querySelector('span').classList.remove('bg-primary', 'bg-green-600');
+                    ind.querySelector('span').classList.add('bg-gray-300');
                 }
             });
 
-            btnStartCamera.addEventListener('click', startCamera);
-            btnCapture.addEventListener('click', captureAndAnalyze);
-            btnSwitchCamera.addEventListener('click', switchCamera);
+            if (step === 1) {
+                step1Card.classList.remove('hidden');
+            } else if (step === 2) {
+                step2Card.classList.remove('hidden');
+            }
+        }
 
-            // ============================================
-            // Image Analysis with Groq API
-            // ============================================
+        // ============================================
+        // Camera Functions
+        // ============================================
 
-            async function analyzeImage(imageData) {
-                loadingIndicator.classList.remove('hidden');
-                btnStartCamera.disabled = true;
-
-                try {
-                    console.log('Calling Groq API...');
-                    const response = await fetch('{{ route('ljk.correction.analyze') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
-                                '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            ljk_answer_key_id: {{ $answerKey->id }},
-                            image: imageData,
-                        }),
-                    });
-
-                    console.log('Response status:', response.status);
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('API Response error:', errorText);
-                        throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
-                    }
-
-                    const result = await response.json();
-                    console.log('Groq result:', result);
-
-                    // Show image preview
-                    capturedImagePreview.src = imageData;
-                    capturedImagePreview.style.display = 'block';
-
-                    // Generate answer grid
-                    generateAnswerGrid();
-
-                    if (result.success && result.answers) {
-                        const detectedCount = applyDetectedAnswers(result.answers);
-                        detectionResultMsg.classList.remove('hidden');
-                        detectionResultMsg.className =
-                            'mb-4 p-3 rounded-lg bg-green-50 text-green-700 border border-green-200';
-                        detectionResultMsg.innerHTML =
-                            `<strong>✓ Terdeteksi ${detectedCount} dari ${jumlahSoal} jawaban.</strong> Periksa dan koreksi jika ada yang salah.`;
-                    } else {
-                        detectionResultMsg.classList.remove('hidden');
-                        detectionResultMsg.className =
-                            'mb-4 p-3 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200';
-                        detectionResultMsg.innerHTML =
-                            `<strong>⚠ ${result.error || 'Tidak dapat mendeteksi jawaban.'}</strong> Silakan input manual.`;
-                    }
-
-                    goToStep(2);
-
-                } catch (error) {
-                    console.error('Analysis error:', error);
-
-                    // Show image preview anyway
-                    capturedImagePreview.src = imageData;
-                    capturedImagePreview.style.display = 'block';
-
-                    // Generate empty grid
-                    generateAnswerGrid();
-
-                    detectionResultMsg.classList.remove('hidden');
-                    detectionResultMsg.className = 'mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200';
-                    detectionResultMsg.innerHTML = `<strong>Error:</strong> ${error.message}. Silakan input manual.`;
-
-                    goToStep(2);
-                } finally {
-                    loadingIndicator.classList.add('hidden');
-                    btnStartCamera.disabled = false;
+        async function startCamera() {
+            try {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
                 }
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: facingMode,
+                        width: {
+                            ideal: 1920
+                        },
+                        height: {
+                            ideal: 1080
+                        }
+                    }
+                });
+
+                videoPreview.srcObject = stream;
+                cameraContainer.classList.remove('hidden');
+                btnStartCamera.classList.add('hidden');
+                btnCapture.classList.remove('hidden');
+                btnSwitchCamera.classList.remove('hidden');
+            } catch (err) {
+                console.error('Camera error:', err);
+                alert('Tidak dapat mengakses kamera. Gunakan upload foto.');
+            }
+        }
+
+        async function captureAndAnalyze() {
+            const context = captureCanvas.getContext('2d');
+            captureCanvas.width = videoPreview.videoWidth;
+            captureCanvas.height = videoPreview.videoHeight;
+            context.drawImage(videoPreview, 0, 0);
+
+            currentImageData = captureCanvas.toDataURL('image/jpeg', 0.9);
+            scanImageInput.value = currentImageData;
+
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                cameraContainer.classList.add('hidden');
             }
 
-            // ============================================
-            // Answer Grid
-            // ============================================
+            // Analyze directly
+            await analyzeImage(currentImageData);
+        }
 
-            function generateAnswerGrid() {
-                studentAnswerGrid.innerHTML = '';
-                for (let i = 1; i <= jumlahSoal; i++) {
-                    const questionDiv = document.createElement('div');
-                    questionDiv.className = 'flex flex-col items-center gap-1 p-2 bg-white rounded border';
-                    questionDiv.innerHTML = `
+        function switchCamera() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            startCamera();
+        }
+
+        // File upload handler
+        fileInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async function(event) {
+                    currentImageData = event.target.result;
+                    scanImageInput.value = currentImageData;
+
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                        cameraContainer.classList.add('hidden');
+                    }
+
+                    // Analyze directly
+                    await analyzeImage(currentImageData);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        btnStartCamera.addEventListener('click', startCamera);
+        btnCapture.addEventListener('click', captureAndAnalyze);
+        btnSwitchCamera.addEventListener('click', switchCamera);
+
+        // ============================================
+        // Image Analysis with Groq API
+        // ============================================
+
+        async function analyzeImage(imageData) {
+            loadingIndicator.classList.remove('hidden');
+            btnStartCamera.disabled = true;
+
+            try {
+                console.log('Calling Groq API...');
+                const response = await fetch('{{ route('ljk.correction.analyze') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                            '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ljk_answer_key_id: {{ $answerKey->id }},
+                        image: imageData,
+                    }),
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Response error:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+                }
+
+                const result = await response.json();
+                console.log('Groq result:', result);
+
+                // Show image preview
+                capturedImagePreview.src = imageData;
+                capturedImagePreview.style.display = 'block';
+
+                // Generate answer grid
+                generateAnswerGrid();
+
+                if (result.success && result.answers) {
+                    const detectedCount = applyDetectedAnswers(result.answers);
+                    detectionResultMsg.classList.remove('hidden');
+                    detectionResultMsg.className =
+                        'mb-4 p-3 rounded-lg bg-green-50 text-green-700 border border-green-200';
+                    detectionResultMsg.innerHTML =
+                        `<strong>✓ Terdeteksi ${detectedCount} dari ${jumlahSoal} jawaban.</strong> Periksa dan koreksi jika ada yang salah.`;
+                } else {
+                    detectionResultMsg.classList.remove('hidden');
+                    detectionResultMsg.className =
+                        'mb-4 p-3 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200';
+                    detectionResultMsg.innerHTML =
+                        `<strong>⚠ ${result.error || 'Tidak dapat mendeteksi jawaban.'}</strong> Silakan input manual.`;
+                }
+
+                goToStep(2);
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+
+                // Show image preview anyway
+                capturedImagePreview.src = imageData;
+                capturedImagePreview.style.display = 'block';
+
+                // Generate empty grid
+                generateAnswerGrid();
+
+                detectionResultMsg.classList.remove('hidden');
+                detectionResultMsg.className = 'mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200';
+                detectionResultMsg.innerHTML = `<strong>Error:</strong> ${error.message}. Silakan input manual.`;
+
+                goToStep(2);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                btnStartCamera.disabled = false;
+            }
+        }
+
+        // ============================================
+        // Answer Grid
+        // ============================================
+
+        function generateAnswerGrid() {
+            studentAnswerGrid.innerHTML = '';
+            for (let i = 1; i <= jumlahSoal; i++) {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'flex flex-col items-center gap-1 p-2 bg-white rounded border';
+                questionDiv.innerHTML = `
                         <span class="text-xs font-bold text-gray-600">${i}</span>
                         <select name="jawaban[${i}]" class="answer-select w-12 h-8 text-center text-sm border rounded focus:ring-2 focus:ring-primary">
                             <option value="">-</option>
                             ${optionLabels.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                         </select>
                     `;
-                    studentAnswerGrid.appendChild(questionDiv);
-                }
+                studentAnswerGrid.appendChild(questionDiv);
             }
+        }
 
-            function applyDetectedAnswers(answers) {
-                let count = 0;
-                const selects = studentAnswerGrid.querySelectorAll('select');
+        function applyDetectedAnswers(answers) {
+            let count = 0;
+            const selects = studentAnswerGrid.querySelectorAll('select');
 
-                answers.forEach((answer, index) => {
-                    if (answer && selects[index]) {
-                        const option = Array.from(selects[index].options).find(opt => opt.value === answer);
-                        if (option) {
-                            selects[index].value = answer;
-                            selects[index].classList.add('bg-green-50', 'border-green-300');
-                            count++;
-                        }
+            answers.forEach((answer, index) => {
+                if (answer && selects[index]) {
+                    const option = Array.from(selects[index].options).find(opt => opt.value === answer);
+                    if (option) {
+                        selects[index].value = answer;
+                        selects[index].classList.add('bg-green-50', 'border-green-300');
+                        count++;
                     }
+                }
+            });
+
+            return count;
+        }
+
+        // ============================================
+        // Navigation
+        // ============================================
+
+        btnBackToScan.addEventListener('click', function() {
+            currentImageData = null;
+            scanImageInput.value = '';
+            capturedImagePreview.style.display = 'none';
+            detectionResultMsg.classList.add('hidden');
+            btnStartCamera.classList.remove('hidden');
+            btnCapture.classList.add('hidden');
+            btnSwitchCamera.classList.add('hidden');
+            fileInput.value = '';
+            goToStep(1);
+        });
+
+        btnScanNext.addEventListener('click', function() {
+            const formData = new FormData(correctionForm);
+            formData.append('scan_next', '1');
+
+            fetch(correctionForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reset for next scan
+                        currentImageData = null;
+                        scanImageInput.value = '';
+                        capturedImagePreview.style.display = 'none';
+                        detectionResultMsg.classList.add('hidden');
+                        document.getElementById('nama_peserta').value = '';
+                        document.getElementById('nomor_peserta').value = '';
+                        btnStartCamera.classList.remove('hidden');
+                        btnCapture.classList.add('hidden');
+                        btnSwitchCamera.classList.add('hidden');
+                        fileInput.value = '';
+                        goToStep(1);
+
+                        // Show success message briefly
+                        alert('Data tersimpan! Silakan scan LJK berikutnya.');
+                    } else {
+                        alert(data.message || 'Gagal menyimpan data.');
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    alert('Terjadi kesalahan. Silakan coba lagi.');
                 });
+        });
 
-                return count;
-            }
-
-            // ============================================
-            // Navigation
-            // ============================================
-
-            btnBackToScan.addEventListener('click', function() {
-                currentImageData = null;
-                scanImageInput.value = '';
-                capturedImagePreview.style.display = 'none';
-                detectionResultMsg.classList.add('hidden');
-                btnStartCamera.classList.remove('hidden');
-                btnCapture.classList.add('hidden');
-                btnSwitchCamera.classList.add('hidden');
-                fileInput.value = '';
-                goToStep(1);
-            });
-
-            btnScanNext.addEventListener('click', function() {
-                const formData = new FormData(correctionForm);
-                formData.append('scan_next', '1');
-
-                fetch(correctionForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                        }
-                    }).then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Reset for next scan
-                            currentImageData = null;
-                            scanImageInput.value = '';
-                            capturedImagePreview.style.display = 'none';
-                            detectionResultMsg.classList.add('hidden');
-                            document.getElementById('nama_peserta').value = '';
-                            document.getElementById('nomor_peserta').value = '';
-                            btnStartCamera.classList.remove('hidden');
-                            btnCapture.classList.add('hidden');
-                            btnSwitchCamera.classList.add('hidden');
-                            fileInput.value = '';
-                            goToStep(1);
-
-                            // Show success message briefly
-                            alert('Data tersimpan! Silakan scan LJK berikutnya.');
-                        } else {
-                            alert(data.message || 'Gagal menyimpan data.');
-                        }
-                    }).catch(err => {
-                        console.error(err);
-                        alert('Terjadi kesalahan. Silakan coba lagi.');
-                    });
-            });
-
-            // Initialize
-            generateAnswerGrid();
-        </script>
-    @endpush
+        // Initialize
+        generateAnswerGrid();
+    </script>
 </x-app-layout>
