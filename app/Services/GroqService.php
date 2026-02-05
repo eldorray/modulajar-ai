@@ -44,37 +44,28 @@ class GroqService
         $col5Start = $rowsPerColumn * 4 + 1;
         
         $prompt = <<<PROMPT
-You are an OCR system for reading Indonesian LJK (Answer Sheets).
+Analyze this Indonesian LJK (Answer Sheet) photo.
 
-TASK: Read the filled answers from the "JAWABAN" (Answer) section grid.
+CRITICAL: The BLACKENED/FILLED/DARK boxes are the student's answers. White/empty boxes are NOT selected.
 
-GRID STRUCTURE:
-- The answer grid has 5 columns and {$rowsPerColumn} rows
-- Column 1: Questions 1-{$rowsPerColumn}
-- Column 2: Questions {$col2Start}-{$col2End}
-- Column 3: Questions {$col3Start}-{$col3End}
-- Column 4: Questions {$col4Start}-{$col4End}
-- Column 5: Questions {$col5Start}-{$jumlahSoal}
+STRUCTURE in the "JAWABAN" section:
+- 5 columns, {$rowsPerColumn} rows each
+- Col 1: Q1-{$rowsPerColumn}, Col 2: Q{$col2Start}-{$col2End}, Col 3: Q{$col3Start}-{$col3End}, Col 4: Q{$col4Start}-{$col4End}, Col 5: Q{$col5Start}-{$jumlahSoal}
+- Format: [Number] [A] [B] [C] [D] where filled box = answer
 
-Each cell format: [Number] [A] [B] [C] [D]
-- The filled/marked box is SOLID BLACK or heavily shaded
-- Empty boxes are WHITE with just the letter inside
+For EACH question 1 to {$jumlahSoal}:
+1. Find the row with that question number
+2. Look for the BLACK/DARK/FILLED box among A, B, C, D
+3. That letter is the answer
 
-READING ORDER (left to right, top row first):
-Row 1: Q1, Q5, Q9, Q13, Q17
-Row 2: Q2, Q6, Q10, Q14, Q18
-Row 3: Q3, Q7, Q11, Q15, Q19
-Row 4: Q4, Q8, Q12, Q16, Q20
+Return ONLY valid JSON:
+{"answers":["B","C","D","A","B","C","D","A","B","C","D","A","B","C","D","A","B","C","D","A"],"confidence":0.9}
 
-For each question 1-{$jumlahSoal}, identify which letter ({$optionsStr}) is filled/blackened.
-
-OUTPUT FORMAT (JSON only, no explanation):
-{"answers":["B","C","D","D","B","C","C","B","B","D","B","B","A","B","C","D","B","B","A","C"],"confidence":0.9}
-
-IMPORTANT:
-- Look for the BLACKENED/FILLED box, not empty ones
-- Return exactly {$jumlahSoal} answers in order from Q1 to Q{$jumlahSoal}
-- Use null only if truly unreadable
+Rules:
+- Exactly {$jumlahSoal} answers in sequential order (Q1, Q2, Q3...)
+- Only use: {$optionsStr} or null
+- BLACK box = selected answer
+- WHITE box = not selected
 PROMPT;
 
         try {
