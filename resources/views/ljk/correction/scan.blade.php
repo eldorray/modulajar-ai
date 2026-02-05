@@ -193,6 +193,238 @@
             let stream = null;
             let facingMode = 'environment';
             let filledCount = 0;
+            let isAnalyzing = false;
+
+            // ============================================
+            // OMR (Optical Mark Recognition) Functions
+            // ============================================
+
+            /**
+             * Analyze the LJK image and detect filled bubbles
+             */
+            async function analyzeImage(imageData) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+
+                        // Get image data
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const pixels = imgData.data;
+
+                        // Convert to grayscale and calculate average brightness
+                        const grayscale = [];
+                        for (let i = 0; i < pixels.length; i += 4) {
+                            const gray = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i +
+                                2] * 0.114);
+                            grayscale.push(gray);
+                        }
+
+                        // Detect answers using grid-based analysis
+                        const detectedAnswers = detectAnswersFromGrid(grayscale, canvas.width,
+                            canvas.height);
+                        resolve(detectedAnswers);
+                    };
+                    img.src = imageData;
+                });
+            }
+
+            /**
+             * Detect answers by analyzing the grid structure
+             * This assumes the LJK has a standard format with answer bubbles arranged in columns
+             */
+            function detectAnswersFromGrid(grayscale, width, height) {
+                const answers = [];
+
+                // LJK Configuration - Based on standard LJK format
+                // The answer section is typically in the bottom portion of the LJK
+                const gridConfig = {
+                    // Approximate answer grid position (as percentage of image)
+                    startY: 0.55, // Start at 55% from top
+                    endY: 0.95, // End at 95% from top
+                    startX: 0.05, // Start at 5% from left
+                    endX: 0.95, // End at 95% from right
+                    columns: 5, // 5 columns of answers
+                    bubbleWidth: 0.015, // Bubble width as percentage
+                    bubbleHeight: 0.02, // Bubble height as percentage
+                };
+
+                const gridStartY = Math.floor(height * gridConfig.startY);
+                const gridEndY = Math.floor(height * gridConfig.endY);
+                const gridStartX = Math.floor(width * gridConfig.startX);
+                const gridEndX = Math.floor(width * gridConfig.endX);
+
+                const gridHeight = gridEndY - gridStartY;
+                const gridWidth = gridEndX - gridStartX;
+
+                const questionsPerColumn = Math.ceil(jumlahSoal / gridConfig.columns);
+                const columnWidth = gridWidth / gridConfig.columns;
+                const rowHeight = gridHeight / questionsPerColumn;
+
+                // Analyze each question
+                for (let q = 0; q < jumlahSoal; q++) {
+                    const col = Math.floor(q / questionsPerColumn);
+                    const row = q % questionsPerColumn;
+
+                    const baseX = gridStartX + (col * columnWidth);
+                    const baseY = gridStartY + (row * rowHeight);
+
+                    // Check each option (A, B, C, D, E)
+                    let lowestIntensity = 255;
+                    let selectedOption = null;
+                    const threshold = 150; // Threshold for considering a bubble as filled
+
+                    const bubbleStartX = baseX + (columnWidth * 0.15); // Skip question number
+                    const bubbleSpacing = (columnWidth * 0.7) / jumlahPilihan;
+
+                    for (let opt = 0; opt < jumlahPilihan; opt++) {
+                        const bubbleX = Math.floor(bubbleStartX + (opt * bubbleSpacing) + (bubbleSpacing * 0.3));
+                        const bubbleY = Math.floor(baseY + (rowHeight * 0.3));
+                        const bubbleW = Math.max(10, Math.floor(bubbleSpacing * 0.4));
+                        const bubbleH = Math.max(10, Math.floor(rowHeight * 0.4));
+
+                        // Calculate average intensity in bubble area
+                        let totalIntensity = 0;
+                        let pixelCount = 0;
+
+                        for (let y = bubbleY; y < bubbleY + bubbleH && y < height; y++) {
+                            for (let x = bubbleX; x < bubbleX + bubbleW && x < width; x++) {
+                                const idx = y * width + x;
+                                if (idx < grayscale.length) {
+                                    totalIntensity += grayscale[idx];
+                                    pixelCount++;
+                                }
+                            }
+                        }
+
+                        const avgIntensity = pixelCount > 0 ? totalIntensity / pixelCount : 255;
+
+                        // Check if this bubble is filled (darker than threshold)
+                        if (avgIntensity < threshold && avgIntensity < lowestIntensity) {
+                            lowestIntensity = avgIntensity;
+                            selectedOption = optionLabels[opt];
+                        }
+                    }
+
+                    answers.push(selectedOption);
+                }
+
+                return answers;
+            }
+
+            /**
+             * Apply detected answers to the answer grid UI
+             */
+            function applyDetectedAnswers(answers) {
+                // Reset all selections first
+                document.querySelectorAll('.answer-option.bg-primary').forEach(btn => {
+                    btn.classList.remove('bg-primary', 'text-white');
+                });
+
+                let detectedCount = 0;
+
+                for (let i = 0; i < answers.length && i < jumlahSoal; i++) {
+                    const answer = answers[i];
+                    if (answer) {
+                        const questionNum = i + 1;
+                        const input = document.getElementById(`student_answer_${questionNum}`);
+                        if (input) {
+                            input.value = answer;
+                            input.dataset.filled = 'true';
+
+                            // Find and select the button
+                            const btn = document.querySelector(
+                                `.answer-option[data-number="${questionNum}"][data-option="${answer}"]`
+                            );
+                            if (btn) {
+                                btn.classList.add('bg-primary', 'text-white');
+                                detectedCount++;
+                            }
+                        }
+                    }
+                }
+
+                updateProgress();
+                return detectedCount;
+            }
+
+            /**
+             * Show loading state during analysis
+             */
+            function showAnalyzing(show) {
+                isAnalyzing = show;
+                if (show) {
+                    btnProceed.innerHTML = `
+                        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Menganalisis LJK...
+                    `;
+                    btnProceed.disabled = true;
+                } else {
+                    btnProceed.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                        Lanjut Input Jawaban
+                    `;
+                    btnProceed.disabled = false;
+                }
+            }
+
+            /**
+             * Process image and detect answers automatically
+             */
+            async function processImageWithOMR(imageData) {
+                showAnalyzing(true);
+
+                try {
+                    // Small delay to let UI update
+                    await new Promise(r => setTimeout(r, 100));
+
+                    // Analyze image
+                    const detectedAnswers = await analyzeImage(imageData);
+
+                    // Show input card
+                    answerInputCard.classList.remove('hidden');
+
+                    // Apply detected answers
+                    const detectedCount = applyDetectedAnswers(detectedAnswers);
+
+                    // Scroll to input card
+                    answerInputCard.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+
+                    // Show detection result message
+                    const resultMsg = document.createElement('div');
+                    resultMsg.className = 'mb-4 p-3 rounded-lg ' + (detectedCount > 0 ?
+                        'bg-green-50 text-green-700 border border-green-200' :
+                        'bg-yellow-50 text-yellow-700 border border-yellow-200');
+                    resultMsg.innerHTML = detectedCount > 0 ?
+                        `<strong>✓ Terdeteksi ${detectedCount} jawaban.</strong> Silakan periksa dan koreksi jika ada yang salah.` :
+                        `<strong>⚠ Tidak dapat mendeteksi jawaban otomatis.</strong> Silakan input manual.`;
+
+                    const existingMsg = answerInputCard.querySelector('.detection-result-msg');
+                    if (existingMsg) existingMsg.remove();
+                    resultMsg.classList.add('detection-result-msg');
+                    answerInputCard.querySelector('[class*="card-content"]').prepend(resultMsg);
+
+                } catch (error) {
+                    console.error('OMR Error:', error);
+                    answerInputCard.classList.remove('hidden');
+                    answerInputCard.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                } finally {
+                    showAnalyzing(false);
+                }
+            }
 
             // Generate student answer grid
             function generateAnswerGrid() {
@@ -295,7 +527,8 @@
                 } catch (err) {
                     console.error('Camera error:', err);
                     alert(
-                        'Tidak dapat mengakses kamera. Pastikan browser memiliki izin kamera atau gunakan upload foto.');
+                        'Tidak dapat mengakses kamera. Pastikan browser memiliki izin kamera atau gunakan upload foto.'
+                        );
                 }
             }
 
@@ -317,6 +550,9 @@
                 capturedContainer.classList.remove('hidden');
                 btnCapture.classList.add('hidden');
                 btnSwitchCamera.classList.add('hidden');
+
+                // Auto-analyze the captured image
+                processImageWithOMR(imageData);
             }
 
             function switchCamera() {
@@ -326,18 +562,35 @@
 
             function retakePhoto() {
                 capturedContainer.classList.add('hidden');
+                answerInputCard.classList.add('hidden');
                 scanImageInput.value = '';
                 btnStartCamera.classList.remove('hidden');
+
+                // Reset answers
+                document.querySelectorAll('.answer-option.bg-primary').forEach(btn => {
+                    btn.classList.remove('bg-primary', 'text-white');
+                });
+                document.querySelectorAll('[id^="student_answer_"]').forEach(input => {
+                    input.value = '';
+                    input.dataset.filled = '';
+                });
+                updateProgress();
+
+                // Remove detection message
+                const existingMsg = document.querySelector('.detection-result-msg');
+                if (existingMsg) existingMsg.remove();
             }
 
             function proceedToInput() {
-                answerInputCard.classList.remove('hidden');
-                answerInputCard.scrollIntoView({
-                    behavior: 'smooth'
-                });
+                if (!isAnalyzing) {
+                    answerInputCard.classList.remove('hidden');
+                    answerInputCard.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
             }
 
-            // File upload
+            // File upload - with auto OMR
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -354,6 +607,9 @@
                         if (stream) {
                             stream.getTracks().forEach(track => track.stop());
                         }
+
+                        // Auto-analyze the uploaded image
+                        processImageWithOMR(event.target.result);
                     };
                     reader.readAsDataURL(file);
                 }
