@@ -6,7 +6,7 @@
     <title>STS - {{ $sts->mata_pelajaran }}</title>
     <style>
         @page {
-            margin: 1.5cm;
+            margin: 0;
         }
 
         * {
@@ -20,6 +20,7 @@
             font-size: 9pt;
             line-height: 1.35;
             color: #000;
+            padding: 40px 45px;
         }
 
         /* ===== KOP SURAT ===== */
