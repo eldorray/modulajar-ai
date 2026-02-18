@@ -6,7 +6,7 @@
     <title>STS - {{ $sts->mata_pelajaran }}</title>
     <style>
         @page {
-            margin: 1cm 1.2cm 1cm 1.2cm;
+            margin: 1.5cm;
         }
 
         * {
