@@ -408,6 +408,13 @@ class StsController extends Controller
             $section->addText('');
         }
 
+        // ========== FOOTER HALAMAN 1 ==========
+        $section->addText('');
+        $section->addText('*** Selamat Mengerjakan ***', ['italic' => true], ['alignment' => Jc::RIGHT]);
+
+        // ========== HALAMAN 2: URAIAN + KUNCI JAWABAN ==========
+        $section->addPageBreak();
+
         // ========== SOAL URAIAN ==========
         if (!empty($content['soal_uraian'])) {
             $section->addText('IV. URAIAN', ['bold' => true, 'size' => 12], ['shading' => ['fill' => 'DDDDDD']]);
@@ -416,17 +423,12 @@ class StsController extends Controller
 
             foreach ($content['soal_uraian'] as $index => $soal) {
                 $section->addText(($index + 1) . '. ' . ($soal['pertanyaan'] ?? ''));
-                $section->addText('');
+                $section->addText('............................................................................................................................', ['color' => '999999', 'size' => 8]);
                 $section->addText('');
             }
         }
 
-        // ========== FOOTER ==========
-        $section->addText('');
-        $section->addText('*** Selamat Mengerjakan ***', ['italic' => true], ['alignment' => Jc::RIGHT]);
-
-        // ========== KUNCI JAWABAN (same section, no page break) ==========
-        $section->addText('');
+        // ========== KUNCI JAWABAN ==========
         $section->addText('');
         $section->addText(
             'KUNCI JAWABAN',

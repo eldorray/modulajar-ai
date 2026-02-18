@@ -420,6 +420,12 @@
         </table>
     @endif
 
+    {{-- ===== FOOTER HALAMAN 1 ===== --}}
+    <div class="footer">*** Selamat Mengerjakan ***</div>
+
+    {{-- ===== HALAMAN 2: URAIAN + KUNCI JAWABAN ===== --}}
+    <div class="page-break"></div>
+
     {{-- ===== IV. URAIAN ===== --}}
     @if (!empty($content['soal_uraian']))
         <div class="sec-title">IV. URAIAN</div>
@@ -433,12 +439,8 @@
         @endforeach
     @endif
 
-    {{-- ===== FOOTER ===== --}}
-    <div class="footer">*** Selamat Mengerjakan ***</div>
-
-    {{-- ===== HALAMAN 2: KUNCI JAWABAN (2 KOLOM) ===== --}}
+    {{-- ===== KUNCI JAWABAN (2 KOLOM) ===== --}}
     @if (!empty($content['kunci_jawaban']))
-        <div class="page-break"></div>
         <div class="kunci-title">KUNCI JAWABAN</div>
 
         <div class="col-wrap clearfix">
