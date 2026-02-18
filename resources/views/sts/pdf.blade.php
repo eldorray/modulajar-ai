@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" dir="auto">
 
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STS - {{ $sts->mata_pelajaran }}</title>
     <style>
         @page {
-            margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+            margin: 2cm 2cm 2cm 2cm;
             size: A4;
         }
 
@@ -18,8 +18,8 @@
         }
 
         body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 11pt;
             line-height: 1.4;
             color: #000;
             background: #fff;

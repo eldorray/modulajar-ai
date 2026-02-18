@@ -425,9 +425,14 @@ class StsController extends Controller
         $section->addText('');
         $section->addText('*** Selamat Mengerjakan ***', ['italic' => true], ['alignment' => Jc::RIGHT]);
 
-        // ========== PAGE BREAK - KUNCI JAWABAN ==========
-        $section->addPageBreak();
-        $section->addTitle('KUNCI JAWABAN', 1);
+        // ========== KUNCI JAWABAN (same section, no page break) ==========
+        $section->addText('');
+        $section->addText('');
+        $section->addText(
+            'KUNCI JAWABAN',
+            ['bold' => true, 'size' => 14],
+            ['alignment' => Jc::CENTER]
+        );
         $section->addText('');
 
         if (!empty($content['kunci_jawaban'])) {
@@ -463,7 +468,6 @@ class StsController extends Controller
                 $section->addText('D. Uraian', ['bold' => true]);
                 foreach ($content['kunci_jawaban']['uraian'] as $i => $item) {
                     $section->addText(($i + 1) . '. ' . ($item['jawaban'] ?? ''));
-                    $section->addText('');
                 }
             }
         }
