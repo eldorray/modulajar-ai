@@ -3,11 +3,10 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STS - {{ $sts->mata_pelajaran }}</title>
     <style>
         @page {
-            margin: 1.2cm 1.5cm 1.2cm 1.5cm;
+            margin: 1cm 1.2cm 1cm 1.2cm;
         }
 
         * {
@@ -19,23 +18,21 @@
         body {
             font-family: 'DejaVu Sans', sans-serif;
             font-size: 9pt;
-            line-height: 1.3;
+            line-height: 1.35;
             color: #000;
-            background: #fff;
         }
 
-        /* Kop Surat / Header */
+        /* ===== KOP SURAT ===== */
         .kop-surat {
             text-align: center;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
+            margin-bottom: 5px;
+            padding-bottom: 4px;
             border-bottom: 3px double #000;
         }
 
         .kop-surat-image {
             width: 100%;
             height: auto;
-            max-width: 100%;
         }
 
         .kop-table {
@@ -49,208 +46,206 @@
         }
 
         .kop-logo {
-            width: 60px;
+            width: 55px;
             text-align: center;
         }
 
         .kop-logo img {
-            max-width: 50px;
-            max-height: 50px;
-            object-fit: contain;
+            max-width: 45px;
+            max-height: 45px;
         }
 
         .kop-center {
             text-align: center;
-            padding: 0 8px;
+            padding: 0 5px;
         }
 
         .kop-sekolah {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .kop-alamat {
-            font-size: 8pt;
-            margin-top: 2px;
+            font-size: 7.5pt;
         }
 
-        /* Title Section */
-        .title-section {
+        /* ===== TITLE ===== */
+        .title-box {
             text-align: center;
-            margin: 8px 0 6px;
-            padding: 5px;
+            margin: 5px 0;
+            padding: 4px;
             background: #f0f0f0;
-            border: 1px solid #ccc;
+            border: 1px solid #bbb;
         }
 
-        .title-section h1 {
-            font-size: 11pt;
-            font-weight: bold;
-            text-transform: uppercase;
+        .title-box h1 {
+            font-size: 10.5pt;
             margin: 0;
+            text-transform: uppercase;
         }
 
-        .title-section div {
-            font-size: 9pt;
+        .title-box .sub {
+            font-size: 8.5pt;
         }
 
-        /* Info Table */
-        .info-table {
+        /* ===== INFO ===== */
+        .info-row {
             width: 100%;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
             border-collapse: collapse;
         }
 
-        .info-table td {
-            padding: 2px 4px;
+        .info-row td {
+            padding: 1px 3px;
+            font-size: 8.5pt;
             vertical-align: top;
-            font-size: 9pt;
         }
 
-        .info-table .label {
-            width: 110px;
+        .info-row .lbl {
             font-weight: bold;
+            width: 100px;
         }
 
-        .info-table .colon {
-            width: 10px;
+        .info-row .col {
+            width: 8px;
             text-align: center;
         }
 
-        .info-table .value {
+        .info-row .val {
             border-bottom: 1px dotted #000;
         }
 
-        /* Instruction */
-        .instruction {
+        /* ===== PETUNJUK ===== */
+        .petunjuk {
+            font-size: 8pt;
             font-weight: bold;
-            font-size: 8.5pt;
-            margin: 6px 0;
-            padding: 4px 6px;
+            padding: 3px 5px;
             background: #eee;
             border-left: 3px solid #333;
+            margin-bottom: 4px;
         }
 
-        /* 2-Column Layout */
-        .two-col-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .two-col-table td {
-            width: 50%;
-            vertical-align: top;
-            padding: 0 8px;
-        }
-
-        .two-col-table td:first-child {
-            border-right: 1px solid #ccc;
-            padding-left: 0;
-        }
-
-        .two-col-table td:last-child {
-            padding-right: 0;
-        }
-
-        /* Questions */
-        .section-title {
+        /* ===== SECTION TITLE ===== */
+        .sec-title {
             font-weight: bold;
-            font-size: 9.5pt;
-            margin: 6px 0 4px;
-            padding: 3px 6px;
+            font-size: 9pt;
+            padding: 2px 5px;
             background: #ddd;
+            margin: 4px 0 3px;
         }
 
-        .question-item {
-            margin-bottom: 6px;
-            font-size: 9pt;
+        /* ===== 2-COLUMN FLOAT LAYOUT ===== */
+        .col-wrap {
+            overflow: hidden;
+        }
+
+        .col-left {
+            float: left;
+            width: 49%;
+            padding-right: 6px;
+            border-right: 1px dotted #bbb;
+        }
+
+        .col-right {
+            float: right;
+            width: 49%;
+            padding-left: 6px;
+        }
+
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* ===== SOAL ===== */
+        .soal {
+            margin-bottom: 5px;
+            font-size: 8.5pt;
             line-height: 1.3;
         }
 
-        .question-number {
+        .soal .no {
             font-weight: bold;
         }
 
-        .options-compact {
-            margin: 2px 0 0 12px;
+        .opsi {
+            margin: 1px 0 0 10px;
+            font-size: 8pt;
         }
 
-        .option-inline {
+        .opsi span {
             display: inline-block;
-            margin-right: 8px;
-            font-size: 8.5pt;
+            margin-right: 6px;
         }
 
-        /* Statement list for PG Kompleks */
-        .statement-item {
-            margin: 2px 0 2px 14px;
-            padding: 2px 4px;
-            font-size: 8.5pt;
-            background: #fafafa;
+        /* PG Kompleks pernyataan */
+        .pernyataan {
+            margin: 1px 0 1px 12px;
+            padding: 1px 3px;
+            font-size: 8pt;
+            background: #f8f8f8;
             border-left: 2px solid #ccc;
         }
 
-        /* Matching table */
-        .matching-table {
+        /* ===== TABEL MENJODOHKAN ===== */
+        .tbl-match {
             width: 100%;
             border-collapse: collapse;
-            margin: 4px 0;
-            font-size: 8.5pt;
+            margin: 3px 0;
+            font-size: 8pt;
         }
 
-        .matching-table th,
-        .matching-table td {
+        .tbl-match th,
+        .tbl-match td {
             border: 1px solid #000;
-            padding: 3px 5px;
-            text-align: left;
+            padding: 2px 4px;
         }
 
-        .matching-table th {
+        .tbl-match th {
             background: #ddd;
             text-align: center;
-            font-size: 8.5pt;
-        }
-
-        /* Essay */
-        .essay-lines {
-            margin: 3px 0 6px 14px;
             font-size: 8pt;
-            color: #999;
         }
 
-        /* Footer */
-        .footer-text {
+        /* ===== URAIAN ===== */
+        .uraian-lines {
+            margin: 2px 0 4px 12px;
+            border-bottom: 1px dotted #999;
+            height: 25px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
             text-align: right;
             font-style: italic;
-            margin-top: 8px;
-            font-size: 9pt;
+            font-size: 8.5pt;
+            margin-top: 6px;
         }
 
-        /* Page break */
+        /* ===== PAGE 2 ===== */
         .page-break {
             page-break-before: always;
         }
 
-        /* Kunci Jawaban */
         .kunci-title {
+            text-align: center;
             font-weight: bold;
             font-size: 11pt;
-            text-align: center;
-            margin: 8px 0 6px;
+            margin: 6px 0;
         }
 
-        .kunci-section-title {
+        .kunci-head {
             font-weight: bold;
-            font-size: 9pt;
-            margin: 4px 0 2px;
+            font-size: 8.5pt;
+            margin: 3px 0 1px;
         }
 
-        .kunci-content {
-            font-size: 8.5pt;
-            margin-bottom: 4px;
+        .kunci-text {
+            font-size: 8pt;
             line-height: 1.4;
+            margin-bottom: 3px;
         }
     </style>
 </head>
@@ -258,28 +253,26 @@
 <body>
     @php
         $content = $sts->content_result ?? [];
-
-        // Split soal pilihan ganda into 2 columns
         $pgSoal = $content['soal_pilihan_ganda'] ?? [];
         $totalPg = count($pgSoal);
-        $halfPg = ceil($totalPg / 2);
+        $halfPg = (int) ceil($totalPg / 2);
         $pgLeft = array_slice($pgSoal, 0, $halfPg);
         $pgRight = array_slice($pgSoal, $halfPg);
     @endphp
 
-    {{-- ============ PAGE 1: KOP + SOAL ============ --}}
-
-    {{-- KOP SURAT --}}
+    {{-- ===== KOP SURAT ===== --}}
     <div class="kop-surat">
-        @if (isset($schoolSettings) && $schoolSettings->kop_surat)
+        @if (isset($schoolSettings) &&
+                $schoolSettings->kop_surat &&
+                file_exists(storage_path('app/public/' . $schoolSettings->kop_surat)))
             <img src="{{ storage_path('app/public/' . $schoolSettings->kop_surat) }}" alt="Kop Surat"
                 class="kop-surat-image">
         @elseif(isset($schoolSettings) && ($schoolSettings->logo || $schoolSettings->logo_kanan || $schoolSettings->nama_sekolah))
             <table class="kop-table">
                 <tr>
                     <td class="kop-logo">
-                        @if ($schoolSettings->logo)
-                            <img src="{{ storage_path('app/public/' . $schoolSettings->logo) }}" alt="Logo Kiri">
+                        @if ($schoolSettings->logo && file_exists(storage_path('app/public/' . $schoolSettings->logo)))
+                            <img src="{{ storage_path('app/public/' . $schoolSettings->logo) }}">
                         @endif
                     </td>
                     <td class="kop-center">
@@ -287,7 +280,7 @@
                             <div class="kop-sekolah">{{ $schoolSettings->nama_sekolah }}</div>
                         @endif
                         @if ($schoolSettings->npsn || $schoolSettings->nsm)
-                            <div style="font-size: 8pt;">
+                            <div style="font-size: 7.5pt;">
                                 @if ($schoolSettings->npsn)
                                     NPSN: {{ $schoolSettings->npsn }}
                                 @endif
@@ -304,117 +297,113 @@
                         @endif
                     </td>
                     <td class="kop-logo">
-                        @if ($schoolSettings->logo_kanan)
-                            <img src="{{ storage_path('app/public/' . $schoolSettings->logo_kanan) }}" alt="Logo Kanan">
+                        @if ($schoolSettings->logo_kanan && file_exists(storage_path('app/public/' . $schoolSettings->logo_kanan)))
+                            <img src="{{ storage_path('app/public/' . $schoolSettings->logo_kanan) }}">
                         @endif
                     </td>
                 </tr>
             </table>
         @else
-            <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">SOAL SUMATIF TENGAH SEMESTER
-            </div>
+            <div style="font-size: 11pt; font-weight: bold;">SOAL SUMATIF TENGAH SEMESTER</div>
         @endif
     </div>
 
-    {{-- TITLE --}}
-    <div class="title-section">
+    {{-- ===== TITLE ===== --}}
+    <div class="title-box">
         <h1>SUMATIF TENGAH SEMESTER (STS)</h1>
-        <div>TAHUN PELAJARAN {{ date('Y') }}/{{ date('Y') + 1 }}</div>
+        <div class="sub">TAHUN PELAJARAN {{ date('Y') }}/{{ date('Y') + 1 }}</div>
     </div>
 
-    {{-- INFO TABLE --}}
-    <table class="info-table">
+    {{-- ===== INFO ===== --}}
+    <table class="info-row">
         <tr>
-            <td class="label">Mata Pelajaran</td>
-            <td class="colon">:</td>
-            <td class="value">{{ $sts->mata_pelajaran }}</td>
-            <td class="label" style="padding-left: 20px;">Nama</td>
-            <td class="colon">:</td>
-            <td class="value" style="width: 150px;"></td>
+            <td class="lbl">Mata Pelajaran</td>
+            <td class="col">:</td>
+            <td class="val">{{ $sts->mata_pelajaran }}</td>
+            <td style="width: 30px;"></td>
+            <td class="lbl">Nama</td>
+            <td class="col">:</td>
+            <td class="val" style="width: 180px;">.........................</td>
         </tr>
         <tr>
-            <td class="label">Kelas</td>
-            <td class="colon">:</td>
-            <td class="value">{{ $sts->kelas }}</td>
-            <td class="label" style="padding-left: 20px;">Hari, Tanggal</td>
-            <td class="colon">:</td>
-            <td class="value"></td>
+            <td class="lbl">Kelas</td>
+            <td class="col">:</td>
+            <td class="val">{{ $sts->kelas }}</td>
+            <td></td>
+            <td class="lbl">Hari/Tanggal</td>
+            <td class="col">:</td>
+            <td class="val">.........................</td>
         </tr>
     </table>
 
-    {{-- INSTRUCTION --}}
-    <div class="instruction">
+    {{-- ===== PETUNJUK ===== --}}
+    <div class="petunjuk">
         Berilah tanda silang (X) pada huruf A, B, C, atau D di depan jawaban yang paling tepat!
     </div>
 
-    {{-- SOAL PILIHAN GANDA - 2 COLUMNS --}}
+    {{-- ===== I. PILIHAN GANDA (2 KOLOM) ===== --}}
     @if (!empty($pgSoal))
-        <div class="section-title">I. PILIHAN GANDA</div>
-        <table class="two-col-table">
-            <tr>
-                <td>
-                    @foreach ($pgLeft as $index => $soal)
-                        <div class="question-item">
-                            <span class="question-number">{{ $index + 1 }}.</span>
-                            {{ $soal['pertanyaan'] ?? '' }}
-                            @if (!empty($soal['pilihan']))
-                                <div class="options-compact">
-                                    @foreach ($soal['pilihan'] as $key => $pilihan)
-                                        <span class="option-inline">{{ $key }}. {{ $pilihan }}</span>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </td>
-                <td>
-                    @foreach ($pgRight as $index => $soal)
-                        <div class="question-item">
-                            <span class="question-number">{{ $halfPg + $index + 1 }}.</span>
-                            {{ $soal['pertanyaan'] ?? '' }}
-                            @if (!empty($soal['pilihan']))
-                                <div class="options-compact">
-                                    @foreach ($soal['pilihan'] as $key => $pilihan)
-                                        <span class="option-inline">{{ $key }}. {{ $pilihan }}</span>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </td>
-            </tr>
-        </table>
+        <div class="sec-title">I. PILIHAN GANDA</div>
+        <div class="col-wrap clearfix">
+            <div class="col-left">
+                @foreach ($pgLeft as $index => $soal)
+                    <div class="soal">
+                        <span class="no">{{ $index + 1 }}.</span> {{ $soal['pertanyaan'] ?? '' }}
+                        @if (!empty($soal['pilihan']))
+                            <div class="opsi">
+                                @foreach ($soal['pilihan'] as $key => $pilihan)
+                                    <span>{{ $key }}. {{ $pilihan }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            <div class="col-right">
+                @foreach ($pgRight as $index => $soal)
+                    <div class="soal">
+                        <span class="no">{{ $halfPg + $index + 1 }}.</span> {{ $soal['pertanyaan'] ?? '' }}
+                        @if (!empty($soal['pilihan']))
+                            <div class="opsi">
+                                @foreach ($soal['pilihan'] as $key => $pilihan)
+                                    <span>{{ $key }}. {{ $pilihan }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
     @endif
 
-    {{-- SOAL PG KOMPLEKS --}}
+    {{-- ===== II. PG KOMPLEKS ===== --}}
     @if (!empty($content['soal_pg_kompleks']))
-        <div class="section-title">II. PILIHAN GANDA KOMPLEKS</div>
-        <div style="margin-bottom: 4px; font-style: italic; font-size: 8.5pt;">Tentukan pernyataan berikut Benar atau
+        <div class="sec-title">II. PILIHAN GANDA KOMPLEKS</div>
+        <div style="font-size: 7.5pt; font-style: italic; margin-bottom: 2px;">Tentukan pernyataan berikut Benar atau
             Salah!</div>
         @foreach ($content['soal_pg_kompleks'] as $index => $soal)
-            <div class="question-item">
-                <span class="question-number">{{ $index + 1 }}.</span>
-                {{ $soal['pertanyaan'] ?? '' }}
+            <div class="soal">
+                <span class="no">{{ $index + 1 }}.</span> {{ $soal['pertanyaan'] ?? '' }}
                 @if (!empty($soal['pernyataan']))
                     @foreach ($soal['pernyataan'] as $p)
-                        <div class="statement-item">{{ $p['teks'] ?? '' }} (................)</div>
+                        <div class="pernyataan">{{ $p['teks'] ?? '' }} (................)</div>
                     @endforeach
                 @endif
             </div>
         @endforeach
     @endif
 
-    {{-- SOAL MENJODOHKAN --}}
+    {{-- ===== III. MENJODOHKAN ===== --}}
     @if (!empty($content['soal_menjodohkan']))
-        <div class="section-title">III. MENJODOHKAN</div>
-        <div style="margin-bottom: 4px; font-style: italic; font-size: 8.5pt;">Jodohkan pernyataan di kolom kiri dengan
+        <div class="sec-title">III. MENJODOHKAN</div>
+        <div style="font-size: 7.5pt; font-style: italic; margin-bottom: 2px;">Jodohkan pernyataan di kolom kiri dengan
             jawaban di kolom kanan!</div>
-        <table class="matching-table">
+        <table class="tbl-match">
             <thead>
                 <tr>
-                    <th style="width: 25px;">No</th>
+                    <th style="width: 20px;">No</th>
                     <th>Soal</th>
-                    <th style="width: 60px;">Jawaban</th>
+                    <th style="width: 55px;">Jawaban</th>
                     <th>Pilihan</th>
                 </tr>
             </thead>
@@ -423,7 +412,7 @@
                     <tr>
                         <td style="text-align: center;">{{ $index + 1 }}</td>
                         <td>{{ $soal['soal'] ?? '' }}</td>
-                        <td style="text-align: center;">(........)</td>
+                        <td style="text-align: center;">(......)</td>
                         <td>{{ chr(65 + $index) }}. {{ $soal['jawaban'] ?? '' }}</td>
                     </tr>
                 @endforeach
@@ -431,77 +420,65 @@
         </table>
     @endif
 
-    {{-- SOAL URAIAN --}}
+    {{-- ===== IV. URAIAN ===== --}}
     @if (!empty($content['soal_uraian']))
-        <div class="section-title">IV. URAIAN</div>
-        <div style="margin-bottom: 4px; font-style: italic; font-size: 8.5pt;">Jawablah pertanyaan berikut dengan jelas
+        <div class="sec-title">IV. URAIAN</div>
+        <div style="font-size: 7.5pt; font-style: italic; margin-bottom: 2px;">Jawablah pertanyaan berikut dengan jelas
             dan lengkap!</div>
         @foreach ($content['soal_uraian'] as $index => $soal)
-            <div class="question-item">
-                <span class="question-number">{{ $index + 1 }}.</span>
-                {{ $soal['pertanyaan'] ?? '' }}
-                <div class="essay-lines">
-                    .........................................................................................................................
-                </div>
+            <div class="soal">
+                <span class="no">{{ $index + 1 }}.</span> {{ $soal['pertanyaan'] ?? '' }}
+                <div class="uraian-lines"></div>
             </div>
         @endforeach
     @endif
 
-    {{-- FOOTER --}}
-    <div class="footer-text">*** Selamat Mengerjakan ***</div>
+    {{-- ===== FOOTER ===== --}}
+    <div class="footer">*** Selamat Mengerjakan ***</div>
 
-    {{-- ============ PAGE 2: KUNCI JAWABAN - 2 COLUMNS ============ --}}
+    {{-- ===== HALAMAN 2: KUNCI JAWABAN (2 KOLOM) ===== --}}
     @if (!empty($content['kunci_jawaban']))
         <div class="page-break"></div>
-
         <div class="kunci-title">KUNCI JAWABAN</div>
 
-        <table class="two-col-table">
-            <tr>
-                <td>
-                    {{-- Kolom Kiri: PG + PG Kompleks --}}
-                    @if (!empty($content['kunci_jawaban']['pilihan_ganda']))
-                        <div class="kunci-section-title">A. Pilihan Ganda</div>
-                        <div class="kunci-content">
-                            @foreach ($content['kunci_jawaban']['pilihan_ganda'] as $i => $kunci)
-                                {{ $i + 1 . '. ' . $kunci }}@if (!$loop->last)
-                                    &nbsp;|&nbsp;
-                                @endif
-                            @endforeach
-                        </div>
-                    @endif
+        <div class="col-wrap clearfix">
+            <div class="col-left">
+                @if (!empty($content['kunci_jawaban']['pilihan_ganda']))
+                    <div class="kunci-head">A. Pilihan Ganda</div>
+                    <div class="kunci-text">
+                        @foreach ($content['kunci_jawaban']['pilihan_ganda'] as $i => $kunci)
+                            {{ $i + 1 . '. ' . $kunci }}@if (!$loop->last)
+                                &nbsp;|
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
 
-                    @if (!empty($content['kunci_jawaban']['pg_kompleks']))
-                        <div class="kunci-section-title">B. Pilihan Ganda Kompleks</div>
-                        <div class="kunci-content">
-                            @foreach ($content['kunci_jawaban']['pg_kompleks'] as $i => $item)
-                                <div>{{ $i + 1 . '. ' . ($item['jawaban'] ?? '') }}</div>
-                            @endforeach
-                        </div>
-                    @endif
-                </td>
-                <td>
-                    {{-- Kolom Kanan: Menjodohkan + Uraian --}}
-                    @if (!empty($content['kunci_jawaban']['menjodohkan']))
-                        <div class="kunci-section-title">C. Menjodohkan</div>
-                        <div class="kunci-content">
-                            {{ implode(', ', $content['kunci_jawaban']['menjodohkan']) }}
-                        </div>
-                    @endif
+                @if (!empty($content['kunci_jawaban']['pg_kompleks']))
+                    <div class="kunci-head">B. Pilihan Ganda Kompleks</div>
+                    <div class="kunci-text">
+                        @foreach ($content['kunci_jawaban']['pg_kompleks'] as $i => $item)
+                            <div>{{ $i + 1 . '. ' . ($item['jawaban'] ?? '') }}</div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+            <div class="col-right">
+                @if (!empty($content['kunci_jawaban']['menjodohkan']))
+                    <div class="kunci-head">C. Menjodohkan</div>
+                    <div class="kunci-text">{{ implode(', ', $content['kunci_jawaban']['menjodohkan']) }}</div>
+                @endif
 
-                    @if (!empty($content['kunci_jawaban']['uraian']))
-                        <div class="kunci-section-title">D. Uraian</div>
-                        <div class="kunci-content">
-                            @foreach ($content['kunci_jawaban']['uraian'] as $i => $item)
-                                <div style="margin-bottom: 4px;">
-                                    <strong>{{ $i + 1 }}.</strong> {{ $item['jawaban'] ?? '' }}
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </td>
-            </tr>
-        </table>
+                @if (!empty($content['kunci_jawaban']['uraian']))
+                    <div class="kunci-head">D. Uraian</div>
+                    <div class="kunci-text">
+                        @foreach ($content['kunci_jawaban']['uraian'] as $i => $item)
+                            <div><strong>{{ $i + 1 }}.</strong> {{ $item['jawaban'] ?? '' }}</div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
     @endif
 
 </body>
