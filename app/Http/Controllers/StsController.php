@@ -175,6 +175,13 @@ class StsController extends Controller
         
         $pdf->setPaper([0, 0, 612, 936], 'landscape'); // F4 landscape (215mm x 330mm)
         
+        // Set margins explicitly via DomPDF (CSS @page margin only affects print)
+        $pdf->getDomPDF()->getOptions()->set('isPhpEnabled', true);
+        $pdf->setOption('margin-top', 42);      // ~1.5cm in points
+        $pdf->setOption('margin-bottom', 42);
+        $pdf->setOption('margin-left', 42);
+        $pdf->setOption('margin-right', 42);
+        
         $filename = 'STS_' . str_replace(' ', '_', $sts->mata_pelajaran) . '_' . $sts->kelas . '_' . date('Ymd') . '.pdf';
 
         return $pdf->download($filename);
