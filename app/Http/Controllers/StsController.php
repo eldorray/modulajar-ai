@@ -97,7 +97,7 @@ class StsController extends Controller
             'materi' => $validated['materi'] ?? '',
         ], Auth::id(), $sts->id);
 
-        if ($result['success']) {
+        if ($result['success'] && !empty($result['content'])) {
             $sts->update([
                 'content_result' => $result['content'],
                 'status' => 'completed',

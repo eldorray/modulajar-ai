@@ -477,6 +477,14 @@ PROMPT;
             // Log usage (reuse existing method)
             $this->logUsage($result, $userId, $stsId);
 
+            if (!$content) {
+                Log::error('DeepSeek STS: Failed to parse AI response content');
+                return [
+                    'success' => false,
+                    'error' => 'Gagal memproses hasil AI. Format response tidak valid. Silakan coba lagi.',
+                ];
+            }
+
             return [
                 'success' => true,
                 'content' => $content,
