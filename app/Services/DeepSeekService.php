@@ -444,7 +444,7 @@ PROMPT;
                     ]
                 ],
                 'temperature' => 0.5,
-                'max_tokens' => 4096,
+                'max_tokens' => 8192,
                 'response_format' => [
                     'type' => 'json_object'
                 ],
@@ -472,16 +472,32 @@ PROMPT;
             }
 
             $result = $response->json();
+
+            // Check if response was truncated due to max_tokens
+            $finishReason = $result['choices'][0]['finish_reason'] ?? 'unknown';
+            if ($finishReason === 'length') {
+                Log::warning('DeepSeek STS: Response truncated (finish_reason=length)', [
+                    'model' => $this->model,
+                ]);
+            }
+
             $content = $this->extractContent($result);
 
             // Log usage (reuse existing method)
             $this->logUsage($result, $userId, $stsId);
 
             if (!$content) {
-                Log::error('DeepSeek STS: Failed to parse AI response content');
+                $rawText = $result['choices'][0]['message']['content'] ?? '(empty)';
+                Log::error('DeepSeek STS: Failed to parse AI response content', [
+                    'finish_reason' => $finishReason,
+                    'raw_response_length' => strlen($rawText),
+                    'raw_response_preview' => substr($rawText, 0, 500),
+                ]);
                 return [
                     'success' => false,
-                    'error' => 'Gagal memproses hasil AI. Format response tidak valid. Silakan coba lagi.',
+                    'error' => $finishReason === 'length'
+                        ? 'Response AI terpotong karena terlalu panjang. Coba kurangi jumlah soal dan coba lagi.'
+                        : 'Gagal memproses hasil AI. Format response tidak valid. Silakan coba lagi.',
                 ];
             }
 
