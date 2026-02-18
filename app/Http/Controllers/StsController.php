@@ -173,7 +173,7 @@ class StsController extends Controller
         
         $pdf = Pdf::loadView('sts.pdf', compact('sts', 'schoolSettings'));
         
-        $pdf->setPaper('A4', 'portrait');
+        $pdf->setPaper([0, 0, 612, 936], 'landscape'); // F4 landscape (215mm x 330mm)
         
         $filename = 'STS_' . str_replace(' ', '_', $sts->mata_pelajaran) . '_' . $sts->kelas . '_' . date('Ymd') . '.pdf';
 
