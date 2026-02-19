@@ -365,7 +365,7 @@ class StsController extends Controller
             $pgTable->addRow();
             
             // Left column
-            $leftCell = $pgTable->addCell($halfPageWidth, ['borderRightSize' => 4, 'borderRightColor' => 'BBBBBB', 'borderRightStyle' => 'dotted']);
+            $leftCell = $pgTable->addCell($halfPageWidth);
             for ($i = 0; $i < $halfPoint && $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
                 $leftCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
