@@ -306,40 +306,43 @@ class StsController extends Controller
             ['alignment' => Jc::CENTER, 'spaceBefore' => 0]
         );
 
+        // Shared no-border cell style
+        $noBorder = ['borderSize' => 0, 'borderTopSize' => 0, 'borderBottomSize' => 0, 'borderLeftSize' => 0, 'borderRightSize' => 0];
+        $noBorderTable = ['borderSize' => 0, 'borderColor' => 'FFFFFF', 'cellMargin' => 0];
+
         // ========== INFO TABLE (matching PDF: with dotted bottom border) ==========
-        $infoTable = $section->addTable(['borderSize' => 0]);
-        $infoCellStyle = ['borderBottomSize' => 4, 'borderBottomColor' => '000000', 'borderBottomStyle' => 'dotted'];
+        $infoTable = $section->addTable($noBorderTable);
+        $infoCellStyleDotted = array_merge($noBorder, ['borderBottomSize' => 4, 'borderBottomColor' => '000000']);
         $infoLabelStyle = ['bold' => true, 'size' => 8.5, 'name' => 'Arial'];
         $infoValueStyle = ['size' => 8.5, 'name' => 'Arial'];
         
         $infoTable->addRow();
-        $infoTable->addCell(1800)->addText('Mata Pelajaran', $infoLabelStyle);
-        $infoTable->addCell(200)->addText(':', $infoValueStyle);
-        $infoTable->addCell(3500, $infoCellStyle)->addText($sts->mata_pelajaran, $infoValueStyle);
-        $infoTable->addCell(500)->addText('', $infoValueStyle);
-        $infoTable->addCell(1800)->addText('Nama', $infoLabelStyle);
-        $infoTable->addCell(200)->addText(':', $infoValueStyle);
-        $infoTable->addCell(3500, $infoCellStyle)->addText('.........................', $infoValueStyle);
+        $infoTable->addCell(1800, $noBorder)->addText('Mata Pelajaran', $infoLabelStyle);
+        $infoTable->addCell(200, $noBorder)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyleDotted)->addText($sts->mata_pelajaran, $infoValueStyle);
+        $infoTable->addCell(500, $noBorder)->addText('', $infoValueStyle);
+        $infoTable->addCell(1800, $noBorder)->addText('Nama', $infoLabelStyle);
+        $infoTable->addCell(200, $noBorder)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyleDotted)->addText('.........................', $infoValueStyle);
         
         $infoTable->addRow();
-        $infoTable->addCell(1800)->addText('Kelas', $infoLabelStyle);
-        $infoTable->addCell(200)->addText(':', $infoValueStyle);
-        $infoTable->addCell(3500, $infoCellStyle)->addText($sts->kelas, $infoValueStyle);
-        $infoTable->addCell(500)->addText('', $infoValueStyle);
-        $infoTable->addCell(1800)->addText('Hari/Tanggal', $infoLabelStyle);
-        $infoTable->addCell(200)->addText(':', $infoValueStyle);
-        $infoTable->addCell(3500, $infoCellStyle)->addText('.........................', $infoValueStyle);
+        $infoTable->addCell(1800, $noBorder)->addText('Kelas', $infoLabelStyle);
+        $infoTable->addCell(200, $noBorder)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyleDotted)->addText($sts->kelas, $infoValueStyle);
+        $infoTable->addCell(500, $noBorder)->addText('', $infoValueStyle);
+        $infoTable->addCell(1800, $noBorder)->addText('Hari/Tanggal', $infoLabelStyle);
+        $infoTable->addCell(200, $noBorder)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyleDotted)->addText('.........................', $infoValueStyle);
 
         // ========== PETUNJUK (matching PDF: border-left + background) ==========
-        $petunjukTable = $section->addTable();
+        $petunjukTable = $section->addTable($noBorderTable);
         $petunjukTable->addRow();
-        $petunjukTable->addCell(60, [
+        $petunjukTable->addCell(60, array_merge($noBorder, [
             'shading' => ['fill' => '333333'],
-            'vMerge' => 'restart',
-        ])->addText('');
-        $petunjukTable->addCell($pageWidthTwip - 60, [
+        ]))->addText('');
+        $petunjukTable->addCell($pageWidthTwip - 60, array_merge($noBorder, [
             'shading' => ['fill' => 'EEEEEE'],
-        ])->addText(
+        ]))->addText(
             'Berilah tanda silang (X) pada huruf A, B, C, atau D di depan jawaban yang paling tepat!',
             ['bold' => true, 'size' => 8, 'name' => 'Arial'],
             ['spaceAfter' => 40, 'spaceBefore' => 40]
@@ -348,9 +351,9 @@ class StsController extends Controller
         // ========== SOAL PILIHAN GANDA (2 Columns) ==========
         if (!empty($content['soal_pilihan_ganda'])) {
             // Section title with background
-            $secTable = $section->addTable();
+            $secTable = $section->addTable($noBorderTable);
             $secTable->addRow();
-            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+            $secTable->addCell($pageWidthTwip, array_merge($noBorder, ['shading' => ['fill' => 'DDDDDD']]))->addText(
                 'I. PILIHAN GANDA',
                 ['bold' => true, 'size' => 9, 'name' => 'Arial'],
                 ['spaceAfter' => 40, 'spaceBefore' => 40]
@@ -361,12 +364,11 @@ class StsController extends Controller
             $halfPoint = ceil($totalPg / 2);
 
             // 2-column table without any borders
-            $noBorderStyle = ['borderSize' => 0, 'borderTopSize' => 0, 'borderBottomSize' => 0, 'borderLeftSize' => 0, 'borderRightSize' => 0];
-            $pgTable = $section->addTable(['borderSize' => 0, 'borderColor' => 'FFFFFF']);
+            $pgTable = $section->addTable($noBorderTable);
             $pgTable->addRow();
             
             // Left column
-            $leftCell = $pgTable->addCell($halfPageWidth, $noBorderStyle);
+            $leftCell = $pgTable->addCell($halfPageWidth, $noBorder);
             for ($i = 0; $i < $halfPoint && $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
                 $leftCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
@@ -380,7 +382,7 @@ class StsController extends Controller
             }
             
             // Right column
-            $rightCell = $pgTable->addCell($halfPageWidth, $noBorderStyle);
+            $rightCell = $pgTable->addCell($halfPageWidth, $noBorder);
             for ($i = $halfPoint; $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
                 $rightCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
@@ -396,9 +398,9 @@ class StsController extends Controller
 
         // ========== SOAL PG KOMPLEKS ==========
         if (!empty($content['soal_pg_kompleks'])) {
-            $secTable = $section->addTable();
+            $secTable = $section->addTable($noBorderTable);
             $secTable->addRow();
-            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+            $secTable->addCell($pageWidthTwip, array_merge($noBorder, ['shading' => ['fill' => 'DDDDDD']]))->addText(
                 'II. PILIHAN GANDA KOMPLEKS',
                 ['bold' => true, 'size' => 9, 'name' => 'Arial'],
                 ['spaceAfter' => 40, 'spaceBefore' => 40]
@@ -410,10 +412,10 @@ class StsController extends Controller
                 if (!empty($soal['pernyataan'])) {
                     foreach ($soal['pernyataan'] as $p) {
                         // Pernyataan with left border + light background (matching PDF)
-                        $pTable = $section->addTable();
+                        $pTable = $section->addTable($noBorderTable);
                         $pTable->addRow();
-                        $pTable->addCell(40, ['shading' => ['fill' => 'CCCCCC']])->addText('');
-                        $pTable->addCell($pageWidthTwip - 40, ['shading' => ['fill' => 'F8F8F8']])->addText(
+                        $pTable->addCell(40, array_merge($noBorder, ['shading' => ['fill' => 'CCCCCC']]))->addText('');
+                        $pTable->addCell($pageWidthTwip - 40, array_merge($noBorder, ['shading' => ['fill' => 'F8F8F8']]))->addText(
                             ($p['teks'] ?? '') . ' (................)',
                             ['size' => 8, 'name' => 'Arial'],
                             ['indentation' => ['left' => 100], 'spaceAfter' => 20, 'spaceBefore' => 20]
@@ -426,9 +428,9 @@ class StsController extends Controller
 
         // ========== SOAL MENJODOHKAN ==========
         if (!empty($content['soal_menjodohkan'])) {
-            $secTable = $section->addTable();
+            $secTable = $section->addTable($noBorderTable);
             $secTable->addRow();
-            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+            $secTable->addCell($pageWidthTwip, array_merge($noBorder, ['shading' => ['fill' => 'DDDDDD']]))->addText(
                 'III. MENJODOHKAN',
                 ['bold' => true, 'size' => 9, 'name' => 'Arial'],
                 ['spaceAfter' => 40, 'spaceBefore' => 40]
@@ -460,9 +462,9 @@ class StsController extends Controller
 
         // ========== SOAL URAIAN ==========
         if (!empty($content['soal_uraian'])) {
-            $secTable = $section->addTable();
+            $secTable = $section->addTable($noBorderTable);
             $secTable->addRow();
-            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+            $secTable->addCell($pageWidthTwip, array_merge($noBorder, ['shading' => ['fill' => 'DDDDDD']]))->addText(
                 'IV. URAIAN',
                 ['bold' => true, 'size' => 9, 'name' => 'Arial'],
                 ['spaceAfter' => 40, 'spaceBefore' => 40]
@@ -490,11 +492,11 @@ class StsController extends Controller
 
         if (!empty($content['kunci_jawaban'])) {
             // 2-column layout: Left = PG + PG Kompleks, Right = Menjodohkan + Uraian
-            $kunciTable = $section->addTable(['borderSize' => 0]);
+            $kunciTable = $section->addTable($noBorderTable);
             $kunciTable->addRow();
             
             // Left column
-            $kunciLeft = $kunciTable->addCell($halfPageWidth, ['borderRightSize' => 4, 'borderRightColor' => 'BBBBBB', 'borderRightStyle' => 'dotted']);
+            $kunciLeft = $kunciTable->addCell($halfPageWidth, $noBorder);
             
             if (!empty($content['kunci_jawaban']['pilihan_ganda'])) {
                 $kunciLeft->addText('A. Pilihan Ganda', ['bold' => true, 'size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
@@ -513,7 +515,7 @@ class StsController extends Controller
             }
 
             // Right column
-            $kunciRight = $kunciTable->addCell($halfPageWidth);
+            $kunciRight = $kunciTable->addCell($halfPageWidth, $noBorder);
 
             if (!empty($content['kunci_jawaban']['menjodohkan'])) {
                 $kunciRight->addText('C. Menjodohkan', ['bold' => true, 'size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
