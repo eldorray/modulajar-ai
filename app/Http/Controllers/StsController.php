@@ -360,12 +360,13 @@ class StsController extends Controller
             $totalPg = count($pgSoal);
             $halfPoint = ceil($totalPg / 2);
 
-            // 2-column table with dotted divider
-            $pgTable = $section->addTable(['borderSize' => 0]);
+            // 2-column table without any borders
+            $noBorderStyle = ['borderSize' => 0, 'borderTopSize' => 0, 'borderBottomSize' => 0, 'borderLeftSize' => 0, 'borderRightSize' => 0];
+            $pgTable = $section->addTable(['borderSize' => 0, 'borderColor' => 'FFFFFF']);
             $pgTable->addRow();
             
             // Left column
-            $leftCell = $pgTable->addCell($halfPageWidth);
+            $leftCell = $pgTable->addCell($halfPageWidth, $noBorderStyle);
             for ($i = 0; $i < $halfPoint && $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
                 $leftCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
@@ -379,7 +380,7 @@ class StsController extends Controller
             }
             
             // Right column
-            $rightCell = $pgTable->addCell($halfPageWidth);
+            $rightCell = $pgTable->addCell($halfPageWidth, $noBorderStyle);
             for ($i = $halfPoint; $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
                 $rightCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
