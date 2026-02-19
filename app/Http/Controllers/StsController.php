@@ -198,30 +198,34 @@ class StsController extends Controller
 
         $phpWord = new PhpWord();
         
-        $phpWord->setDefaultFontName('Times New Roman');
-        $phpWord->setDefaultFontSize(12);
+        // Match PDF font: DejaVu Sans → Arial (closest sans-serif in Word), 9pt
+        $phpWord->setDefaultFontName('Arial');
+        $phpWord->setDefaultFontSize(9);
 
-        // Title styles
-        $phpWord->addTitleStyle(1, ['bold' => true, 'size' => 14], ['alignment' => Jc::CENTER]);
-        $phpWord->addTitleStyle(2, ['bold' => true, 'size' => 12], ['alignment' => Jc::LEFT]);
-
+        // F4 Landscape: 330mm x 215mm
         $section = $phpWord->addSection([
-            'marginTop' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(2),
-            'marginBottom' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(2),
-            'marginLeft' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(2),
-            'marginRight' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(2),
+            'orientation' => 'landscape',
+            'pageSizeW' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(33.0),
+            'pageSizeH' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(21.5),
+            'marginTop' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(1.4),
+            'marginBottom' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(1.4),
+            'marginLeft' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(1.6),
+            'marginRight' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(1.6),
         ]);
+
+        // Full page width in twips (for table sizing)
+        $pageWidthTwip = \PhpOffice\PhpWord\Shared\Converter::cmToTwip(33.0 - 1.6 - 1.6);
+        $halfPageWidth = (int) ($pageWidthTwip / 2);
 
         // ========== KOP SURAT / HEADER ==========
         if ($schoolSettings->kop_surat && file_exists(storage_path('app/public/' . $schoolSettings->kop_surat))) {
-            // Use uploaded kop surat image - maintain proportions
             $imagePath = storage_path('app/public/' . $schoolSettings->kop_surat);
             $imageInfo = getimagesize($imagePath);
             $originalWidth = $imageInfo[0];
             $originalHeight = $imageInfo[1];
             
-            // Scale to fit width of ~450px while maintaining aspect ratio
-            $targetWidth = 450;
+            // Scale to fit landscape page width
+            $targetWidth = 680;
             $aspectRatio = $originalHeight / $originalWidth;
             $targetHeight = $targetWidth * $aspectRatio;
             
@@ -234,25 +238,22 @@ class StsController extends Controller
                 ]
             );
         } elseif ($schoolSettings->nama_sekolah || $schoolSettings->logo) {
-            // Generate header from components
             $headerTable = $section->addTable(['alignment' => Jc::CENTER]);
             $headerTable->addRow();
             
-            // Logo Kiri
-            $cellLeft = $headerTable->addCell(1500);
+            $cellLeft = $headerTable->addCell(1200);
             if ($schoolSettings->logo && file_exists(storage_path('app/public/' . $schoolSettings->logo))) {
                 $cellLeft->addImage(
                     storage_path('app/public/' . $schoolSettings->logo),
-                    ['width' => 50, 'height' => 50, 'alignment' => Jc::CENTER]
+                    ['width' => 45, 'height' => 45, 'alignment' => Jc::CENTER]
                 );
             }
             
-            // Center - School Info
-            $cellCenter = $headerTable->addCell(6000);
+            $cellCenter = $headerTable->addCell(8000);
             if ($schoolSettings->nama_sekolah) {
                 $cellCenter->addText(
                     strtoupper($schoolSettings->nama_sekolah),
-                    ['bold' => true, 'size' => 14],
+                    ['bold' => true, 'size' => 12, 'name' => 'Arial'],
                     ['alignment' => Jc::CENTER]
                 );
             }
@@ -260,125 +261,162 @@ class StsController extends Controller
                 $info = [];
                 if ($schoolSettings->npsn) $info[] = "NPSN: {$schoolSettings->npsn}";
                 if ($schoolSettings->nsm) $info[] = "NSM: {$schoolSettings->nsm}";
-                $cellCenter->addText(implode(' | ', $info), ['size' => 10], ['alignment' => Jc::CENTER]);
+                $cellCenter->addText(implode(' | ', $info), ['size' => 7.5], ['alignment' => Jc::CENTER]);
             }
             if ($schoolSettings->alamat) {
-                $cellCenter->addText($schoolSettings->alamat, ['size' => 10], ['alignment' => Jc::CENTER]);
+                $cellCenter->addText($schoolSettings->alamat, ['size' => 7.5], ['alignment' => Jc::CENTER]);
             }
             
-            // Logo Kanan
-            $cellRight = $headerTable->addCell(1500);
+            $cellRight = $headerTable->addCell(1200);
             if ($schoolSettings->logo_kanan && file_exists(storage_path('app/public/' . $schoolSettings->logo_kanan))) {
                 $cellRight->addImage(
                     storage_path('app/public/' . $schoolSettings->logo_kanan),
-                    ['width' => 50, 'height' => 50, 'alignment' => Jc::CENTER]
+                    ['width' => 45, 'height' => 45, 'alignment' => Jc::CENTER]
                 );
             }
         }
 
-        // Line separator
+        // Double-line separator (matching PDF border-bottom: 3px double)
         $section->addText('');
-        $section->addText('_______________________________________________________________________________', [], ['alignment' => Jc::CENTER]);
-        $section->addText('');
-
-        // ========== TITLE ==========
         $section->addText(
+            str_repeat('_', 120),
+            ['size' => 6],
+            ['alignment' => Jc::CENTER, 'spacing' => 0]
+        );
+
+        // ========== TITLE BOX (matching PDF: background #f0f0f0, border) ==========
+        $titleTable = $section->addTable([
+            'alignment' => Jc::CENTER,
+            'borderSize' => 4,
+            'borderColor' => 'BBBBBB',
+        ]);
+        $titleTable->addRow();
+        $titleCell = $titleTable->addCell($pageWidthTwip, [
+            'shading' => ['fill' => 'F0F0F0'],
+            'valign' => 'center',
+        ]);
+        $titleCell->addText(
             'SUMATIF TENGAH SEMESTER (STS)',
-            ['bold' => true, 'size' => 14],
-            ['alignment' => Jc::CENTER]
+            ['bold' => true, 'size' => 10.5, 'name' => 'Arial'],
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
         );
-        $section->addText(
+        $titleCell->addText(
             'TAHUN PELAJARAN ' . date('Y') . '/' . (date('Y') + 1),
-            ['size' => 11],
-            ['alignment' => Jc::CENTER]
+            ['size' => 8.5, 'name' => 'Arial'],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 0]
         );
-        $section->addText('');
 
-        // ========== INFO TABLE ==========
-        $infoTable = $section->addTable();
-        $infoTable->addRow();
-        $infoTable->addCell(2500)->addText('Mata Pelajaran', ['bold' => true]);
-        $infoTable->addCell(200)->addText(':');
-        $infoTable->addCell(3000)->addText($sts->mata_pelajaran);
-        $infoTable->addCell(2000)->addText('Nama', ['bold' => true]);
-        $infoTable->addCell(200)->addText(':');
-        $infoTable->addCell(2500)->addText('.............................');
+        // ========== INFO TABLE (matching PDF: with dotted bottom border) ==========
+        $infoTable = $section->addTable(['borderSize' => 0]);
+        $infoCellStyle = ['borderBottomSize' => 4, 'borderBottomColor' => '000000', 'borderBottomStyle' => 'dotted'];
+        $infoLabelStyle = ['bold' => true, 'size' => 8.5, 'name' => 'Arial'];
+        $infoValueStyle = ['size' => 8.5, 'name' => 'Arial'];
         
         $infoTable->addRow();
-        $infoTable->addCell(2500)->addText('Kelas', ['bold' => true]);
-        $infoTable->addCell(200)->addText(':');
-        $infoTable->addCell(3000)->addText($sts->kelas);
-        $infoTable->addCell(2000)->addText('Hari, Tanggal', ['bold' => true]);
-        $infoTable->addCell(200)->addText(':');
-        $infoTable->addCell(2500)->addText('.............................');
+        $infoTable->addCell(1800)->addText('Mata Pelajaran', $infoLabelStyle);
+        $infoTable->addCell(200)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyle)->addText($sts->mata_pelajaran, $infoValueStyle);
+        $infoTable->addCell(500)->addText('', $infoValueStyle);
+        $infoTable->addCell(1800)->addText('Nama', $infoLabelStyle);
+        $infoTable->addCell(200)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyle)->addText('.........................', $infoValueStyle);
         
-        $section->addText('');
+        $infoTable->addRow();
+        $infoTable->addCell(1800)->addText('Kelas', $infoLabelStyle);
+        $infoTable->addCell(200)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyle)->addText($sts->kelas, $infoValueStyle);
+        $infoTable->addCell(500)->addText('', $infoValueStyle);
+        $infoTable->addCell(1800)->addText('Hari/Tanggal', $infoLabelStyle);
+        $infoTable->addCell(200)->addText(':', $infoValueStyle);
+        $infoTable->addCell(3500, $infoCellStyle)->addText('.........................', $infoValueStyle);
 
-        // ========== INSTRUCTION ==========
-        $section->addText(
+        // ========== PETUNJUK (matching PDF: border-left + background) ==========
+        $petunjukTable = $section->addTable();
+        $petunjukTable->addRow();
+        $petunjukTable->addCell(60, [
+            'shading' => ['fill' => '333333'],
+            'vMerge' => 'restart',
+        ])->addText('');
+        $petunjukTable->addCell($pageWidthTwip - 60, [
+            'shading' => ['fill' => 'EEEEEE'],
+        ])->addText(
             'Berilah tanda silang (X) pada huruf A, B, C, atau D di depan jawaban yang paling tepat!',
-            ['bold' => true],
-            ['shading' => ['fill' => 'EEEEEE'], 'indentation' => ['left' => 200, 'right' => 200]]
+            ['bold' => true, 'size' => 8, 'name' => 'Arial'],
+            ['spaceAfter' => 40, 'spaceBefore' => 40]
         );
-        $section->addText('');
 
         // ========== SOAL PILIHAN GANDA (2 Columns) ==========
         if (!empty($content['soal_pilihan_ganda'])) {
-            $section->addText('I. PILIHAN GANDA', ['bold' => true, 'size' => 12], ['shading' => ['fill' => 'DDDDDD']]);
-            $section->addText('');
+            // Section title with background
+            $secTable = $section->addTable();
+            $secTable->addRow();
+            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+                'I. PILIHAN GANDA',
+                ['bold' => true, 'size' => 9, 'name' => 'Arial'],
+                ['spaceAfter' => 40, 'spaceBefore' => 40]
+            );
 
             $pgSoal = $content['soal_pilihan_ganda'];
             $totalPg = count($pgSoal);
             $halfPoint = ceil($totalPg / 2);
 
-            // Create 2-column table
-            $pgTable = $section->addTable();
+            // 2-column table with dotted divider
+            $pgTable = $section->addTable(['borderSize' => 0]);
             $pgTable->addRow();
             
             // Left column
-            $leftCell = $pgTable->addCell(5000);
+            $leftCell = $pgTable->addCell($halfPageWidth, ['borderRightSize' => 4, 'borderRightColor' => 'BBBBBB', 'borderRightStyle' => 'dotted']);
             for ($i = 0; $i < $halfPoint && $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
-                $leftCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 11]);
+                $leftCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
                 if (!empty($soal['pilihan'])) {
                     $options = [];
                     foreach ($soal['pilihan'] as $key => $pilihan) {
                         $options[] = "{$key}. {$pilihan}";
                     }
-                    $leftCell->addText('    ' . implode('   ', $options), ['size' => 10]);
+                    $leftCell->addText('    ' . implode('   ', $options), ['size' => 8, 'name' => 'Arial'], ['spaceAfter' => 60]);
                 }
-                $leftCell->addText('');
             }
             
             // Right column
-            $rightCell = $pgTable->addCell(5000);
+            $rightCell = $pgTable->addCell($halfPageWidth);
             for ($i = $halfPoint; $i < $totalPg; $i++) {
                 $soal = $pgSoal[$i];
-                $rightCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 11]);
+                $rightCell->addText(($i + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
                 if (!empty($soal['pilihan'])) {
                     $options = [];
                     foreach ($soal['pilihan'] as $key => $pilihan) {
                         $options[] = "{$key}. {$pilihan}";
                     }
-                    $rightCell->addText('    ' . implode('   ', $options), ['size' => 10]);
+                    $rightCell->addText('    ' . implode('   ', $options), ['size' => 8, 'name' => 'Arial'], ['spaceAfter' => 60]);
                 }
-                $rightCell->addText('');
             }
-            
-            $section->addText('');
         }
 
         // ========== SOAL PG KOMPLEKS ==========
         if (!empty($content['soal_pg_kompleks'])) {
-            $section->addText('II. PILIHAN GANDA KOMPLEKS', ['bold' => true, 'size' => 12], ['shading' => ['fill' => 'DDDDDD']]);
-            $section->addText('Tentukan pernyataan berikut Benar atau Salah!', ['italic' => true]);
-            $section->addText('');
+            $secTable = $section->addTable();
+            $secTable->addRow();
+            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+                'II. PILIHAN GANDA KOMPLEKS',
+                ['bold' => true, 'size' => 9, 'name' => 'Arial'],
+                ['spaceAfter' => 40, 'spaceBefore' => 40]
+            );
+            $section->addText('Tentukan pernyataan berikut Benar atau Salah!', ['italic' => true, 'size' => 7.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
 
             foreach ($content['soal_pg_kompleks'] as $index => $soal) {
-                $section->addText(($index + 1) . '. ' . ($soal['pertanyaan'] ?? ''));
+                $section->addText(($index + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
                 if (!empty($soal['pernyataan'])) {
                     foreach ($soal['pernyataan'] as $p) {
-                        $section->addText('    • ' . ($p['teks'] ?? '') . ' (................)');
+                        // Pernyataan with left border + light background (matching PDF)
+                        $pTable = $section->addTable();
+                        $pTable->addRow();
+                        $pTable->addCell(40, ['shading' => ['fill' => 'CCCCCC']])->addText('');
+                        $pTable->addCell($pageWidthTwip - 40, ['shading' => ['fill' => 'F8F8F8']])->addText(
+                            ($p['teks'] ?? '') . ' (................)',
+                            ['size' => 8, 'name' => 'Arial'],
+                            ['indentation' => ['left' => 100], 'spaceAfter' => 20, 'spaceBefore' => 20]
+                        );
                     }
                 }
                 $section->addText('');
@@ -387,89 +425,104 @@ class StsController extends Controller
 
         // ========== SOAL MENJODOHKAN ==========
         if (!empty($content['soal_menjodohkan'])) {
-            $section->addText('III. MENJODOHKAN', ['bold' => true, 'size' => 12], ['shading' => ['fill' => 'DDDDDD']]);
-            $section->addText('Jodohkan pernyataan di kolom kiri dengan jawaban di kolom kanan!', ['italic' => true]);
-            $section->addText('');
+            $secTable = $section->addTable();
+            $secTable->addRow();
+            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+                'III. MENJODOHKAN',
+                ['bold' => true, 'size' => 9, 'name' => 'Arial'],
+                ['spaceAfter' => 40, 'spaceBefore' => 40]
+            );
+            $section->addText('Jodohkan pernyataan di kolom kiri dengan jawaban di kolom kanan!', ['italic' => true, 'size' => 7.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
 
-            $matchTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000']);
+            $matchTable = $section->addTable(['borderSize' => 4, 'borderColor' => '000000']);
             $matchTable->addRow();
-            $matchTable->addCell(500, ['shading' => ['fill' => 'DDDDDD']])->addText('No', ['bold' => true]);
-            $matchTable->addCell(4000, ['shading' => ['fill' => 'DDDDDD']])->addText('Soal', ['bold' => true]);
-            $matchTable->addCell(1000, ['shading' => ['fill' => 'DDDDDD']])->addText('Jawaban', ['bold' => true]);
-            $matchTable->addCell(4000, ['shading' => ['fill' => 'DDDDDD']])->addText('Pilihan', ['bold' => true]);
+            $matchTable->addCell(500, ['shading' => ['fill' => 'DDDDDD']])->addText('No', ['bold' => true, 'size' => 8, 'name' => 'Arial'], ['alignment' => Jc::CENTER]);
+            $matchTable->addCell(4500, ['shading' => ['fill' => 'DDDDDD']])->addText('Soal', ['bold' => true, 'size' => 8, 'name' => 'Arial'], ['alignment' => Jc::CENTER]);
+            $matchTable->addCell(1000, ['shading' => ['fill' => 'DDDDDD']])->addText('Jawaban', ['bold' => true, 'size' => 8, 'name' => 'Arial'], ['alignment' => Jc::CENTER]);
+            $matchTable->addCell(4500, ['shading' => ['fill' => 'DDDDDD']])->addText('Pilihan', ['bold' => true, 'size' => 8, 'name' => 'Arial'], ['alignment' => Jc::CENTER]);
 
             foreach ($content['soal_menjodohkan'] as $index => $soal) {
                 $matchTable->addRow();
-                $matchTable->addCell(500)->addText($index + 1);
-                $matchTable->addCell(4000)->addText($soal['soal'] ?? '');
-                $matchTable->addCell(1000)->addText('(........)');
-                $matchTable->addCell(4000)->addText(chr(65 + $index) . '. ' . ($soal['jawaban'] ?? ''));
+                $matchTable->addCell(500)->addText($index + 1, ['size' => 8, 'name' => 'Arial'], ['alignment' => Jc::CENTER]);
+                $matchTable->addCell(4500)->addText($soal['soal'] ?? '', ['size' => 8, 'name' => 'Arial']);
+                $matchTable->addCell(1000)->addText('(......)', ['size' => 8, 'name' => 'Arial'], ['alignment' => Jc::CENTER]);
+                $matchTable->addCell(4500)->addText(chr(65 + $index) . '. ' . ($soal['jawaban'] ?? ''), ['size' => 8, 'name' => 'Arial']);
             }
-            $section->addText('');
         }
 
         // ========== FOOTER HALAMAN 1 ==========
         $section->addText('');
-        $section->addText('*** Selamat Mengerjakan ***', ['italic' => true], ['alignment' => Jc::RIGHT]);
+        $section->addText('*** Selamat Mengerjakan ***', ['italic' => true, 'size' => 8.5, 'name' => 'Arial'], ['alignment' => Jc::RIGHT]);
 
         // ========== HALAMAN 2: URAIAN + KUNCI JAWABAN ==========
         $section->addPageBreak();
 
         // ========== SOAL URAIAN ==========
         if (!empty($content['soal_uraian'])) {
-            $section->addText('IV. URAIAN', ['bold' => true, 'size' => 12], ['shading' => ['fill' => 'DDDDDD']]);
-            $section->addText('Jawablah pertanyaan berikut dengan jelas dan lengkap!', ['italic' => true]);
-            $section->addText('');
+            $secTable = $section->addTable();
+            $secTable->addRow();
+            $secTable->addCell($pageWidthTwip, ['shading' => ['fill' => 'DDDDDD']])->addText(
+                'IV. URAIAN',
+                ['bold' => true, 'size' => 9, 'name' => 'Arial'],
+                ['spaceAfter' => 40, 'spaceBefore' => 40]
+            );
+            $section->addText('Jawablah pertanyaan berikut dengan jelas dan lengkap!', ['italic' => true, 'size' => 7.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
 
             foreach ($content['soal_uraian'] as $index => $soal) {
-                $section->addText(($index + 1) . '. ' . ($soal['pertanyaan'] ?? ''));
-                $section->addText('............................................................................................................................', ['color' => '999999', 'size' => 8]);
-                $section->addText('');
+                $section->addText(($index + 1) . '. ' . ($soal['pertanyaan'] ?? ''), ['size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 20]);
+                // Dotted answer line (matching PDF uraian-lines)
+                $section->addText(
+                    str_repeat('.', 150),
+                    ['color' => '999999', 'size' => 7, 'name' => 'Arial'],
+                    ['spaceAfter' => 80]
+                );
             }
         }
 
-        // ========== KUNCI JAWABAN ==========
+        // ========== KUNCI JAWABAN (2 KOLOM - matching PDF) ==========
         $section->addText('');
         $section->addText(
             'KUNCI JAWABAN',
-            ['bold' => true, 'size' => 14],
-            ['alignment' => Jc::CENTER]
+            ['bold' => true, 'size' => 11, 'name' => 'Arial'],
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 120]
         );
-        $section->addText('');
 
         if (!empty($content['kunci_jawaban'])) {
-            // PG
+            // 2-column layout: Left = PG + PG Kompleks, Right = Menjodohkan + Uraian
+            $kunciTable = $section->addTable(['borderSize' => 0]);
+            $kunciTable->addRow();
+            
+            // Left column
+            $kunciLeft = $kunciTable->addCell($halfPageWidth, ['borderRightSize' => 4, 'borderRightColor' => 'BBBBBB', 'borderRightStyle' => 'dotted']);
+            
             if (!empty($content['kunci_jawaban']['pilihan_ganda'])) {
-                $section->addText('A. Pilihan Ganda', ['bold' => true]);
+                $kunciLeft->addText('A. Pilihan Ganda', ['bold' => true, 'size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
                 $answers = [];
                 foreach ($content['kunci_jawaban']['pilihan_ganda'] as $i => $kunci) {
                     $answers[] = ($i + 1) . '. ' . $kunci;
                 }
-                $section->addText(implode('  |  ', $answers));
-                $section->addText('');
+                $kunciLeft->addText(implode('  |  ', $answers), ['size' => 8, 'name' => 'Arial'], ['spaceAfter' => 80]);
             }
 
-            // PG Kompleks
             if (!empty($content['kunci_jawaban']['pg_kompleks'])) {
-                $section->addText('B. Pilihan Ganda Kompleks', ['bold' => true]);
+                $kunciLeft->addText('B. Pilihan Ganda Kompleks', ['bold' => true, 'size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
                 foreach ($content['kunci_jawaban']['pg_kompleks'] as $i => $item) {
-                    $section->addText(($i + 1) . '. ' . ($item['jawaban'] ?? ''));
+                    $kunciLeft->addText(($i + 1) . '. ' . ($item['jawaban'] ?? ''), ['size' => 8, 'name' => 'Arial'], ['spaceAfter' => 20]);
                 }
-                $section->addText('');
             }
 
-            // Menjodohkan
+            // Right column
+            $kunciRight = $kunciTable->addCell($halfPageWidth);
+
             if (!empty($content['kunci_jawaban']['menjodohkan'])) {
-                $section->addText('C. Menjodohkan', ['bold' => true]);
-                $section->addText(implode(', ', $content['kunci_jawaban']['menjodohkan']));
-                $section->addText('');
+                $kunciRight->addText('C. Menjodohkan', ['bold' => true, 'size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
+                $kunciRight->addText(implode(', ', $content['kunci_jawaban']['menjodohkan']), ['size' => 8, 'name' => 'Arial'], ['spaceAfter' => 80]);
             }
 
-            // Uraian
             if (!empty($content['kunci_jawaban']['uraian'])) {
-                $section->addText('D. Uraian', ['bold' => true]);
+                $kunciRight->addText('D. Uraian', ['bold' => true, 'size' => 8.5, 'name' => 'Arial'], ['spaceAfter' => 40]);
                 foreach ($content['kunci_jawaban']['uraian'] as $i => $item) {
-                    $section->addText(($i + 1) . '. ' . ($item['jawaban'] ?? ''));
+                    $kunciRight->addText(($i + 1) . '. ' . ($item['jawaban'] ?? ''), ['size' => 8, 'name' => 'Arial'], ['spaceAfter' => 20]);
                 }
             }
         }
