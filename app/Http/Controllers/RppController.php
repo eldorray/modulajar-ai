@@ -67,9 +67,23 @@ class RppController extends Controller
             'kompetensi_awal' => 'nullable|string|max:1000',
             'kata_kunci' => 'nullable|string|max:500',
             'model_pembelajaran' => 'nullable|string|max:255',
-            'jenis_asesmen' => 'nullable|string|max:255',
+            'jenis_asesmen' => 'nullable',
+            'jenis_asesmen.*' => 'string|in:Diagnostik Kognitif,Diagnostik Non-Kognitif,Formatif,Sumatif',
             'kurikulum' => 'required|string|max:255',
         ]);
+
+        // Normalize jenis_asesmen to array → comma-separated string for storage
+        $jenisAsesmenRaw = $validated['jenis_asesmen'] ?? [];
+        if (is_string($jenisAsesmenRaw)) {
+            $jenisAsesmenArray = array_filter(array_map('trim', explode(',', $jenisAsesmenRaw)));
+        } else {
+            $jenisAsesmenArray = is_array($jenisAsesmenRaw) ? $jenisAsesmenRaw : [];
+        }
+        if (empty($jenisAsesmenArray)) {
+            $jenisAsesmenArray = ['Formatif', 'Sumatif'];
+        }
+        $validated['jenis_asesmen'] = implode(', ', $jenisAsesmenArray);
+        $validated['jenis_asesmen_array'] = $jenisAsesmenArray;
 
         // Create RPP with processing status
         $rpp = Rpp::create([
@@ -95,8 +109,9 @@ class RppController extends Controller
             'status' => 'processing',
         ]);
 
-        // Increase time limit for AI generation (3 minutes)
-        set_time_limit(180);
+        // Increase time limit for AI generation
+        $isDeepLearning = ($validated['kurikulum'] ?? '') === 'Kurikulum Merdeka Deep Learning';
+        set_time_limit($isDeepLearning ? 360 : 180);
 
         // Generate RPP using AI
         $result = $this->aiService->generateRPP(
@@ -166,17 +181,25 @@ class RppController extends Controller
         }
 
         $schoolSettings = SchoolSetting::getSettings();
-        
-        $pdf = Pdf::loadView('rpp.pdf', compact('rpp', 'schoolSettings'));
-        
-        // Set paper size and margins (in points: 1cm = 28.35pt)
+
+        $isDeepLearning = $rpp->kurikulum === 'Kurikulum Merdeka Deep Learning';
+        $viewName = $isDeepLearning ? 'rpp.pdf_deep_learning' : 'rpp.pdf';
+
+        $pdf = Pdf::loadView($viewName, compact('rpp', 'schoolSettings'));
+
+        // Set paper size; margins come from @page CSS rule in the template
         $pdf->setPaper('A4', 'portrait');
-        $pdf->setOption('margin-top', 85);      // 3cm = ~85pt
-        $pdf->setOption('margin-bottom', 71);   // 2.5cm = ~71pt
-        $pdf->setOption('margin-left', 85);     // 3cm = ~85pt
-        $pdf->setOption('margin-right', 71);    // 2.5cm = ~71pt
-        
-        $filename = 'ModulAjar_' . str_replace(' ', '_', $rpp->mata_pelajaran) . '_' . $rpp->id . '.pdf';
+        if (!$isDeepLearning) {
+            // Modul Ajar: 3cm top/left, 2.5cm right/bottom
+            $pdf->setOption('margin-top', 85);
+            $pdf->setOption('margin-bottom', 71);
+            $pdf->setOption('margin-left', 85);
+            $pdf->setOption('margin-right', 71);
+        }
+        // Deep Learning: margins dari @page rule di template (2cm atas/bawah, 2.5cm kiri/kanan)
+
+        $prefix = $isDeepLearning ? 'RPPM_' : 'ModulAjar_';
+        $filename = $prefix . str_replace(' ', '_', $rpp->mata_pelajaran) . '_' . $rpp->id . '.pdf';
 
         return $pdf->download($filename);
     }

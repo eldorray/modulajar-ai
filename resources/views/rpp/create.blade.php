@@ -222,19 +222,40 @@
                         required
                     />
 
-                    <x-ui.select
-                        name="jenis_asesmen"
-                        label="Jenis Asesmen"
-                        :options="[
-                            'Formatif' => 'Asesmen Formatif',
-                            'Sumatif' => 'Asesmen Sumatif',
-                            'Formatif dan Sumatif' => 'Formatif dan Sumatif',
-                            'Diagnostik' => 'Asesmen Diagnostik',
-                        ]"
-                        placeholder="Pilih Jenis Asesmen"
-                        :value="old('jenis_asesmen', 'Formatif dan Sumatif')"
-                        :error="$errors->first('jenis_asesmen')"
-                    />
+                    <div>
+                        <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-2">
+                            Jenis Asesmen <span class="text-[hsl(var(--muted-foreground))] text-xs">(pilih satu atau lebih)</span>
+                        </label>
+                        @php
+                            $asesmenOptions = [
+                                'Diagnostik Kognitif' => 'Asesmen Diagnostik Kognitif',
+                                'Diagnostik Non-Kognitif' => 'Asesmen Diagnostik Non-Kognitif (Gaya Belajar)',
+                                'Formatif' => 'Asesmen Formatif',
+                                'Sumatif' => 'Asesmen Sumatif',
+                            ];
+                            $selectedAsesmen = old('jenis_asesmen', ['Diagnostik Kognitif', 'Diagnostik Non-Kognitif', 'Formatif', 'Sumatif']);
+                            if (!is_array($selectedAsesmen)) {
+                                $selectedAsesmen = array_filter(array_map('trim', explode(',', $selectedAsesmen)));
+                            }
+                        @endphp
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
+                            @foreach($asesmenOptions as $value => $label)
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-[hsl(var(--muted))] p-2 rounded transition-colors">
+                                <input
+                                    type="checkbox"
+                                    name="jenis_asesmen[]"
+                                    value="{{ $value }}"
+                                    {{ in_array($value, $selectedAsesmen) ? 'checked' : '' }}
+                                    class="mt-1 h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+                                >
+                                <span class="text-sm text-[hsl(var(--foreground))]">{{ $label }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                        @if($errors->first('jenis_asesmen'))
+                        <p class="mt-1 text-xs text-[hsl(var(--destructive))]">{{ $errors->first('jenis_asesmen') }}</p>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-4 pt-4 border-t border-[hsl(var(--border))]">
