@@ -2,1032 +2,874 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modul Ajar - {{ $rpp->mata_pelajaran }}</title>
+    <title>RPPM - {{ $rpp->mata_pelajaran }}</title>
+
     <style>
         @page {
-            margin: 3cm 2.5cm 2.5cm 3cm; /* atas, kanan, bawah, kiri */
+            margin: 2.5cm;
             size: A4;
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Reset bertarget — JANGAN reset `html` (dan jangan pakai `* {}`):
+           margin:0 pada html menggeser acuan posisi elemen fixed di DomPDF,
+           sehingga ornamen sudut (offset negatif) terlempar ke luar kanvas. */
+        body, div, p, h1, h2, h3, h4, ol, ul, li, table, thead, tbody, tr, th, td, span { margin: 0; padding: 0; }
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            line-height: 1.6;
+            font-size: 11pt;
+            line-height: 1.55;
             color: #1a1a1a;
-            background: #fff;
         }
 
-        /* Cover Page */
+        /* ============== DECORATIONS ==============
+           Ornamen sudut = PNG transparan (di-generate GD, public/decor-*.png).
+           SVG, gradient, dan border-top triangle tidak dirender DomPDF;
+           gambar PNG dirender andal. position:fixed = berulang tiap halaman. */
+        .fx-dots { position: fixed; top: -1.6cm; left: -1.6cm; width: 48px; }
+        .fx-tr   { position: fixed; top: -2.5cm; right: -2.5cm; width: 180px; }
+        .fx-bl   { position: fixed; bottom: -2.5cm; left: -2.5cm; width: 160px; }
+        .fx-br   { position: fixed; bottom: -2.5cm; right: -2.5cm; width: 115px; }
+
+        .page-num { position: fixed; bottom: -1.7cm; right: 0; font-size: 12pt; font-weight: bold; color: #1a1a1a; }
+        .page-num:before { content: counter(page); }
+
+        /* ============== COVER PAGE ============== */
         .cover {
-            text-align: center;
-            padding: 40px 30px;
             page-break-after: always;
-            min-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .cover-border {
-            border: 3px solid #27a38a;
-            border-radius: 8px;
-            padding: 50px 40px;
-            margin: 0 auto;
-            max-width: 100%;
-        }
-        .cover h1 {
-            font-size: 22pt;
-            font-weight: bold;
-            color: #27a38a;
-            margin-bottom: 8px;
-            letter-spacing: 3px;
-        }
-        .cover h2 {
-            font-size: 14pt;
-            font-weight: normal;
-            color: #374151;
-            margin-bottom: 40px;
-        }
-        .cover .subject-box {
-            background: linear-gradient(135deg, #27a38a 0%, #27a38a 100%);
-            color: white;
-            font-size: 18pt;
-            font-weight: bold;
-            padding: 25px 40px;
-            border-radius: 10px;
-            margin: 30px auto;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
-        }
-        .cover .topic {
-            font-size: 14pt;
-            color: #374151;
-            margin: 25px 0;
-            font-style: italic;
-        }
-        .cover .info-table {
-            margin: 40px auto;
-            text-align: left;
-            border-collapse: collapse;
-        }
-        .cover .info-table td {
-            padding: 8px 15px;
-            font-size: 12pt;
-        }
-        .cover .info-table td:first-child {
-            font-weight: bold;
-            width: 180px;
-        }
-        .cover .author {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 1px solid #e5e7eb;
-        }
-        .cover .author p {
-            margin: 5px 0;
-        }
-
-        /* Content Styling */
-        .page-title {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #27a38a;
-        }
-        .page-title h1 {
-            font-size: 16pt;
-            color: #27a38a;
-            margin-bottom: 5px;
-        }
-        .page-title h2 {
-            font-size: 12pt;
-            font-weight: normal;
-            color: #6b7280;
+            padding: 30px 20px 40px;
+            position: relative;
+            /* JANGAN kasih height: DomPDF abaikan box-sizing utk height,
+               height + padding overflow → cover terdorong ke halaman 2.
+               Ornamen sudut sudah fixed per halaman, tak butuh cover full-height. */
         }
 
-        .section {
-            margin-bottom: 25px;
-            page-break-inside: avoid;
-        }
-        .section-header {
-            background: #27a38a;
-            color: white;
-            padding: 10px 20px;
-            font-size: 12pt;
-            font-weight: bold;
-            border-radius: 6px 6px 0 0;
-            margin-bottom: 0;
-        }
-        .section-body {
-            border: 1px solid #e5e7eb;
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            padding: 20px;
-            background: #fafafa;
-        }
+        .cover-school-logo { margin-bottom: 8px; margin-top: 40px; position: relative; z-index: 2; }
+        .cover-school-logo img { max-height: 85px; max-width: 85px; }
+        .cover-school-name { font-size: 12pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2; }
+        .cover-school-sub { font-size: 9pt; color: #555; letter-spacing: 1px; margin-bottom: 25px; position: relative; z-index: 2; }
 
-        /* Tables */
-        .info-table-content {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .info-table-content tr {
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .info-table-content tr:last-child {
-            border-bottom: none;
-        }
-        .info-table-content td {
-            padding: 12px 15px;
-            vertical-align: top;
-        }
-        .info-table-content td:first-child {
-            width: 35%;
-            font-weight: 600;
-            color: #374151;
-            background: #f3f4f6;
-        }
-        .info-table-content td:last-child {
-            background: white;
-        }
+        .cover-title-main { font-size: 24pt; font-weight: bold; text-transform: uppercase; line-height: 1.15; margin: 15px 0 0; letter-spacing: 1px; color: #4b5563; position: relative; z-index: 2; }
+        .cover-subject { font-size: 32pt; font-weight: bold; color: #facc15; text-transform: uppercase; letter-spacing: 1px; margin: 0; line-height: 1.15; position: relative; z-index: 2; }
+        .cover-semester { font-size: 13pt; color: #6b7280; margin-bottom: 20px; position: relative; z-index: 2; }
 
-        /* Lists */
-        ol, ul {
-            margin-left: 20px;
-            padding-left: 10px;
-        }
-        li {
-            margin-bottom: 10px;
-            text-align: justify;
-            line-height: 1.7;
-        }
+        .cover-garuda { margin: 15px auto; width: 210px; position: relative; z-index: 2; }
+        .cover-garuda img { width: 100%; max-width: 230px; }
 
-        /* Activity Boxes */
-        .activity-container {
-            margin-top: 15px;
-        }
-        .activity-box {
-            margin-bottom: 20px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            overflow: hidden;
-            background: white;
-        }
-        .activity-header {
-            background: linear-gradient(90deg, #f3f4f6, #e5e7eb);
-            padding: 12px 20px;
-            font-weight: bold;
-            color: #1f2937;
-            display: table;
-            width: 100%;
-        }
-        .activity-header span:first-child {
-            display: table-cell;
-            text-align: left;
-        }
-        .activity-header span:last-child {
-            display: table-cell;
-            text-align: right;
-            color: #1e40af;
-            font-weight: normal;
-        }
-        .activity-content {
-            padding: 15px 20px;
-        }
-        .activity-content ul {
-            margin: 0;
-        }
-        .activity-content li {
-            margin-bottom: 8px;
-        }
-        .activity-detail {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: #f9fafb;
-            border-radius: 6px;
-        }
-        .activity-detail p {
-            margin: 4px 0;
-        }
-        .activity-detail strong {
-            color: #374151;
-        }
+        .cover-author-label { font-size: 12pt; color: #374151; margin-top: 20px; margin-bottom: 5px; position: relative; z-index: 2; }
+        .cover-author-name { font-size: 17pt; font-weight: bold; color: #b91c1c; position: relative; z-index: 2; }
 
-        /* Badges */
-        .badge-container {
-            margin-top: 10px;
-        }
-        .badge {
-            display: inline-block;
-            background: #dbeafe;
-            color: #1e40af;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 11pt;
-            margin: 4px;
-            border: 1px solid #93c5fd;
-        }
-        .profil-item {
-            margin-bottom: 15px;
-            padding: 12px;
-            background: #f0fdf4;
-            border-left: 4px solid #27a38a;
-            border-radius: 0 6px 6px 0;
-        }
-        .profil-item h4 {
-            color: #27a38a;
-            margin-bottom: 5px;
-        }
+        /* ============== TITLES ============== */
+        .page-title { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 20px; margin-top: 5px; }
+        .section-letter { font-size: 12pt; font-weight: bold; margin: 18px 0 8px; }
 
-        /* Rubric Table */
-        .rubrik-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 10pt;
-        }
-        .rubrik-table th {
-            background: #27a38a;
-            color: white;
-            padding: 12px 10px;
-            text-align: center;
-            font-weight: bold;
-            border: 1px solid #27a38a;
-        }
-        .rubrik-table td {
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            vertical-align: top;
-            text-align: left;
-        }
-        .rubrik-table tr:nth-child(even) {
-            background: #f9fafb;
-        }
-        .rubrik-table td:first-child {
-            font-weight: 600;
-            background: #f3f4f6;
-            width: 18%;
-        }
+        .page-break { page-break-before: always; }
 
-        /* Signature Section */
-        .signature-section {
-            margin-top: 60px;
-            page-break-inside: avoid;
-        }
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .signature-table td {
-            width: 50%;
-            text-align: center;
-            vertical-align: top;
-            padding: 10px 20px;
-        }
-        .signature-space {
-            height: 80px;
-        }
-        .signature-name {
-            font-weight: bold;
-            text-decoration: underline;
-        }
-        .signature-nip {
-            font-size: 11pt;
-            color: #4b5563;
-        }
+        /* ============== KATA PENGANTAR ============== */
+        .kata-pengantar-body { page-break-after: always; position: relative; z-index: 2; }
+        .kata-pengantar-body p { text-align: justify; text-indent: 35px; margin-bottom: 10px; line-height: 1.7; font-size: 11pt; }
+        .kata-pengantar-signature { text-align: right; margin-top: 35px; font-size: 11pt; }
+        .kata-pengantar-signature .space { height: 55px; }
 
-        /* Two column layout */
-        .two-column {
-            display: table;
-            width: 100%;
-        }
-        .two-column > div {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-            padding: 10px;
-        }
-        .remedial-box {
-            background: #fef3c7;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #f59e0b;
-        }
-        .pengayaan-box {
-            background: #d1fae5;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #10b981;
-        }
+        /* ============== DAFTAR ISI ============== */
+        /* Tanpa page-break-after: bagian modul berikutnya sudah punya
+           page-break-before (double break = halaman kosong) */
+        .daftar-isi { width: 100%; border-collapse: collapse; position: relative; z-index: 2; }
+        .daftar-isi td { border: none; padding: 6px 0; font-size: 11pt; vertical-align: bottom; background: transparent; }
+        .daftar-isi .dots { border-bottom: 1px dotted #555; padding: 0 8px 4px 8px; }
+        .daftar-isi .page-col { text-align: right; width: 35px; }
+        .daftar-isi .level-1 td { font-weight: bold; }
+        .daftar-isi .level-2 td:first-child { padding-left: 20px; }
 
-        /* Utility */
-        .text-center { text-align: center; }
+        /* ============== TABLES ============== */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; position: relative; z-index: 2; background: white; }
+        th, td { border: 1px solid #666; padding: 6px 9px; vertical-align: top; font-size: 10.5pt; line-height: 1.5; }
+
+        .tbl-info td { border: none; padding: 3px 0; font-size: 11pt; background: transparent; }
+        .tbl-info td:first-child { width: 32%; }
+
+        .tbl-red thead th, .tbl-red tbody .row-head td { background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; padding: 7px 9px; border: 1px solid #b91c1c; }
+        .tbl-red tbody .row-sub td { background-color: #f5f5f5; font-weight: bold; }
+        .label-cell { font-weight: bold; background-color: #fafafa; width: 25%; }
+
+        .tbl-langkah th { background-color: #b91c1c; color: #ffffff; text-align: center; font-weight: bold; padding: 8px; border: 1px solid #b91c1c; }
+        .tbl-langkah .col-pengalaman { width: 20%; text-align: center; vertical-align: middle; background-color: #fff6f6; font-weight: bold; color: #b91c1c; font-size: 12pt; padding: 15px 8px; }
+        .tbl-langkah .fase-sintaks { font-weight: bold; font-style: italic; margin: 8px 0 4px; }
+        .tbl-langkah .durasi { font-size: 9.5pt; color: #444; font-weight: normal; }
+
+        /* ============== LKPD ============== */
+        .lkpd-wrapper { border: 2px solid #b91c1c; padding: 15px; }
+        .lkpd-header { text-align: center; border-bottom: 2px solid #b91c1c; padding-bottom: 10px; margin-bottom: 12px; }
+        .lkpd-title { font-size: 13pt; font-weight: bold; color: #b91c1c; text-transform: uppercase; }
+        .jawaban-box { border: 1px dashed #999; min-height: 55px; padding: 6px 8px; margin-top: 5px; color: #999; font-size: 9.5pt; background: #ffffff; }
+
+        /* ============== SIGNATURE ============== */
+        .signature-section { margin-top: 30px; page-break-inside: avoid; position: relative; z-index: 2; }
+        .signature-table td { border: none; text-align: center; font-size: 11pt; background: transparent; }
+        .signature-space { height: 60px; }
+        .signature-name { font-weight: bold; text-decoration: underline; }
+        .signature-nip { font-size: 10pt; }
+
+        /* ============== HELPERS ============== */
         .text-bold { font-weight: bold; }
-        .mt-10 { margin-top: 10px; }
-        .mt-15 { margin-top: 15px; }
-        .mt-20 { margin-top: 20px; }
-        .mb-10 { margin-bottom: 10px; }
+        .text-red { color: #b91c1c; }
+        .text-center { text-align: center; }
+        .mt-5 { margin-top: 5px; } .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; }
+        .mb-5 { margin-bottom: 5px; } .mb-10 { margin-bottom: 10px; }
+        ol, ul { margin-left: 20px; }
+        ol li, ul li { margin-bottom: 4px; }
     </style>
 </head>
 <body>
-    @php $content = $rpp->content_result ?? []; @endphp
 
-    <!-- ==================== COVER PAGE ==================== -->
-    <div class="cover">
-        <div class="cover-border">
-            <!-- School Header -->
-            @if(isset($schoolSettings) && ($schoolSettings->logo || $schoolSettings->nama_sekolah))
-            <div style="margin-bottom: 30px;">
-                @if($schoolSettings->logo)
-                <div style="margin-bottom: 15px;">
-                    <img src="{{ storage_path('app/public/' . $schoolSettings->logo) }}" alt="Logo Sekolah" style="max-height: 80px; max-width: 80px; object-fit: contain;">
-                </div>
-                @endif
-                @if($schoolSettings->nama_sekolah)
-                <h3 style="font-size: 16pt; font-weight: bold; color: #1f2937; margin-bottom: 5px;">{{ strtoupper($schoolSettings->nama_sekolah) }}</h3>
-                @endif
-                @if($schoolSettings->npsn)
-                <p style="font-size: 11pt; color: #6b7280;">NPSN: {{ $schoolSettings->npsn }}</p>
-                @endif
-            </div>
-            <div style="border-top: 2px solid #27a38a; margin-bottom: 20px;"></div>
+@php
+    $content = $rpp->content_result ?? [];
+    $isPrint = $print ?? false;
+
+    $schoolName = $schoolSettings->nama_sekolah ?? 'NAMA SEKOLAH';
+    $schoolCity = $schoolSettings->kota ?? '';
+    $tahunAjaran = date('Y') . '/' . (date('Y') + 1);
+
+    $isKBC = ($rpp->kurikulum === 'Kurikulum Berbasis Cinta');
+    $docName = 'Rencana Pelaksanaan Pembelajaran Mendalam (RPPM)';
+
+    $tanggalDok = ($rpp->tanggal ? \Carbon\Carbon::parse($rpp->tanggal) : now())
+        ->locale('id')->translatedFormat('d F Y');
+    $kotaDok = $rpp->kota ?: ($schoolCity ?: '.............');
+
+    $garudaSrc = $isPrint ? asset('garuda.png') : public_path('garuda.png');
+
+    $huruf = 'A'; // penomoran section dinamis (section kondisional tidak bikin huruf loncat)
+@endphp
+
+{{-- =============================================================
+     COVER
+     ============================================================= --}}
+{{-- Ornamen sudut: fixed langsung di bawah <body> (DomPDF tak merender fixed
+     di dalam parent position:relative). Berulang otomatis di semua halaman. --}}
+<img class="fx-dots" src="{{ $isPrint ? asset('decor-dots.png') : public_path('decor-dots.png') }}" alt="">
+<img class="fx-tr" src="{{ $isPrint ? asset('decor-tr.png') : public_path('decor-tr.png') }}" alt="">
+<img class="fx-bl" src="{{ $isPrint ? asset('decor-bl.png') : public_path('decor-bl.png') }}" alt="">
+<img class="fx-br" src="{{ $isPrint ? asset('decor-br.png') : public_path('decor-br.png') }}" alt="">
+<div class="page-num"></div>
+
+<div class="cover">
+    @if(isset($schoolSettings) && $schoolSettings->logo)
+    <div class="cover-school-logo">
+        <img src="{{ $isPrint ? asset('storage/' . $schoolSettings->logo) : storage_path('app/public/' . $schoolSettings->logo) }}" alt="Logo">
+    </div>
+    @endif
+    <div class="cover-school-name">{{ strtoupper($schoolName) }}</div>
+    @if($schoolCity)
+    <div class="cover-school-sub">{{ strtoupper($schoolCity) }}</div>
+    @endif
+
+    <div class="cover-title-main">RENCANA PELAKSANAAN<br>PEMBELAJARAN MENDALAM<br><span style="font-size:13pt;">{{ strtoupper($rpp->kurikulum ?? 'Kurikulum Merdeka') }}</span></div>
+    <div class="cover-subject">{{ strtoupper($rpp->mata_pelajaran) }}</div>
+    <div class="cover-semester">
+        Semester {{ $rpp->semester ?? 'Ganjil' }} : Tahun Ajaran {{ $tahunAjaran }}
+    </div>
+
+    <div class="cover-garuda">
+        <img src="{{ $garudaSrc }}" alt="Garuda Pancasila">
+    </div>
+
+    <div class="cover-author-label">Disusun oleh:</div>
+    <div class="cover-author-name">{{ $rpp->nama_guru }}</div>
+</div>
+
+{{-- =============================================================
+     KATA PENGANTAR
+     ============================================================= --}}
+<div class="kata-pengantar-body">
+    <div class="page-title">Kata Pengantar</div>
+
+    <p>
+        Puji syukur kehadirat Tuhan Yang Maha Esa atas segala rahmat dan karunia-Nya sehingga
+        {{ $docName }} dengan topik <em>"{{ $rpp->topik }}"</em> ini dapat diselesaikan dengan baik.
+        RPPM ini disusun sebagai salah satu perangkat pembelajaran untuk mendukung proses
+        pembelajaran yang lebih bermakna bagi peserta didik dalam memahami materi
+        {{ strtolower($rpp->mata_pelajaran) }}.
+    </p>
+    <p>
+        Melalui pembelajaran ini, peserta didik diharapkan mampu mengembangkan kompetensi sesuai
+        dengan tujuan pembelajaran yang telah ditetapkan. Selain itu, peserta didik juga diharapkan
+        mampu menumbuhkan sikap kritis, reflektif, serta mampu menerapkan nilai-nilai yang dipelajari
+        dalam kehidupan sehari-hari, bermasyarakat, berbangsa, dan bernegara.
+    </p>
+    @if($isKBC)
+    <p>
+        RPPM ini disusun berdasarkan Kurikulum Berbasis Cinta (KBC) Kementerian Agama yang
+        mengintegrasikan nilai-nilai cinta, yaitu cinta kepada Allah dan Rasul-Nya, cinta ilmu,
+        cinta lingkungan, cinta diri dan sesama manusia, serta cinta tanah air. Integrasi nilai-nilai
+        tersebut diharapkan mampu membentuk peserta didik yang berakhlak mulia dan moderat dalam
+        beragama.
+    </p>
+    @else
+    <p>
+        RPPM ini juga mengintegrasikan dimensi Profil Pelajar Pancasila yang meliputi beriman
+        dan bertakwa kepada Tuhan Yang Maha Esa, mandiri, bergotong royong, bernalar kritis, kreatif,
+        serta berkebinekaan global. Integrasi dimensi tersebut diharapkan mampu mendukung
+        pengembangan karakter peserta didik secara holistik, tidak hanya dalam aspek kognitif tetapi
+        juga dalam aspek sikap dan keterampilan.
+    </p>
+    @endif
+    @if(isset($content['integrasi_panca_cinta']) || isset($content['integrasi_adiwiyata']))
+    <p>
+        Selain itu, RPPM ini memuat
+        @if(isset($content['integrasi_panca_cinta']))integrasi nilai-nilai Panca Cinta @endif
+        @if(isset($content['integrasi_panca_cinta']) && isset($content['integrasi_adiwiyata'])) serta @endif
+        @if(isset($content['integrasi_adiwiyata']))integrasi program Adiwiyata (Sekolah Peduli dan Berbudaya Lingkungan)@endif
+        yang dihubungkan secara kontekstual dengan topik pembelajaran, sehingga penanaman karakter
+        dan kepedulian lingkungan menyatu dalam aktivitas belajar peserta didik.
+    </p>
+    @endif
+    <p>
+        Ucapan terima kasih disampaikan kepada berbagai pihak yang telah memberikan dukungan,
+        masukan, serta bimbingan dalam penyusunan RPPM ini. Semoga RPPM ini dapat
+        memberikan manfaat dalam mendukung proses pembelajaran
+        {{ strtolower($rpp->mata_pelajaran) }} yang lebih bermakna dan kontekstual.
+    </p>
+
+    <div class="kata-pengantar-signature">
+        <p>{{ $kotaDok }}, {{ $tanggalDok }}</p>
+        <div class="space"></div>
+        <p><strong>{{ $rpp->nama_guru }}</strong></p>
+    </div>
+</div>
+
+{{-- =============================================================
+     DAFTAR ISI
+     ============================================================= --}}
+<div>
+    <div class="page-title">Daftar Isi</div>
+    <table class="daftar-isi">
+        <tr>
+            <td style="width:55%;">Kata Pengantar</td>
+            <td class="dots"></td>
+            <td class="page-col">ii</td>
+        </tr>
+        <tr>
+            <td>Daftar Isi</td>
+            <td class="dots"></td>
+            <td class="page-col">iii</td>
+        </tr>
+        <tr class="level-1">
+            <td>{{ $docName }}</td>
+            <td class="dots"></td>
+            <td class="page-col">1</td>
+        </tr>
+        @php
+            $tocPage = 1;
+            $tocItems = [];
+            $tocItems[] = 'Informasi Umum';
+            if (!empty($content['kompetensi_awal'])) $tocItems[] = 'Kompetensi Awal';
+            if ($isKBC && isset($content['nilai_nilai_cinta'])) $tocItems[] = 'Nilai-Nilai Cinta';
+            if ($isKBC && isset($content['profil_lulusan_madrasah'])) $tocItems[] = 'Profil Lulusan Madrasah';
+            if ($isKBC && isset($content['moderasi_beragama'])) $tocItems[] = 'Moderasi Beragama';
+            if (isset($content['profil_pelajar_pancasila'])) $tocItems[] = 'Profil Pelajar Pancasila';
+            if (isset($content['sarana_prasarana'])) $tocItems[] = 'Sarana dan Prasarana';
+            if (isset($content['tujuan_pembelajaran'])) $tocItems[] = 'Tujuan Pembelajaran';
+            if (!empty($content['pemahaman_bermakna'])) $tocItems[] = 'Pemahaman Bermakna';
+            if (isset($content['pertanyaan_pemantik'])) $tocItems[] = 'Pertanyaan Pemantik';
+            if (isset($content['kegiatan_pembelajaran'])) $tocItems[] = 'Kegiatan Pembelajaran';
+            if (isset($content['asesmen'])) $tocItems[] = 'Asesmen Pembelajaran';
+            if (isset($content['pengayaan_remedial'])) $tocItems[] = 'Pengayaan dan Remedial';
+            if (isset($content['refleksi']) || isset($content['refleksi_guru'])) $tocItems[] = 'Refleksi';
+            if (isset($content['integrasi_panca_cinta'])) $tocItems[] = 'Integrasi Panca Cinta';
+            if (isset($content['integrasi_adiwiyata'])) $tocItems[] = 'Integrasi Adiwiyata';
+            if (isset($content['glosarium'])) $tocItems[] = 'Glosarium';
+            if (isset($content['daftar_pustaka'])) $tocItems[] = 'Daftar Pustaka';
+            $tocLetter = 'A';
+        @endphp
+        @foreach($tocItems as $i => $item)
+        <tr class="level-2">
+            <td>{{ $tocLetter++ }}. {{ $item }}</td>
+            <td class="dots"></td>
+            <td class="page-col">{{ 1 + intdiv($i, 2) }}</td>
+        </tr>
+        @endforeach
+        @if(isset($content['lkpd']))
+        <tr class="level-1">
+            <td>Lampiran : Lembar Kerja Peserta Didik (LKPD)</td>
+            <td class="dots"></td>
+            <td class="page-col">{{ 2 + intdiv(count($tocItems), 2) }}</td>
+        </tr>
+        @endif
+    </table>
+</div>
+
+{{-- =============================================================
+     MODUL AJAR UTAMA
+     ============================================================= --}}
+<div class="page-break">
+    <div class="page-title">{{ $docName }}</div>
+
+    <table class="tbl-info">
+        <tr><td>Nama Satuan Pendidikan</td><td>: {{ $schoolName }}</td></tr>
+        <tr><td>Kelas/Fase</td><td>: {{ $rpp->kelas ?: '-' }} / Fase {{ $rpp->fase }}</td></tr>
+        <tr><td>Tahun Pelajaran</td><td>: {{ $tahunAjaran }}</td></tr>
+        <tr><td>Mata Pelajaran</td><td>: {{ $rpp->mata_pelajaran }}</td></tr>
+    </table>
+
+    {{-- INFORMASI UMUM --}}
+    <div class="section-letter">{{ $huruf++ }}. Informasi Umum</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:30%;">Komponen</th>
+                <th>Keterangan</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td class="label-cell">Nama Penyusun</td><td>{{ $rpp->nama_guru }}</td></tr>
+            <tr><td class="label-cell">Topik / Materi</td><td>{{ $rpp->topik }}</td></tr>
+            <tr><td class="label-cell">Semester</td><td>{{ $rpp->semester ?? '-' }}</td></tr>
+            <tr><td class="label-cell">Alokasi Waktu</td><td>{{ $rpp->alokasi_waktu }}{{ $rpp->jumlah_pertemuan ? ' (' . $rpp->jumlah_pertemuan . ' pertemuan)' : '' }}</td></tr>
+            <tr><td class="label-cell">Model Pembelajaran</td><td>{{ $rpp->model_pembelajaran }}</td></tr>
+            <tr><td class="label-cell">Kurikulum</td><td>{{ $rpp->kurikulum ?? 'Kurikulum Merdeka' }}</td></tr>
+            <tr><td class="label-cell">Jenis Asesmen</td><td>{{ $rpp->jenis_asesmen ?? 'Formatif dan Sumatif' }}</td></tr>
+            @if($rpp->target_peserta_didik)
+            <tr><td class="label-cell">Target Peserta Didik</td><td>{{ $rpp->target_peserta_didik }}</td></tr>
             @endif
-            
-            <h1>MODUL AJAR</h1>
-            <h2>{{ $rpp->kurikulum ?? 'Kurikulum Merdeka' }}</h2>
-            
-            <div class="subject-box">
-                {{ strtoupper($rpp->mata_pelajaran) }}
-            </div>
-            
-            <p class="topic">"{{ $rpp->topik }}"</p>
-            
-            <table class="info-table" style="margin: 30px auto;">
-                <tr>
-                    <td>Fase / Kelas</td>
-                    <td>: {{ $rpp->fase }}{{ $rpp->kelas ? ' / Kelas ' . $rpp->kelas : '' }}</td>
-                </tr>
-                @if($rpp->semester)
-                <tr>
-                    <td>Semester</td>
-                    <td>: {{ $rpp->semester }}</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Alokasi Waktu</td>
-                    <td>: {{ $rpp->alokasi_waktu }}</td>
-                </tr>
-                <tr>
-                    <td>Model Pembelajaran</td>
-                    <td>: {{ $rpp->model_pembelajaran }}</td>
-                </tr>
-            </table>
-            
-            <div class="author">
-                <p><strong>Disusun Oleh:</strong></p>
-                <p style="font-size: 14pt; margin-top: 10px;"><strong>{{ $rpp->nama_guru }}</strong></p>
-            </div>
-        </div>
-    </div>
+        </tbody>
+    </table>
 
-    <!-- ==================== CONTENT PAGES ==================== -->
-    
-    <div class="page-title">
-        <h1>MODUL AJAR</h1>
-        <h2>{{ $rpp->kurikulum ?? 'Kurikulum Merdeka' }}</h2>
-    </div>
-
-    <!-- A. INFORMASI UMUM -->
-    <div class="section">
-        <div class="section-header">A. INFORMASI UMUM</div>
-        <div class="section-body">
-            <table class="info-table-content">
-                <tr>
-                    <td>Nama Penyusun</td>
-                    <td>{{ $rpp->nama_guru }}</td>
-                </tr>
-                <tr>
-                    <td>Mata Pelajaran</td>
-                    <td>{{ $rpp->mata_pelajaran }}</td>
-                </tr>
-                <tr>
-                    <td>Fase / Kelas</td>
-                    <td>{{ $rpp->fase }}{{ $rpp->kelas ? ' / Kelas ' . $rpp->kelas : '' }}</td>
-                </tr>
-                @if($rpp->semester)
-                <tr>
-                    <td>Semester</td>
-                    <td>{{ $rpp->semester }}</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Topik / Materi</td>
-                    <td>{{ $rpp->topik }}</td>
-                </tr>
-                <tr>
-                    <td>Alokasi Waktu</td>
-                    <td>{{ $rpp->alokasi_waktu }}</td>
-                </tr>
-                @if($rpp->jumlah_pertemuan)
-                <tr>
-                    <td>Jumlah Pertemuan</td>
-                    <td>{{ $rpp->jumlah_pertemuan }} Pertemuan</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Model Pembelajaran</td>
-                    <td>{{ $rpp->model_pembelajaran }}</td>
-                </tr>
-                <tr>
-                    <td>Jenis Asesmen</td>
-                    <td>{{ $rpp->jenis_asesmen ?? 'Formatif dan Sumatif' }}</td>
-                </tr>
-                @if($rpp->target_peserta_didik)
-                <tr>
-                    <td>Target Peserta Didik</td>
-                    <td>{{ $rpp->target_peserta_didik }}</td>
-                </tr>
-                @endif
-            </table>
-        </div>
-    </div>
-
-    <!-- B. KOMPETENSI AWAL -->
-    @if(isset($content['kompetensi_awal']) && $content['kompetensi_awal'])
-    <div class="section">
-        <div class="section-header">B. KOMPETENSI AWAL</div>
-        <div class="section-body">
-            <p>{{ $content['kompetensi_awal'] }}</p>
-        </div>
-    </div>
+    {{-- KOMPETENSI AWAL --}}
+    @if(!empty($content['kompetensi_awal']))
+    <div class="section-letter">{{ $huruf++ }}. Kompetensi Awal</div>
+    <table class="tbl-red">
+        <tbody>
+            <tr class="row-head"><td>Kompetensi Awal Peserta Didik</td></tr>
+            <tr><td>{{ $content['kompetensi_awal'] }}</td></tr>
+        </tbody>
+    </table>
     @endif
 
-    <!-- C. TUJUAN PEMBELAJARAN -->
-    @if(isset($content['tujuan_pembelajaran']))
-    <div class="section">
-        <div class="section-header">C. TUJUAN PEMBELAJARAN</div>
-        <div class="section-body">
-            <p>Setelah mengikuti pembelajaran ini, peserta didik diharapkan mampu:</p>
-            <ol class="mt-15">
-                @foreach($content['tujuan_pembelajaran'] as $tujuan)
-                <li>{{ $tujuan }}</li>
-                @endforeach
-            </ol>
-        </div>
-    </div>
-    @endif
-
-    <!-- D. PEMAHAMAN BERMAKNA -->
-    @if(isset($content['pemahaman_bermakna']) && $content['pemahaman_bermakna'])
-    <div class="section">
-        <div class="section-header">D. PEMAHAMAN BERMAKNA</div>
-        <div class="section-body">
-            <p>{{ $content['pemahaman_bermakna'] }}</p>
-        </div>
-    </div>
-    @endif
-
-    <!-- E. PERTANYAAN PEMANTIK -->
-    @if(isset($content['pertanyaan_pemantik']))
-    <div class="section">
-        <div class="section-header">E. PERTANYAAN PEMANTIK</div>
-        <div class="section-body">
-            <ol>
-                @foreach($content['pertanyaan_pemantik'] as $pertanyaan)
-                <li>{{ $pertanyaan }}</li>
-                @endforeach
-            </ol>
-        </div>
-    </div>
-    @endif
-
-    <!-- F. NILAI-NILAI CINTA (KBC - Kemenag) -->
-    @if(isset($content['nilai_nilai_cinta']))
-    <div class="section">
-        <div class="section-header" style="background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);">F. NILAI-NILAI CINTA (Kurikulum Berbasis Cinta)</div>
-        <div class="section-body">
-            <p class="mb-10">Dimensi nilai-nilai cinta yang dikembangkan dalam pembelajaran:</p>
+    {{-- NILAI-NILAI CINTA (KBC) --}}
+    @if($isKBC && isset($content['nilai_nilai_cinta']))
+    <div class="section-letter">{{ $huruf++ }}. Nilai-Nilai Cinta (Kurikulum Berbasis Cinta)</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Dimensi Cinta</th>
+                <th>Deskripsi Pengembangan</th>
+            </tr>
+        </thead>
+        <tbody>
             @foreach($content['nilai_nilai_cinta'] as $nilai)
-                @if(is_array($nilai))
-                <div class="profil-item" style="background: #fdf2f8; border-left-color: #ec4899;">
-                    <h4 style="color: #be185d;">{{ $nilai['dimensi'] ?? '' }}</h4>
-                    <p>{{ $nilai['deskripsi'] ?? '' }}</p>
-                </div>
-                @else
-                <span class="badge" style="background: #fce7f3; color: #be185d; border-color: #f9a8d4;">{{ $nilai }}</span>
-                @endif
+            @if(is_array($nilai))
+            <tr>
+                <td class="label-cell">{{ $nilai['dimensi'] ?? '-' }}</td>
+                <td>{{ $nilai['deskripsi'] ?? '-' }}</td>
+            </tr>
+            @endif
             @endforeach
-        </div>
-    </div>
+        </tbody>
+    </table>
     @endif
 
-    <!-- G. PROFIL LULUSAN MADRASAH (KBC - Kemenag) -->
-    @if(isset($content['profil_lulusan_madrasah']))
-    <div class="section">
-        <div class="section-header" style="background: linear-gradient(135deg, #059669 0%, #14b8a6 100%);">G. PROFIL LULUSAN MADRASAH</div>
-        <div class="section-body">
-            <p class="mb-10">Dimensi Profil Lulusan Madrasah yang dikembangkan:</p>
+    {{-- PROFIL LULUSAN MADRASAH (KBC) --}}
+    @if($isKBC && isset($content['profil_lulusan_madrasah']))
+    <div class="section-letter">{{ $huruf++ }}. Profil Lulusan Madrasah</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Dimensi</th>
+                <th>Deskripsi</th>
+            </tr>
+        </thead>
+        <tbody>
             @foreach($content['profil_lulusan_madrasah'] as $profil)
-                @if(is_array($profil))
-                <div class="profil-item" style="background: #ecfdf5; border-left-color: #059669;">
-                    <h4 style="color: #047857;">{{ $profil['dimensi'] ?? '' }}</h4>
-                    <p>{{ $profil['deskripsi'] ?? '' }}</p>
-                </div>
-                @else
-                <span class="badge" style="background: #d1fae5; color: #047857; border-color: #6ee7b7;">{{ $profil }}</span>
-                @endif
+            @if(is_array($profil))
+            <tr>
+                <td class="label-cell">{{ $profil['dimensi'] ?? '-' }}</td>
+                <td>{{ $profil['deskripsi'] ?? '-' }}</td>
+            </tr>
+            @endif
             @endforeach
-        </div>
-    </div>
+        </tbody>
+    </table>
     @endif
 
-    <!-- H. MODERASI BERAGAMA (KBC - Kemenag) -->
-    @if(isset($content['moderasi_beragama']))
-    <div class="section">
-        <div class="section-header" style="background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);">H. MODERASI BERAGAMA (Wasathiyah)</div>
-        <div class="section-body">
-            @if(isset($content['moderasi_beragama']['nilai_wasathiyah']))
-            <div style="margin-bottom: 15px; padding: 15px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 6px 6px 0;">
-                <p><strong style="color: #b45309;">Nilai Wasathiyah:</strong></p>
-                <p style="margin-top: 8px;">{{ $content['moderasi_beragama']['nilai_wasathiyah'] }}</p>
-            </div>
+    {{-- MODERASI BERAGAMA (KBC) --}}
+    @if($isKBC && isset($content['moderasi_beragama']))
+    <div class="section-letter">{{ $huruf++ }}. Moderasi Beragama (Wasathiyah)</div>
+    <table class="tbl-red">
+        <tbody>
+            @if(!empty($content['moderasi_beragama']['nilai_wasathiyah']))
+            <tr class="row-head"><td>Nilai Wasathiyah</td></tr>
+            <tr><td>{{ $content['moderasi_beragama']['nilai_wasathiyah'] }}</td></tr>
             @endif
-            @if(isset($content['moderasi_beragama']['implementasi']))
-            <p class="text-bold">Implementasi dalam Pembelajaran:</p>
-            <ul class="mt-10">
-                @foreach($content['moderasi_beragama']['implementasi'] as $item)
-                <li>{{ $item }}</li>
-                @endforeach
-            </ul>
-            @endif
-        </div>
-    </div>
-    @endif
-
-    <!-- I. PROFIL PELAJAR PANCASILA -->
-    @if(isset($content['profil_pelajar_pancasila']))
-    <div class="section">
-        <div class="section-header">I. PROFIL PELAJAR PANCASILA</div>
-        <div class="section-body">
-            <p class="mb-10">Dimensi Profil Pelajar Pancasila yang dikembangkan:</p>
-            @foreach($content['profil_pelajar_pancasila'] as $profil)
-                @if(is_array($profil))
-                <div class="profil-item">
-                    <h4>{{ $profil['dimensi'] ?? '' }}</h4>
-                    <p>{{ $profil['deskripsi'] ?? '' }}</p>
-                </div>
-                @else
-                <span class="badge">{{ $profil }}</span>
-                @endif
-            @endforeach
-        </div>
-    </div>
-    @endif
-
-    <!-- G. SARANA DAN PRASARANA -->
-    @if(isset($content['sarana_prasarana']))
-    <div class="section">
-        <div class="section-header">G. SARANA DAN PRASARANA</div>
-        <div class="section-body">
-            @if(is_array($content['sarana_prasarana']) && isset($content['sarana_prasarana']['alat']))
-            <table class="info-table-content">
-                @if(isset($content['sarana_prasarana']['alat']) && count($content['sarana_prasarana']['alat']) > 0)
-                <tr>
-                    <td>Alat</td>
-                    <td>{{ implode(', ', $content['sarana_prasarana']['alat']) }}</td>
-                </tr>
-                @endif
-                @if(isset($content['sarana_prasarana']['bahan']) && count($content['sarana_prasarana']['bahan']) > 0)
-                <tr>
-                    <td>Bahan</td>
-                    <td>{{ implode(', ', $content['sarana_prasarana']['bahan']) }}</td>
-                </tr>
-                @endif
-                @if(isset($content['sarana_prasarana']['media']) && count($content['sarana_prasarana']['media']) > 0)
-                <tr>
-                    <td>Media</td>
-                    <td>{{ implode(', ', $content['sarana_prasarana']['media']) }}</td>
-                </tr>
-                @endif
-                @if(isset($content['sarana_prasarana']['sumber_belajar']) && count($content['sarana_prasarana']['sumber_belajar']) > 0)
-                <tr>
-                    <td>Sumber Belajar</td>
-                    <td>{{ implode(', ', $content['sarana_prasarana']['sumber_belajar']) }}</td>
-                </tr>
-                @endif
-            </table>
-            @else
-            <ul>
-                @foreach($content['sarana_prasarana'] as $sarana)
-                <li>{{ is_array($sarana) ? json_encode($sarana) : $sarana }}</li>
-                @endforeach
-            </ul>
-            @endif
-        </div>
-    </div>
-    @endif
-
-    <!-- H. KEGIATAN PEMBELAJARAN -->
-    @if(isset($content['kegiatan_pembelajaran']))
-    <div class="section">
-        <div class="section-header">H. KEGIATAN PEMBELAJARAN</div>
-        <div class="section-body">
-            <div class="activity-container">
-                
-                @if(isset($content['kegiatan_pembelajaran']['pendahuluan']))
-                <div class="activity-box">
-                    <div class="activity-header">
-                        <span>1. PENDAHULUAN</span>
-                        <span>{{ $content['kegiatan_pembelajaran']['pendahuluan']['durasi'] ?? '± 15 menit' }}</span>
-                    </div>
-                    <div class="activity-content">
-                        @php $aktivitasPendahuluan = $content['kegiatan_pembelajaran']['pendahuluan']['aktivitas'] ?? []; @endphp
-                        @if(count($aktivitasPendahuluan) > 0 && is_array($aktivitasPendahuluan[0] ?? null))
-                            @foreach($aktivitasPendahuluan as $akt)
-                            <div class="activity-detail">
-                                <p><strong>Kegiatan Guru:</strong> {{ $akt['kegiatan_guru'] ?? '' }}</p>
-                                <p><strong>Kegiatan Siswa:</strong> {{ $akt['kegiatan_siswa'] ?? '' }}</p>
-                            </div>
-                            @endforeach
-                        @else
-                            <ul>
-                                @foreach($aktivitasPendahuluan as $aktivitas)
-                                <li>{{ is_array($aktivitas) ? ($aktivitas['kegiatan_guru'] ?? json_encode($aktivitas)) : $aktivitas }}</li>
-                                @endforeach
-                            </ul>
-                        @endif
-                    </div>
-                </div>
-                @endif
-
-                @if(isset($content['kegiatan_pembelajaran']['inti']))
-                <div class="activity-box">
-                    <div class="activity-header">
-                        <span>2. KEGIATAN INTI</span>
-                        <span>{{ $content['kegiatan_pembelajaran']['inti']['durasi'] ?? '± 60 menit' }}</span>
-                    </div>
-                    <div class="activity-content">
-                        @if(isset($content['kegiatan_pembelajaran']['inti']['sintaks_model']))
-                        <p class="mb-10"><strong>Model:</strong> {{ $content['kegiatan_pembelajaran']['inti']['sintaks_model'] }}</p>
-                        @endif
-                        @php $aktivitasInti = $content['kegiatan_pembelajaran']['inti']['aktivitas'] ?? []; @endphp
-                        @if(count($aktivitasInti) > 0 && is_array($aktivitasInti[0] ?? null))
-                            @foreach($aktivitasInti as $akt)
-                            <div class="activity-detail">
-                                @if(isset($akt['fase_sintaks']))
-                                <p><strong>Fase:</strong> {{ $akt['fase_sintaks'] }} {{ isset($akt['durasi']) ? '(' . $akt['durasi'] . ')' : '' }}</p>
-                                @endif
-                                <p><strong>Kegiatan Guru:</strong> {{ $akt['kegiatan_guru'] ?? '' }}</p>
-                                <p><strong>Kegiatan Siswa:</strong> {{ $akt['kegiatan_siswa'] ?? '' }}</p>
-                            </div>
-                            @endforeach
-                        @else
-                            <ul>
-                                @foreach($aktivitasInti as $aktivitas)
-                                <li>{{ is_array($aktivitas) ? ($aktivitas['kegiatan_guru'] ?? json_encode($aktivitas)) : $aktivitas }}</li>
-                                @endforeach
-                            </ul>
-                        @endif
-                    </div>
-                </div>
-                @endif
-
-                @if(isset($content['kegiatan_pembelajaran']['penutup']))
-                <div class="activity-box">
-                    <div class="activity-header">
-                        <span>3. PENUTUP</span>
-                        <span>{{ $content['kegiatan_pembelajaran']['penutup']['durasi'] ?? '± 10 menit' }}</span>
-                    </div>
-                    <div class="activity-content">
-                        @php $aktivitasPenutup = $content['kegiatan_pembelajaran']['penutup']['aktivitas'] ?? []; @endphp
-                        @if(count($aktivitasPenutup) > 0 && is_array($aktivitasPenutup[0] ?? null))
-                            @foreach($aktivitasPenutup as $akt)
-                            <div class="activity-detail">
-                                <p><strong>Kegiatan Guru:</strong> {{ $akt['kegiatan_guru'] ?? '' }}</p>
-                                <p><strong>Kegiatan Siswa:</strong> {{ $akt['kegiatan_siswa'] ?? '' }}</p>
-                            </div>
-                            @endforeach
-                        @else
-                            <ul>
-                                @foreach($aktivitasPenutup as $aktivitas)
-                                <li>{{ is_array($aktivitas) ? ($aktivitas['kegiatan_guru'] ?? json_encode($aktivitas)) : $aktivitas }}</li>
-                                @endforeach
-                            </ul>
-                        @endif
-                    </div>
-                </div>
-                @endif
-
-            </div>
-        </div>
-    </div>
-    @endif
-
-    <!-- I. ASESMEN -->
-    @if(isset($content['asesmen']))
-    <div class="section">
-        <div class="section-header">I. ASESMEN</div>
-        <div class="section-body">
-            <table class="info-table-content">
-                <tr>
-                    <td>Jenis Asesmen</td>
-                    <td>{{ $content['asesmen']['jenis'] ?? ($rpp->jenis_asesmen ?? '-') }}</td>
-                </tr>
-                <tr>
-                    <td>Teknik Asesmen</td>
-                    <td>
-                        @if(is_array($content['asesmen']['teknik'] ?? null))
-                            {{ implode(', ', $content['asesmen']['teknik']) }}
-                        @else
-                            {{ $content['asesmen']['teknik'] ?? '-' }}
-                        @endif
-                    </td>
-                </tr>
-                @if(isset($content['asesmen']['bentuk']))
-                <tr>
-                    <td>Bentuk Asesmen</td>
-                    <td>{{ $content['asesmen']['bentuk'] }}</td>
-                </tr>
-                @endif
-            </table>
-
-            @if(isset($content['asesmen']['instrumen']))
-            <p class="mt-20 text-bold">Instrumen Asesmen:</p>
-            @foreach($content['asesmen']['instrumen'] as $instrumen)
-                @if(is_array($instrumen))
-                <div style="margin: 10px 0; padding: 12px; background: #f9fafb; border-radius: 6px;">
-                    <p><strong>{{ $instrumen['jenis'] ?? '' }}</strong></p>
-                    <p>{{ $instrumen['deskripsi'] ?? '' }}</p>
-                    @if(isset($instrumen['contoh_soal']))
-                    <p class="mt-10"><em>Contoh Soal:</em></p>
-                    <ol style="margin-left: 15px;">
-                        @foreach($instrumen['contoh_soal'] as $soal)
-                        <li>{{ $soal }}</li>
+            @if(!empty($content['moderasi_beragama']['implementasi']))
+            <tr class="row-head"><td>Implementasi dalam Pembelajaran</td></tr>
+            <tr>
+                <td>
+                    <ol style="margin-bottom:0;">
+                        @foreach($content['moderasi_beragama']['implementasi'] as $item)
+                        <li>{{ $item }}</li>
                         @endforeach
                     </ol>
-                    @endif
-                </div>
-                @else
-                <li>{{ $instrumen }}</li>
-                @endif
+                </td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+    @endif
+
+    {{-- PROFIL PELAJAR PANCASILA --}}
+    @if(isset($content['profil_pelajar_pancasila']))
+    <div class="section-letter">{{ $huruf++ }}. Profil Pelajar Pancasila</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Dimensi</th>
+                <th>Deskripsi Pengembangan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['profil_pelajar_pancasila'] as $profil)
+            @if(is_array($profil))
+            <tr>
+                <td class="label-cell">{{ $profil['dimensi'] ?? '-' }}</td>
+                <td>{{ $profil['deskripsi'] ?? '-' }}</td>
+            </tr>
+            @else
+            <tr><td colspan="2">{{ $profil }}</td></tr>
+            @endif
             @endforeach
-            @endif
-
-            @php $rubrikData = $content['asesmen']['rubrik_penilaian'] ?? $content['asesmen']['rubrik'] ?? []; @endphp
-            @if(count($rubrikData) > 0)
-            <p class="mt-20 text-bold">Rubrik Penilaian:</p>
-            <table class="rubrik-table">
-                <thead>
-                    <tr>
-                        <th>Kriteria</th>
-                        <th>Sangat Baik (4)</th>
-                        <th>Baik (3)</th>
-                        <th>Cukup (2)</th>
-                        <th>Perlu Perbaikan (1)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($rubrikData as $rubrik)
-                    <tr>
-                        <td>{{ $rubrik['kriteria'] ?? '-' }}</td>
-                        <td>{{ $rubrik['skor_4'] ?? '-' }}</td>
-                        <td>{{ $rubrik['skor_3'] ?? '-' }}</td>
-                        <td>{{ $rubrik['skor_2'] ?? '-' }}</td>
-                        <td>{{ $rubrik['skor_1'] ?? '-' }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            @endif
-        </div>
-    </div>
+        </tbody>
+    </table>
     @endif
 
-    <!-- J. PENGAYAAN & REMEDIAL -->
-    @if(isset($content['pengayaan_remedial']))
-    <div class="section">
-        <div class="section-header">J. PENGAYAAN DAN REMEDIAL</div>
-        <div class="section-body">
-            <div class="two-column">
-                @if(isset($content['pengayaan_remedial']['pengayaan']))
-                <div>
-                    <div class="pengayaan-box">
-                        <h4 style="color: #059669; margin-bottom: 10px;">PENGAYAAN</h4>
-                        <p><em>{{ $content['pengayaan_remedial']['pengayaan']['sasaran'] ?? '' }}</em></p>
-                        <ul class="mt-10">
-                            @foreach($content['pengayaan_remedial']['pengayaan']['kegiatan'] ?? [] as $kegiatan)
-                            <li>{{ $kegiatan }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                @endif
-                @if(isset($content['pengayaan_remedial']['remedial']))
-                <div>
-                    <div class="remedial-box">
-                        <h4 style="color: #d97706; margin-bottom: 10px;">REMEDIAL</h4>
-                        <p><em>{{ $content['pengayaan_remedial']['remedial']['sasaran'] ?? '' }}</em></p>
-                        <ul class="mt-10">
-                            @foreach($content['pengayaan_remedial']['remedial']['kegiatan'] ?? [] as $kegiatan)
-                            <li>{{ $kegiatan }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
+    {{-- SARANA DAN PRASARANA --}}
+    @if(isset($content['sarana_prasarana']) && is_array($content['sarana_prasarana']))
+    <div class="section-letter">{{ $huruf++ }}. Sarana dan Prasarana</div>
+    <table class="tbl-red">
+        <tbody>
+            @foreach(['alat' => 'Alat', 'bahan' => 'Bahan', 'media' => 'Media', 'sumber_belajar' => 'Sumber Belajar'] as $key => $label)
+            @if(!empty($content['sarana_prasarana'][$key]))
+            <tr>
+                <td class="label-cell">{{ $label }}</td>
+                <td>{{ is_array($content['sarana_prasarana'][$key]) ? implode(', ', $content['sarana_prasarana'][$key]) : $content['sarana_prasarana'][$key] }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
     @endif
 
-    <!-- K. REFLEKSI -->
-    @if(isset($content['refleksi']))
-    <div class="section">
-        <div class="section-header">K. REFLEKSI</div>
-        <div class="section-body">
-            @if(isset($content['refleksi']['refleksi_siswa']))
-            <p class="text-bold">Refleksi Peserta Didik:</p>
-            <ol class="mt-10">
-                @foreach($content['refleksi']['refleksi_siswa'] as $item)
-                <li>{{ $item }}</li>
-                @endforeach
-            </ol>
-            @endif
-            
-            @if(isset($content['refleksi']['refleksi_guru']))
-            <p class="text-bold mt-20">Refleksi Guru:</p>
-            <ol class="mt-10">
-                @foreach($content['refleksi']['refleksi_guru'] as $item)
-                <li>{{ $item }}</li>
-                @endforeach
-            </ol>
-            @endif
-        </div>
-    </div>
-    @elseif(isset($content['refleksi_guru']))
-    <!-- Fallback for old format -->
-    <div class="section">
-        <div class="section-header">K. REFLEKSI GURU</div>
-        <div class="section-body">
-            <p>Pertanyaan refleksi untuk evaluasi pembelajaran:</p>
-            <ol class="mt-15">
-                @foreach($content['refleksi_guru'] as $refleksi)
-                <li>{{ $refleksi }}</li>
-                @endforeach
-            </ol>
-        </div>
-    </div>
+    {{-- TUJUAN PEMBELAJARAN --}}
+    @if(isset($content['tujuan_pembelajaran']))
+    <div class="section-letter">{{ $huruf++ }}. Tujuan Pembelajaran</div>
+    <table class="tbl-red">
+        <tbody>
+            <tr class="row-head"><td style="width:10%;">No</td><td>Tujuan Pembelajaran</td></tr>
+            @foreach($content['tujuan_pembelajaran'] as $i => $tujuan)
+            <tr>
+                <td class="text-center">{{ $i + 1 }}</td>
+                <td>{{ $tujuan }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
     @endif
 
-    <!-- L. GLOSARIUM -->
-    @if(isset($content['glosarium']) && count($content['glosarium']) > 0)
-    <div class="section">
-        <div class="section-header">L. GLOSARIUM</div>
-        <div class="section-body">
-            <table class="info-table-content">
-                @foreach($content['glosarium'] as $item)
-                <tr>
-                    <td>{{ $item['istilah'] ?? '' }}</td>
-                    <td>{{ $item['definisi'] ?? '' }}</td>
-                </tr>
-                @endforeach
-            </table>
-        </div>
-    </div>
+    {{-- PEMAHAMAN BERMAKNA --}}
+    @if(!empty($content['pemahaman_bermakna']))
+    <div class="section-letter">{{ $huruf++ }}. Pemahaman Bermakna</div>
+    <table class="tbl-red">
+        <tbody>
+            <tr class="row-head"><td>Pemahaman Bermakna</td></tr>
+            <tr><td>{{ $content['pemahaman_bermakna'] }}</td></tr>
+        </tbody>
+    </table>
     @endif
 
-    <!-- M. DAFTAR PUSTAKA -->
-    @if(isset($content['daftar_pustaka']) && count($content['daftar_pustaka']) > 0)
-    <div class="section">
-        <div class="section-header">M. DAFTAR PUSTAKA</div>
-        <div class="section-body">
-            <ol>
-                @foreach($content['daftar_pustaka'] as $pustaka)
-                <li>{{ $pustaka }}</li>
-                @endforeach
-            </ol>
-        </div>
-    </div>
+    {{-- PERTANYAAN PEMANTIK --}}
+    @if(isset($content['pertanyaan_pemantik']))
+    <div class="section-letter">{{ $huruf++ }}. Pertanyaan Pemantik</div>
+    <table class="tbl-red">
+        <tbody>
+            <tr class="row-head"><td style="width:10%;">No</td><td>Pertanyaan</td></tr>
+            @foreach($content['pertanyaan_pemantik'] as $i => $pertanyaan)
+            <tr>
+                <td class="text-center">{{ $i + 1 }}</td>
+                <td>{{ $pertanyaan }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
     @endif
 
-    <!-- N. LEMBAR KERJA PESERTA DIDIK (LKPD) -->
-    @if(isset($content['lkpd']))
-    <div class="section" style="page-break-before: always;">
-        <div class="section-header">N. LEMBAR KERJA PESERTA DIDIK (LKPD)</div>
-        <div class="section-body">
-            @if(isset($content['lkpd']['judul']))
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h3 style="font-size: 14pt; font-weight: bold; color: #27a38a;">{{ $content['lkpd']['judul'] }}</h3>
-            </div>
-            @endif
-
-            <table class="info-table-content" style="margin-bottom: 20px;">
-                <tr>
-                    <td style="width: 20%;">Nama</td>
-                    <td>: ................................................................</td>
-                </tr>
-                <tr>
-                    <td>Kelas</td>
-                    <td>: ................................................................</td>
-                </tr>
-                <tr>
-                    <td>Tanggal</td>
-                    <td>: ................................................................</td>
-                </tr>
-            </table>
-
-            @if(isset($content['lkpd']['tujuan']))
-            <div style="margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 5px;">Tujuan:</p>
-                <p>{{ $content['lkpd']['tujuan'] }}</p>
-            </div>
-            @endif
-
-            @php $petunjuk = $content['lkpd']['petunjuk_umum'] ?? $content['lkpd']['petunjuk_pengerjaan'] ?? []; @endphp
-            @if(count($petunjuk) > 0)
-            <div style="margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 5px;">Petunjuk Pengerjaan:</p>
-                <ol>
-                    @foreach($petunjuk as $p)
-                    <li>{{ $p }}</li>
-                    @endforeach
-                </ol>
-            </div>
-            @endif
-
-            @if(isset($content['lkpd']['kegiatan']))
-            <div style="margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 10px;">Kegiatan:</p>
-                @foreach($content['lkpd']['kegiatan'] as $kegiatan)
-                <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa;">
-                    @if(isset($kegiatan['judul_kegiatan']))
-                    <p style="font-weight: bold; margin-bottom: 5px;">
-                        {{ $kegiatan['nomor'] ?? $loop->iteration }}. {{ $kegiatan['judul_kegiatan'] }}
-                    </p>
-                    @if(isset($kegiatan['petunjuk']))
-                    <p style="font-style: italic; margin-bottom: 10px;">{{ $kegiatan['petunjuk'] }}</p>
+    {{-- KEGIATAN PEMBELAJARAN --}}
+    @if(isset($content['kegiatan_pembelajaran']))
+    <div class="section-letter">{{ $huruf++ }}. Kegiatan Pembelajaran</div>
+    <table class="tbl-langkah">
+        <thead>
+            <tr>
+                <th style="width:20%;">Tahap</th>
+                <th>Langkah-Langkah Pembelajaran</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(['pendahuluan' => 'Pendahuluan', 'inti' => 'Kegiatan Inti', 'penutup' => 'Penutup'] as $tahapKey => $tahapLabel)
+            @php $tahap = $content['kegiatan_pembelajaran'][$tahapKey] ?? null; @endphp
+            @if($tahap)
+            <tr>
+                <td class="col-pengalaman">
+                    {{ $tahapLabel }}
+                    @if(!empty($tahap['durasi']))
+                    <br><span class="durasi">({{ $tahap['durasi'] }})</span>
                     @endif
-                    @if(isset($kegiatan['soal_tugas']))
-                        @foreach($kegiatan['soal_tugas'] as $soal)
-                        <div style="margin: 10px 0;">
-                            <p style="font-weight: 500;">{{ $soal['nomor'] ?? '' }}. {{ $soal['pertanyaan'] ?? '' }}</p>
-                            <div style="border: 1px dashed #ccc; min-height: 60px; background: white; padding: 10px; border-radius: 4px; margin-top: 5px;">
-                                <p style="color: #999; font-size: 10pt;">Jawaban:</p>
+                </td>
+                <td>
+                    @if($tahapKey === 'inti' && !empty($tahap['sintaks_model']))
+                    <p class="text-bold mb-5">Model: {{ $tahap['sintaks_model'] }}</p>
+                    @endif
+                    @php
+                        $aktivitas = $tahap['aktivitas'] ?? [];
+                        $faseSebelumnya = null;
+                        $no = 0;
+                    @endphp
+                    @foreach($aktivitas as $akt)
+                        @if(is_array($akt))
+                            @if(!empty($akt['fase_sintaks']) && $akt['fase_sintaks'] !== $faseSebelumnya)
+                            <div class="fase-sintaks">{{ $akt['fase_sintaks'] }}@if(!empty($akt['durasi'])) <span class="durasi">({{ $akt['durasi'] }})</span>@endif</div>
+                            @php $faseSebelumnya = $akt['fase_sintaks']; @endphp
+                            @endif
+                            @php $no++; @endphp
+                            <div style="margin-bottom:6px;">
+                                <span class="text-bold">{{ $no }}.</span>
+                                Guru: {{ $akt['kegiatan_guru'] ?? '-' }}<br>
+                                <span style="padding-left:18px;display:inline-block;">Peserta didik: {{ $akt['kegiatan_siswa'] ?? '-' }}</span>
                             </div>
-                        </div>
-                        @endforeach
-                    @endif
-                    @else
-                    <p style="font-weight: bold; margin-bottom: 10px;">
-                        {{ $kegiatan['nomor'] ?? $loop->iteration }}. {{ $kegiatan['pertanyaan'] ?? '' }}
-                    </p>
-                    <div style="border: 1px dashed #ccc; min-height: 80px; background: white; padding: 10px; border-radius: 4px;">
-                        <p style="color: #999; font-size: 10pt;">Jawaban:</p>
-                    </div>
-                    @endif
-                </div>
-                @endforeach
-            </div>
+                        @else
+                            @php $no++; @endphp
+                            <div style="margin-bottom:6px;"><span class="text-bold">{{ $no }}.</span> {{ $akt }}</div>
+                        @endif
+                    @endforeach
+                </td>
+            </tr>
             @endif
-
-            @if(isset($content['lkpd']['kesimpulan']))
-            <div style="margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 10px;">Kesimpulan:</p>
-                <p style="margin-bottom: 10px;">{{ $content['lkpd']['kesimpulan'] }}</p>
-                <div style="border: 1px dashed #ccc; min-height: 60px; background: white; padding: 10px; border-radius: 4px;">
-                    <p style="color: #999; font-size: 10pt;">Tulis kesimpulanmu di sini:</p>
-                </div>
-            </div>
-            @endif
-        </div>
-    </div>
+            @endforeach
+        </tbody>
+    </table>
     @endif
 
-    <!-- ==================== SIGNATURE ==================== -->
+    {{-- ASESMEN --}}
+    @if(isset($content['asesmen']))
+    <div class="section-letter">{{ $huruf++ }}. Asesmen Pembelajaran</div>
+    <table class="tbl-red">
+        <tbody>
+            <tr>
+                <td class="label-cell">Jenis Asesmen</td>
+                <td>{{ $content['asesmen']['jenis'] ?? ($rpp->jenis_asesmen ?? '-') }}</td>
+            </tr>
+            <tr>
+                <td class="label-cell">Teknik Asesmen</td>
+                <td>{{ is_array($content['asesmen']['teknik'] ?? null) ? implode(', ', $content['asesmen']['teknik']) : ($content['asesmen']['teknik'] ?? '-') }}</td>
+            </tr>
+            @if(!empty($content['asesmen']['bentuk']))
+            <tr>
+                <td class="label-cell">Bentuk Asesmen</td>
+                <td>{{ $content['asesmen']['bentuk'] }}</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+
+    @if(!empty($content['asesmen']['instrumen']))
+    <p class="text-bold mt-10 mb-5">Instrumen Asesmen</p>
+    @foreach($content['asesmen']['instrumen'] as $instrumen)
+    @if(is_array($instrumen))
+    <div style="margin-bottom:10px;padding:10px 12px;border:1px solid #ddd;background:#fcfcfc;page-break-inside:avoid;">
+        <p class="text-bold text-red">{{ $instrumen['jenis'] ?? 'Instrumen' }}</p>
+        @if(!empty($instrumen['deskripsi']))
+        <p>{{ $instrumen['deskripsi'] }}</p>
+        @endif
+        @if(!empty($instrumen['contoh_soal']))
+        <p class="text-bold mt-5 mb-5">Contoh Soal/Tugas:</p>
+        <ol style="margin-bottom:0;">
+            @foreach($instrumen['contoh_soal'] as $soal)
+            <li>{{ $soal }}</li>
+            @endforeach
+        </ol>
+        @endif
+    </div>
+    @endif
+    @endforeach
+    @endif
+
+    @php $rubrikData = $content['asesmen']['rubrik_penilaian'] ?? $content['asesmen']['rubrik'] ?? []; @endphp
+    @if(is_array($rubrikData) && count($rubrikData) > 0)
+    <p class="text-bold mt-10 mb-5">Rubrik Penilaian</p>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:20%;">Kriteria</th>
+                <th>Sangat Baik (4)</th>
+                <th>Baik (3)</th>
+                <th>Cukup (2)</th>
+                <th>Perlu Perbaikan (1)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($rubrikData as $rubrik)
+            @if(is_array($rubrik))
+            <tr>
+                <td class="label-cell">{{ $rubrik['kriteria'] ?? '-' }}</td>
+                <td>{{ $rubrik['skor_4'] ?? '-' }}</td>
+                <td>{{ $rubrik['skor_3'] ?? '-' }}</td>
+                <td>{{ $rubrik['skor_2'] ?? '-' }}</td>
+                <td>{{ $rubrik['skor_1'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+    @endif
+
+    {{-- PENGAYAAN & REMEDIAL --}}
+    @if(isset($content['pengayaan_remedial']))
+    <div class="section-letter">{{ $huruf++ }}. Pengayaan dan Remedial</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:18%;">Program</th>
+                <th style="width:30%;">Sasaran</th>
+                <th>Kegiatan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(['pengayaan' => 'Pengayaan', 'remedial' => 'Remedial'] as $progKey => $progLabel)
+            @php $prog = $content['pengayaan_remedial'][$progKey] ?? null; @endphp
+            @if($prog)
+            <tr>
+                <td class="label-cell">{{ $progLabel }}</td>
+                <td>{{ $prog['sasaran'] ?? '-' }}</td>
+                <td>
+                    <ol style="margin-bottom:0;">
+                        @foreach($prog['kegiatan'] ?? [] as $kegiatan)
+                        <li>{{ $kegiatan }}</li>
+                        @endforeach
+                    </ol>
+                </td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- REFLEKSI --}}
+    @if(isset($content['refleksi']) || isset($content['refleksi_guru']))
+    <div class="section-letter">{{ $huruf++ }}. Refleksi</div>
+    <table class="tbl-red">
+        <tbody>
+            @if(!empty($content['refleksi']['refleksi_siswa']))
+            <tr class="row-head"><td>Refleksi Peserta Didik</td></tr>
+            <tr>
+                <td>
+                    <ol style="margin-bottom:0;">
+                        @foreach($content['refleksi']['refleksi_siswa'] as $item)
+                        <li>{{ $item }}</li>
+                        @endforeach
+                    </ol>
+                </td>
+            </tr>
+            @endif
+            @php $refleksiGuru = $content['refleksi']['refleksi_guru'] ?? $content['refleksi_guru'] ?? []; @endphp
+            @if(!empty($refleksiGuru))
+            <tr class="row-head"><td>Refleksi Guru</td></tr>
+            <tr>
+                <td>
+                    <ol style="margin-bottom:0;">
+                        @foreach($refleksiGuru as $item)
+                        <li>{{ $item }}</li>
+                        @endforeach
+                    </ol>
+                </td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+    @endif
+
+    {{-- INTEGRASI PANCA CINTA --}}
+    @if(isset($content['integrasi_panca_cinta']))
+    <div class="section-letter">{{ $huruf++ }}. Integrasi Panca Cinta</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Nilai Panca Cinta</th>
+                <th>Implementasi dalam Pembelajaran</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['integrasi_panca_cinta'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['nilai'] ?? '-' }}</td>
+                <td>{{ $item['implementasi'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- INTEGRASI ADIWIYATA --}}
+    @if(isset($content['integrasi_adiwiyata']))
+    <div class="section-letter">{{ $huruf++ }}. Integrasi Adiwiyata</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Komponen Adiwiyata</th>
+                <th>Kegiatan / Aksi Nyata</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['integrasi_adiwiyata'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['komponen'] ?? '-' }}</td>
+                <td>{{ $item['kegiatan'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- GLOSARIUM --}}
+    @if(isset($content['glosarium']) && count($content['glosarium']) > 0)
+    <div class="section-letter">{{ $huruf++ }}. Glosarium</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:28%;">Istilah</th>
+                <th>Definisi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['glosarium'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['istilah'] ?? '-' }}</td>
+                <td>{{ $item['definisi'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- DAFTAR PUSTAKA --}}
+    @if(isset($content['daftar_pustaka']) && count($content['daftar_pustaka']) > 0)
+    <div class="section-letter">{{ $huruf++ }}. Daftar Pustaka</div>
+    <ol>
+        @foreach($content['daftar_pustaka'] as $pustaka)
+        <li>{{ $pustaka }}</li>
+        @endforeach
+    </ol>
+    @endif
+
+    {{-- TANDA TANGAN --}}
     <div class="signature-section">
         <table class="signature-table">
             <tr>
-                <td>
+                <td style="width:50%;"></td>
+                <td style="width:50%;"><p>{{ $kotaDok }}, {{ $tanggalDok }}</p></td>
+            </tr>
+            <tr>
+                <td style="width:50%;">
                     <p>Mengetahui,</p>
-                    <p><strong>Kepala Sekolah</strong></p>
+                    <p>Kepala {{ $schoolName }}</p>
                     <div class="signature-space"></div>
-                    <p class="signature-name">{{ $rpp->kepala_sekolah ?? '.................................' }}</p>
-                    <p class="signature-nip">NIP. {{ $rpp->nip_kepala_sekolah ?? '.................................' }}</p>
+                    <p class="signature-name">{{ $rpp->kepala_sekolah ?: '.................................' }}</p>
+                    <p class="signature-nip">NIP. {{ $rpp->nip_kepala_sekolah ?: '.................................' }}</p>
                 </td>
-                <td>
-                    <p>{{ $rpp->kota ?? '.........................' }}, {{ $rpp->tanggal ? $rpp->tanggal->translatedFormat('d F Y') : now()->translatedFormat('d F Y') }}</p>
-                    <p><strong>Guru Mata Pelajaran</strong></p>
+                <td style="width:50%;">
+                    <p>Guru Mata Pelajaran</p>
+                    <p>{{ $rpp->mata_pelajaran }}</p>
                     <div class="signature-space"></div>
                     <p class="signature-name">{{ $rpp->nama_guru }}</p>
-                    <p class="signature-nip">NIP. .................................</p>
+                    <p class="signature-nip">NIP. -</p>
                 </td>
             </tr>
         </table>
     </div>
+</div>
 
+{{-- =============================================================
+     LAMPIRAN : LKPD
+     ============================================================= --}}
+@if(isset($content['lkpd']))
+@php $lkpd = $content['lkpd']; @endphp
+<div class="page-break">
+    <div class="page-title">Lampiran</div>
+    <p class="text-bold mb-10">Lampiran 1 : Lembar Kerja Peserta Didik (LKPD)</p>
+
+    <div class="lkpd-wrapper">
+        <div class="lkpd-header">
+            <div class="lkpd-title">{{ $lkpd['judul'] ?? 'LEMBAR KERJA PESERTA DIDIK' }}</div>
+            <div style="font-size:10pt;color:#666;margin-top:4px;">{{ $rpp->mata_pelajaran }} — Fase {{ $rpp->fase }}</div>
+        </div>
+
+        <table class="tbl-info" style="margin-bottom:15px;">
+            <tr><td style="width:20%;">Nama</td><td>: ................................................</td></tr>
+            <tr><td>Kelas</td><td>: ................................................</td></tr>
+            <tr><td>Tanggal</td><td>: ................................................</td></tr>
+        </table>
+
+        @if(!empty($lkpd['tujuan']))
+        <p class="text-bold mt-10 mb-5">Tujuan Kegiatan:</p>
+        <p>{{ $lkpd['tujuan'] }}</p>
+        @endif
+
+        @php $petunjuk = $lkpd['petunjuk_umum'] ?? $lkpd['petunjuk_pengerjaan'] ?? $lkpd['petunjuk'] ?? []; @endphp
+        @if(count($petunjuk) > 0)
+        <p class="text-bold mt-10 mb-5">Petunjuk Pengerjaan:</p>
+        <ol>
+            @foreach($petunjuk as $p)
+            <li>{{ $p }}</li>
+            @endforeach
+        </ol>
+        @endif
+
+        @foreach($lkpd['kegiatan'] ?? [] as $keg)
+        <div style="margin-top:15px;padding:12px;border:1px solid #ddd;background:#fcfcfc;page-break-inside:avoid;">
+            <p class="text-bold text-red">Kegiatan {{ $keg['nomor'] ?? $loop->iteration }}: {{ $keg['judul_kegiatan'] ?? $keg['judul'] ?? '' }}</p>
+            @if(!empty($keg['petunjuk']))
+            <p><em>{{ $keg['petunjuk'] }}</em></p>
+            @endif
+            @foreach($keg['soal_tugas'] ?? [] as $soal)
+            <div style="margin-top:8px;">
+                <div>{{ $soal['nomor'] ?? '' }}. {{ $soal['pertanyaan'] ?? '' }}</div>
+                <div class="jawaban-box">Jawaban:</div>
+            </div>
+            @endforeach
+            @foreach($keg['pertanyaan'] ?? [] as $i => $pq)
+            <div style="margin-top:8px;">
+                <div>{{ $i + 1 }}. {{ $pq }}</div>
+                <div class="jawaban-box">Jawaban:</div>
+            </div>
+            @endforeach
+        </div>
+        @endforeach
+
+        @if(!empty($lkpd['kesimpulan']))
+        <p class="text-bold mt-15 mb-5">Kesimpulan:</p>
+        <p>{{ $lkpd['kesimpulan'] }}</p>
+        <div class="jawaban-box" style="min-height:70px;">Tulis kesimpulanmu di sini:</div>
+        @endif
+    </div>
+</div>
+@endif
+
+@if($print ?? false)
+<script>window.addEventListener('load', function () { window.print(); });</script>
+@endif
 </body>
 </html>

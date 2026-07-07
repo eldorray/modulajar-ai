@@ -33,12 +33,12 @@
                     </svg>
                     Word
                 </a>
-                <a href="{{ route('rpp.pdf', $rpp) }}" class="btn btn-primary btn-sm">
+                <button type="button" onclick="cetakModulAjar('{{ route('rpp.print', $rpp) }}')" class="btn btn-primary btn-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                     </svg>
-                    PDF
-                </a>
+                    Cetak
+                </button>
                 @endif
             </div>
         </div>
@@ -213,6 +213,52 @@
         </x-ui.card>
         @endif
 
+
+        <!-- Integrasi Panca Cinta -->
+        @if(isset($content['integrasi_panca_cinta']))
+        <x-ui.card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">💗</span>
+                    <h3 class="text-lg font-semibold">Integrasi Panca Cinta</h3>
+                </div>
+                <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Nilai-nilai cinta yang diintegrasikan dalam pembelajaran</p>
+            </x-slot>
+            <div class="space-y-3">
+                @foreach($content['integrasi_panca_cinta'] as $item)
+                    @if(is_array($item))
+                    <div class="p-3 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border border-pink-100">
+                        <p class="font-semibold text-rose-700">{{ $item['nilai'] ?? '' }}</p>
+                        <p class="text-sm text-rose-600 mt-1">{{ $item['implementasi'] ?? '' }}</p>
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Integrasi Adiwiyata -->
+        @if(isset($content['integrasi_adiwiyata']))
+        <x-ui.card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🌱</span>
+                    <h3 class="text-lg font-semibold">Integrasi Adiwiyata</h3>
+                </div>
+                <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Sekolah Peduli &amp; Berbudaya Lingkungan</p>
+            </x-slot>
+            <div class="space-y-3">
+                @foreach($content['integrasi_adiwiyata'] as $item)
+                    @if(is_array($item))
+                    <div class="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                        <p class="font-semibold text-green-700">{{ $item['komponen'] ?? '' }}</p>
+                        <p class="text-sm text-green-600 mt-1">{{ $item['kegiatan'] ?? '' }}</p>
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+        </x-ui.card>
+        @endif
 
         <!-- Sarana Prasarana -->
         @if(isset($content['sarana_prasarana']))
@@ -704,4 +750,19 @@
         </x-ui.alert>
         @endif
     </div>
+
+    <script>
+        // Cetak: muat print view (pdf blade) ke iframe tersembunyi.
+        // Blade print otomatis memanggil window.print() saat load, di dalam iframe,
+        // sehingga yang tercetak HANYA modul ajar (tanpa sidebar/tombol), tanpa buka tab baru.
+        function cetakModulAjar(url) {
+            var old = document.getElementById('cetak-frame');
+            if (old) old.remove();
+            var f = document.createElement('iframe');
+            f.id = 'cetak-frame';
+            f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0;';
+            f.src = url;
+            document.body.appendChild(f);
+        }
+    </script>
 </x-app-layout>

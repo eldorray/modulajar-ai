@@ -120,15 +120,15 @@ class DeepSeekService
 
         // Check if using Kurikulum Berbasis Cinta (Kemenag)
         if ($kurikulum === 'Kurikulum Berbasis Cinta') {
-            return $this->buildKBCPrompt($data);
+            return $this->buildKBCPrompt($data) . $this->integrationDirective($data);
         }
 
         // Check if using Kurikulum Merdeka Deep Learning (RPPM)
         if ($kurikulum === 'Kurikulum Merdeka Deep Learning') {
-            return $this->buildRPPMPrompt($data);
+            return $this->buildRPPMPrompt($data) . $this->integrationDirective($data);
         }
 
-        return <<<PROMPT
+        $prompt = <<<PROMPT
 Anda adalah seorang ahli pengembangan kurikulum dan penyusun Modul Ajar di Indonesia dengan pengalaman lebih dari 20 tahun. Tugas Anda adalah membuat Modul Ajar yang LENGKAP dan BERKUALITAS sesuai standar Kemdikbud Kurikulum Merdeka.
 
 ## DATA INPUT MODUL AJAR
@@ -315,6 +315,68 @@ PENTING:
 - Sesuaikan tingkat kesulitan dengan fase/kelas yang diminta
 - Gunakan bahasa Indonesia yang baik dan benar
 PROMPT;
+
+        return $prompt . $this->integrationDirective($data);
+    }
+
+    /**
+     * Build an appendable directive for optional value integrations
+     * (Panca Cinta, Adiwiyata). Returns '' when neither flag is set, so
+     * non-selected generations produce a byte-identical prompt as before.
+     */
+    protected function integrationDirective(array $data): string
+    {
+        $panca = ! empty($data['panca_cinta']);
+        $adiwiyata = ! empty($data['adiwiyata']);
+
+        if (! $panca && ! $adiwiyata) {
+            return '';
+        }
+
+        $topik = $data['topik'] ?? '';
+        $keys = [];
+        $blocks = [];
+
+        if ($panca) {
+            $keys[] = '"integrasi_panca_cinta"';
+            $blocks[] = <<<TXT
+
+
+### INTEGRASI PANCA CINTA (Kurikulum Berbasis Cinta - Kemenag)
+Integrasikan KELIMA nilai Panca Cinta ke dalam pembelajaran topik "{$topik}". Untuk SETIAP nilai, tuliskan implementasi yang KONKRET, spesifik pada topik, dan dapat diamati dalam aktivitas belajar (bukan kalimat umum/slogan).
+Tambahkan key ini di ROOT JSON:
+"integrasi_panca_cinta": [
+  {"nilai": "Cinta Allah & Rasul-Nya", "implementasi": "cara konkret nilai ini dihidupkan saat belajar {$topik}"},
+  {"nilai": "Cinta Ilmu", "implementasi": "..."},
+  {"nilai": "Cinta Lingkungan (Alam)", "implementasi": "..."},
+  {"nilai": "Cinta Diri & Sesama Manusia", "implementasi": "..."},
+  {"nilai": "Cinta Tanah Air", "implementasi": "..."}
+]
+TXT;
+        }
+
+        if ($adiwiyata) {
+            $keys[] = '"integrasi_adiwiyata"';
+            $blocks[] = <<<TXT
+
+
+### INTEGRASI ADIWIYATA (Sekolah Peduli & Berbudaya Lingkungan)
+Kaitkan pembelajaran topik "{$topik}" dengan aksi nyata program Adiwiyata. Untuk setiap komponen, tuliskan kegiatan/aksi KONKRET yang bisa dilakukan peserta didik terkait topik (spesifik, terukur, bukan slogan).
+Tambahkan key ini di ROOT JSON:
+"integrasi_adiwiyata": [
+  {"komponen": "Kebersihan & Sanitasi", "kegiatan": "aksi konkret terkait {$topik}"},
+  {"komponen": "Pengelolaan Sampah (3R: Reduce, Reuse, Recycle)", "kegiatan": "..."},
+  {"komponen": "Konservasi Air", "kegiatan": "..."},
+  {"komponen": "Konservasi Energi", "kegiatan": "..."},
+  {"komponen": "Penghijauan / Pemeliharaan Tanaman", "kegiatan": "..."}
+]
+TXT;
+        }
+
+        $keyList = implode(' dan ', $keys);
+        $header = "\n\n## INTEGRASI NILAI TAMBAHAN (WAJIB)\nSelain seluruh struktur JSON di atas, WAJIB tambahkan key {$keyList} di ROOT objek JSON (sejajar dengan key lain, BUKAN di dalamnya). Isi dengan konten SPESIFIK dan SUBSTANTIF sesuai topik \"{$topik}\"; hindari kalimat generik.";
+
+        return $header . implode('', $blocks);
     }
 
     /**

@@ -258,6 +258,40 @@
                     </div>
                 </div>
 
+                <!-- Integrasi Nilai & Karakter -->
+                <div class="space-y-4 pt-4 border-t border-[hsl(var(--border))]">
+                    <h3 class="text-sm font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Integrasi Nilai & Karakter</h3>
+                    <p class="text-xs text-[hsl(var(--muted-foreground))]">Centang untuk menambahkan bagian khusus integrasi nilai pada modul ajar (berlaku untuk semua kurikulum).</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
+                        <label class="flex items-start gap-2 cursor-pointer hover:bg-[hsl(var(--muted))] p-2 rounded transition-colors">
+                            <input
+                                type="checkbox"
+                                name="panca_cinta"
+                                value="1"
+                                {{ old('panca_cinta') ? 'checked' : '' }}
+                                class="mt-1 h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+                            >
+                            <span class="text-sm text-[hsl(var(--foreground))]">
+                                <span class="font-medium">💗 Panca Cinta</span>
+                                <span class="block text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Cinta Allah &amp; Rasul, Ilmu, Lingkungan, Diri &amp; Sesama, Tanah Air</span>
+                            </span>
+                        </label>
+                        <label class="flex items-start gap-2 cursor-pointer hover:bg-[hsl(var(--muted))] p-2 rounded transition-colors">
+                            <input
+                                type="checkbox"
+                                name="adiwiyata"
+                                value="1"
+                                {{ old('adiwiyata') ? 'checked' : '' }}
+                                class="mt-1 h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+                            >
+                            <span class="text-sm text-[hsl(var(--foreground))]">
+                                <span class="font-medium">🌱 Adiwiyata</span>
+                                <span class="block text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Peduli lingkungan: sanitasi, sampah 3R, air, energi, penghijauan</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-end gap-4 pt-4 border-t border-[hsl(var(--border))]">
                     <a href="{{ route('rpp.index') }}" class="btn btn-outline" x-show="!loading">Batal</a>
                     

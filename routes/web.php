@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('rpp', RppController::class)->except(['edit', 'update']);
     Route::get('rpp/{rpp}/pdf', [RppController::class, 'downloadPdf'])->name('rpp.pdf');
     Route::get('rpp/{rpp}/word', [RppController::class, 'downloadWord'])->name('rpp.word');
+    Route::get('rpp/{rpp}/print', [RppController::class, 'print'])->name('rpp.print');
 
     // LJK (Lembar Jawaban Komputer)
     Route::resource('ljk', LjkController::class);
