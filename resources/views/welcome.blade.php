@@ -180,12 +180,19 @@
             <!-- Social Proof -->
             <div class="animate-fade-up delay-500">
                 <p class="text-xs font-semibold text-gray-400 mb-6 uppercase tracking-wide sm:tracking-widest">Bergabung dengan 4.000+ guru yang telah berkembang</p>
-                <div class="flex flex-wrap justify-center items-center gap-x-5 gap-y-3 sm:gap-8 text-gray-400">
-                    <!-- Fictional Logos (using generic shapes/text for now) -->
-                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Grapho</div>
-                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle></svg> Signum</div>
-                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"></path></svg> Vectra</div>
-                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg> Optimal</div>
+                <div class="grid w-full max-w-[680px] grid-cols-2 sm:grid-cols-4 items-center gap-x-4 gap-y-5 sm:gap-x-7 mx-auto px-1">
+                    <div class="min-w-0 flex h-14 sm:h-16 items-center justify-center">
+                        <img src="{{ asset('brand-logos/kemdikdasmen.png') }}" alt="Kemdikdasmen" class="block max-h-11 sm:max-h-12 w-full max-w-[150px] sm:max-w-[170px] object-contain grayscale contrast-125 brightness-75 opacity-70" loading="lazy">
+                    </div>
+                    <div class="min-w-0 flex h-14 sm:h-16 items-center justify-center">
+                        <img src="{{ asset('brand-logos/disdik-kota-tangerang.png') }}" alt="Disdik Kota Tangerang" class="block max-h-12 sm:max-h-14 w-full max-w-[138px] sm:max-w-[158px] object-contain grayscale contrast-125 brightness-75 opacity-70" loading="lazy">
+                    </div>
+                    <div class="min-w-0 flex h-14 sm:h-16 items-center justify-center">
+                        <img src="{{ asset('brand-logos/pgri.png') }}" alt="PGRI" class="block max-h-12 sm:max-h-14 w-auto object-contain grayscale contrast-125 brightness-75 opacity-70" loading="lazy">
+                    </div>
+                    <div class="min-w-0 flex h-14 sm:h-16 items-center justify-center">
+                        <img src="{{ asset('brand-logos/merdeka-belajar.png') }}" alt="Merdeka Belajar" class="block max-h-12 sm:max-h-14 w-full max-w-[142px] sm:max-w-[160px] object-contain grayscale contrast-125 brightness-75 opacity-70" loading="lazy">
+                    </div>
                 </div>
             </div>
             
