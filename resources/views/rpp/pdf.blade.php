@@ -1,3 +1,16 @@
+@php
+    // Palet tema warna dokumen (config/rpp_themes.php). Dihitung di paling atas
+    // karena dipakai di dalam <style> pada <head>.
+    $themeKey = $rpp->tema ?? 'merah';
+    $themeSet = config('rpp_themes.'.$themeKey) ?? config('rpp_themes.merah');
+    $primary = '#'.$themeSet['primary'];
+    $dark = '#'.$themeSet['dark'];
+    $accent = '#'.$themeSet['accent'];
+    // Tint 90% ke putih untuk latar kolom tahap (padanan #fff6f6 pada tema merah)
+    $primaryTint = '#'.collect([0, 2, 4])
+        ->map(fn ($i) => sprintf('%02x', (int) round(($h = hexdec(substr($themeSet['primary'], $i, 2))) + (255 - $h) * 0.9)))
+        ->implode('');
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -49,14 +62,14 @@
         .cover-school-sub { font-size: 9pt; color: #555; letter-spacing: 1px; margin-bottom: 25px; position: relative; z-index: 2; }
 
         .cover-title-main { font-size: 24pt; font-weight: bold; text-transform: uppercase; line-height: 1.15; margin: 15px 0 0; letter-spacing: 1px; color: #4b5563; position: relative; z-index: 2; }
-        .cover-subject { font-size: 32pt; font-weight: bold; color: #facc15; text-transform: uppercase; letter-spacing: 1px; margin: 0; line-height: 1.15; position: relative; z-index: 2; }
+        .cover-subject { font-size: 32pt; font-weight: bold; color: {{ $accent }}; text-transform: uppercase; letter-spacing: 1px; margin: 0; line-height: 1.15; position: relative; z-index: 2; }
         .cover-semester { font-size: 13pt; color: #6b7280; margin-bottom: 20px; position: relative; z-index: 2; }
 
         .cover-garuda { margin: 15px auto; width: 210px; position: relative; z-index: 2; }
         .cover-garuda img { width: 100%; max-width: 230px; }
 
         .cover-author-label { font-size: 12pt; color: #374151; margin-top: 20px; margin-bottom: 5px; position: relative; z-index: 2; }
-        .cover-author-name { font-size: 17pt; font-weight: bold; color: #b91c1c; position: relative; z-index: 2; }
+        .cover-author-name { font-size: 17pt; font-weight: bold; color: {{ $primary }}; position: relative; z-index: 2; }
 
         /* ============== TITLES ============== */
         .page-title { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 20px; margin-top: 5px; }
@@ -87,19 +100,19 @@
         .tbl-info td { border: none; padding: 3px 0; font-size: 11pt; background: transparent; }
         .tbl-info td:first-child { width: 32%; }
 
-        .tbl-red thead th, .tbl-red tbody .row-head td { background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; padding: 7px 9px; border: 1px solid #b91c1c; }
+        .tbl-red thead th, .tbl-red tbody .row-head td { background-color: {{ $primary }}; color: #ffffff; font-weight: bold; text-align: center; padding: 7px 9px; border: 1px solid {{ $primary }}; }
         .tbl-red tbody .row-sub td { background-color: #f5f5f5; font-weight: bold; }
         .label-cell { font-weight: bold; background-color: #fafafa; width: 25%; }
 
-        .tbl-langkah th { background-color: #b91c1c; color: #ffffff; text-align: center; font-weight: bold; padding: 8px; border: 1px solid #b91c1c; }
-        .tbl-langkah .col-pengalaman { width: 20%; text-align: center; vertical-align: middle; background-color: #fff6f6; font-weight: bold; color: #b91c1c; font-size: 12pt; padding: 15px 8px; }
+        .tbl-langkah th { background-color: {{ $primary }}; color: #ffffff; text-align: center; font-weight: bold; padding: 8px; border: 1px solid {{ $primary }}; }
+        .tbl-langkah .col-pengalaman { width: 20%; text-align: center; vertical-align: middle; background-color: {{ $primaryTint }}; font-weight: bold; color: {{ $primary }}; font-size: 12pt; padding: 15px 8px; }
         .tbl-langkah .fase-sintaks { font-weight: bold; font-style: italic; margin: 8px 0 4px; }
         .tbl-langkah .durasi { font-size: 9.5pt; color: #444; font-weight: normal; }
 
         /* ============== LKPD ============== */
-        .lkpd-wrapper { border: 2px solid #b91c1c; padding: 15px; }
-        .lkpd-header { text-align: center; border-bottom: 2px solid #b91c1c; padding-bottom: 10px; margin-bottom: 12px; }
-        .lkpd-title { font-size: 13pt; font-weight: bold; color: #b91c1c; text-transform: uppercase; }
+        .lkpd-wrapper { border: 2px solid {{ $primary }}; padding: 15px; }
+        .lkpd-header { text-align: center; border-bottom: 2px solid {{ $primary }}; padding-bottom: 10px; margin-bottom: 12px; }
+        .lkpd-title { font-size: 13pt; font-weight: bold; color: {{ $primary }}; text-transform: uppercase; }
         .jawaban-box { border: 1px dashed #999; min-height: 55px; padding: 6px 8px; margin-top: 5px; color: #999; font-size: 9.5pt; background: #ffffff; }
 
         /* ============== SIGNATURE ============== */
@@ -111,7 +124,7 @@
 
         /* ============== HELPERS ============== */
         .text-bold { font-weight: bold; }
-        .text-red { color: #b91c1c; }
+        .text-red { color: {{ $primary }}; }
         .text-center { text-align: center; }
         .mt-5 { margin-top: 5px; } .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; }
         .mb-5 { margin-bottom: 5px; } .mb-10 { margin-bottom: 10px; }
@@ -146,10 +159,10 @@
      ============================================================= --}}
 {{-- Ornamen sudut: fixed langsung di bawah <body> (DomPDF tak merender fixed
      di dalam parent position:relative). Berulang otomatis di semua halaman. --}}
-<img class="fx-dots" src="{{ $isPrint ? asset('decor-dots.png') : public_path('decor-dots.png') }}" alt="">
-<img class="fx-tr" src="{{ $isPrint ? asset('decor-tr.png') : public_path('decor-tr.png') }}" alt="">
-<img class="fx-bl" src="{{ $isPrint ? asset('decor-bl.png') : public_path('decor-bl.png') }}" alt="">
-<img class="fx-br" src="{{ $isPrint ? asset('decor-br.png') : public_path('decor-br.png') }}" alt="">
+<img class="fx-dots" src="{{ $isPrint ? asset("decor-{$themeKey}-dots.png") : public_path("decor-{$themeKey}-dots.png") }}" alt="">
+<img class="fx-tr" src="{{ $isPrint ? asset("decor-{$themeKey}-tr.png") : public_path("decor-{$themeKey}-tr.png") }}" alt="">
+<img class="fx-bl" src="{{ $isPrint ? asset("decor-{$themeKey}-bl.png") : public_path("decor-{$themeKey}-bl.png") }}" alt="">
+<img class="fx-br" src="{{ $isPrint ? asset("decor-{$themeKey}-br.png") : public_path("decor-{$themeKey}-br.png") }}" alt="">
 <div class="page-num"></div>
 
 <div class="cover">

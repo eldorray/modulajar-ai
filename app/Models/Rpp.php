@@ -31,6 +31,7 @@ class Rpp extends Model
         'model_pembelajaran',
         'jenis_asesmen',
         'kurikulum',
+        'tema',
         'content_result',
         'status',
     ];

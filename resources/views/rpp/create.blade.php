@@ -292,9 +292,25 @@
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-4 pt-4 border-t border-[hsl(var(--border))]">
+                <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[hsl(var(--border))]">
+                    <!-- Tema Warna Dokumen -->
+                    @php $temaTerpilih = old('tema', 'merah'); @endphp
+                    <div x-show="!loading" class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-[hsl(var(--muted-foreground))]">Tema warna:</span>
+                        <div class="flex items-center gap-2">
+                            @foreach(config('rpp_themes') as $key => $tema)
+                            <label class="cursor-pointer" title="{{ $tema['label'] }}">
+                                <input type="radio" name="tema" value="{{ $key }}" class="peer sr-only" {{ $temaTerpilih === $key ? 'checked' : '' }}>
+                                <span class="block w-7 h-7 rounded-full border-2 border-transparent ring-1 ring-[hsl(var(--border))] peer-checked:border-[hsl(var(--foreground))] peer-checked:ring-2 transition"
+                                      style="background: linear-gradient(135deg, #{{ $tema['primary'] }} 60%, #{{ $tema['accent'] }} 60%);"></span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
                     <a href="{{ route('rpp.index') }}" class="btn btn-outline" x-show="!loading">Batal</a>
-                    
+
                     <!-- Normal Submit Button -->
                     <button type="submit" class="btn btn-primary" x-show="!loading">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,6 +328,7 @@
                             </svg>
                             <span class="text-sm font-medium">Memproses dengan AI...</span>
                         </div>
+                    </div>
                     </div>
                 </div>
             </form>

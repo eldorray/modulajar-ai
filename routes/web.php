@@ -77,6 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Guru Management
         Route::resource('guru', GuruController::class)->except(['create', 'store', 'destroy']);
         Route::post('guru/sync', [GuruController::class, 'sync'])->name('guru.sync');
+
+        // RPP dari Guru
+        Route::get('rpp', [\App\Http\Controllers\Admin\RppController::class, 'index'])->name('rpp.index');
     });
 });
 

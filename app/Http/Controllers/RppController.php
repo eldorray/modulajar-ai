@@ -70,6 +70,7 @@ class RppController extends Controller
             'jenis_asesmen' => 'nullable',
             'jenis_asesmen.*' => 'string|in:Diagnostik Kognitif,Diagnostik Non-Kognitif,Formatif,Sumatif',
             'kurikulum' => 'required|string|max:255',
+            'tema' => 'nullable|string|in:'.implode(',', array_keys(config('rpp_themes'))),
             'panca_cinta' => 'nullable|boolean',
             'adiwiyata' => 'nullable|boolean',
         ]);
@@ -112,6 +113,7 @@ class RppController extends Controller
             'model_pembelajaran' => $validated['model_pembelajaran'] ?? 'Problem Based Learning',
             'jenis_asesmen' => $validated['jenis_asesmen'] ?? 'Formatif dan Sumatif',
             'kurikulum' => $validated['kurikulum'],
+            'tema' => $validated['tema'] ?? 'merah',
             'status' => 'processing',
         ]);
 

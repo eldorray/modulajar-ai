@@ -19,12 +19,6 @@ use PhpOffice\PhpWord\Style\Image;
  */
 class RppWordExporter
 {
-    private const RED = 'B91C1C';
-
-    private const DARK_RED = '7F1D1D';
-
-    private const YELLOW = 'FACC15';
-
     private const GRAY_TITLE = '4B5563';
 
     private const BORDER = '666666';
@@ -34,12 +28,27 @@ class RppWordExporter
 
     private PhpWord $word;
 
+    // Warna tema (tanpa '#'), diisi dari config/rpp_themes.php di export().
+    private string $primary = 'B91C1C';
+
+    private string $dark = '7F1D1D';
+
+    private string $accent = 'FACC15';
+
+    private string $themeKey = 'merah';
+
     public function export(Rpp $rpp, SchoolSetting $schoolSettings): PhpWord
     {
         // Wajib: PHPWord default TIDAK meng-escape XML. Tanpa ini, karakter
         // seperti "&" pada topik menghasilkan document.xml cacat → Word
         // menolak membuka file.
         \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+
+        $this->themeKey = $rpp->tema ?: 'merah';
+        $theme = config('rpp_themes.'.$this->themeKey) ?? config('rpp_themes.merah');
+        $this->primary = strtoupper($theme['primary']);
+        $this->dark = strtoupper($theme['dark']);
+        $this->accent = strtoupper($theme['accent']);
 
         $this->word = new PhpWord;
         $this->word->setDefaultFontName('Times New Roman');
@@ -91,23 +100,24 @@ class RppWordExporter
             'wrappingStyle' => 'behind',
         ]);
 
-        // px → pt (0.75) mengikuti ukuran di PDF
-        $img('decor-dots.png', [
+        // px → pt (0.75) mengikuti ukuran di PDF; ornamen mengikuti tema aktif
+        $k = $this->themeKey;
+        $img("decor-{$k}-dots.png", [
             'width' => 36, 'height' => 47,
             'posHorizontal' => Image::POSITION_ABSOLUTE, 'marginLeft' => 26,
             'posVertical' => Image::POSITION_ABSOLUTE, 'marginTop' => 26,
         ]);
-        $img('decor-tr.png', [
+        $img("decor-{$k}-tr.png", [
             'width' => 135, 'height' => 135,
             'posHorizontal' => Image::POSITION_HORIZONTAL_RIGHT,
             'posVertical' => Image::POSITION_ABSOLUTE, 'marginTop' => 0,
         ]);
-        $img('decor-bl.png', [
+        $img("decor-{$k}-bl.png", [
             'width' => 120, 'height' => 120,
             'posHorizontal' => Image::POSITION_ABSOLUTE, 'marginLeft' => 0,
             'posVertical' => Image::POSITION_VERTICAL_BOTTOM,
         ]);
-        $img('decor-br.png', [
+        $img("decor-{$k}-br.png", [
             'width' => 86, 'height' => 86,
             'posHorizontal' => Image::POSITION_HORIZONTAL_RIGHT,
             'posVertical' => Image::POSITION_VERTICAL_BOTTOM,
@@ -137,7 +147,7 @@ class RppWordExporter
         $section->addText('RENCANA PELAKSANAAN', ['bold' => true, 'size' => 22, 'color' => self::GRAY_TITLE], $center);
         $section->addText('PEMBELAJARAN MENDALAM', ['bold' => true, 'size' => 22, 'color' => self::GRAY_TITLE], $center);
         $section->addText(mb_strtoupper($rpp->kurikulum ?? 'Kurikulum Merdeka'), ['bold' => true, 'size' => 13, 'color' => self::GRAY_TITLE], $center);
-        $section->addText(mb_strtoupper($rpp->mata_pelajaran), ['bold' => true, 'size' => 30, 'color' => self::YELLOW], $center);
+        $section->addText(mb_strtoupper($rpp->mata_pelajaran), ['bold' => true, 'size' => 30, 'color' => $this->accent], $center);
         $section->addText(
             'Semester '.($rpp->semester ?? 'Ganjil').' : Tahun Ajaran '.$tahunAjaran,
             ['size' => 12, 'color' => '6B7280'],
@@ -151,7 +161,7 @@ class RppWordExporter
 
         $section->addTextBreak(1);
         $section->addText('Disusun oleh:', ['size' => 12, 'color' => '374151'], $center);
-        $section->addText($rpp->nama_guru, ['bold' => true, 'size' => 16, 'color' => self::RED], $center);
+        $section->addText($rpp->nama_guru, ['bold' => true, 'size' => 16, 'color' => $this->primary], $center);
 
         $section->addPageBreak();
     }
@@ -323,6 +333,18 @@ class RppWordExporter
 
     // ================= TABEL DASAR =================
 
+    /** Tint hex 90% ke putih (latar kolom tahap). Input & output tanpa '#'. */
+    private function tint(string $hex): string
+    {
+        $mix = fn (int $c) => (int) round($c + (255 - $c) * 0.9);
+
+        return sprintf('%02X%02X%02X',
+            $mix(hexdec(substr($hex, 0, 2))),
+            $mix(hexdec(substr($hex, 2, 2))),
+            $mix(hexdec(substr($hex, 4, 2)))
+        );
+    }
+
     private function tableStyle(): array
     {
         return [
@@ -336,7 +358,7 @@ class RppWordExporter
 
     private function headerCell($row, int $width, string $text): void
     {
-        $row->addCell($width, ['bgColor' => self::RED, 'valign' => 'center'])
+        $row->addCell($width, ['bgColor' => $this->primary, 'valign' => 'center'])
             ->addText($text, ['bold' => true, 'color' => 'FFFFFF'], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
     }
 
@@ -630,8 +652,8 @@ class RppWordExporter
                 continue;
             }
             $r = $table->addRow();
-            $tahapCell = $r->addCell(1900, ['bgColor' => 'FFF6F6', 'valign' => 'center']);
-            $tahapCell->addText($label, ['bold' => true, 'color' => self::RED, 'size' => 12], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+            $tahapCell = $r->addCell(1900, ['bgColor' => $this->tint($this->primary), 'valign' => 'center']);
+            $tahapCell->addText($label, ['bold' => true, 'color' => $this->primary, 'size' => 12], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
             if (! empty($tahap['durasi'])) {
                 $tahapCell->addText('('.$tahap['durasi'].')', ['size' => 9, 'color' => '444444'], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
             }
@@ -687,7 +709,7 @@ class RppWordExporter
                 }
                 $box = $section->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 100, 'width' => self::CONTENT_W, 'unit' => 'dxa']);
                 $cell = $box->addRow()->addCell(self::CONTENT_W, ['bgColor' => 'FCFCFC']);
-                $cell->addText((string) ($instrumen['jenis'] ?? 'Instrumen'), ['bold' => true, 'color' => self::RED], ['spaceAfter' => 40]);
+                $cell->addText((string) ($instrumen['jenis'] ?? 'Instrumen'), ['bold' => true, 'color' => $this->primary], ['spaceAfter' => 40]);
                 if (! empty($instrumen['deskripsi'])) {
                     $cell->addText((string) $instrumen['deskripsi'], null, ['spaceAfter' => 40]);
                 }
@@ -764,10 +786,10 @@ class RppWordExporter
         $section->addText('Lampiran 1 : Lembar Kerja Peserta Didik (LKPD)', ['bold' => true], ['spaceAfter' => 120]);
 
         // Bingkai LKPD = tabel satu sel berborder merah (padanan .lkpd-wrapper)
-        $frame = $section->addTable(['borderSize' => 12, 'borderColor' => self::RED, 'cellMargin' => 160, 'width' => self::CONTENT_W, 'unit' => 'dxa']);
+        $frame = $section->addTable(['borderSize' => 12, 'borderColor' => $this->primary, 'cellMargin' => 160, 'width' => self::CONTENT_W, 'unit' => 'dxa']);
         $cell = $frame->addRow()->addCell(self::CONTENT_W);
 
-        $cell->addText((string) ($lkpd['judul'] ?? 'LEMBAR KERJA PESERTA DIDIK'), ['bold' => true, 'size' => 13, 'color' => self::RED], ['alignment' => Jc::CENTER, 'spaceAfter' => 20]);
+        $cell->addText((string) ($lkpd['judul'] ?? 'LEMBAR KERJA PESERTA DIDIK'), ['bold' => true, 'size' => 13, 'color' => $this->primary], ['alignment' => Jc::CENTER, 'spaceAfter' => 20]);
         $cell->addText($rpp->mata_pelajaran.' — Fase '.$rpp->fase, ['size' => 10, 'color' => '666666'], ['alignment' => Jc::CENTER, 'spaceAfter' => 160]);
 
         foreach (['Nama', 'Kelas', 'Tanggal'] as $field) {
@@ -793,7 +815,7 @@ class RppWordExporter
             $judul = $keg['judul_kegiatan'] ?? $keg['judul'] ?? '';
             $cell->addText(
                 'Kegiatan '.($keg['nomor'] ?? $idx + 1).': '.$judul,
-                ['bold' => true, 'color' => self::RED],
+                ['bold' => true, 'color' => $this->primary],
                 ['spaceBefore' => 160, 'spaceAfter' => 20]
             );
             if (! empty($keg['petunjuk'])) {

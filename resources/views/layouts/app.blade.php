@@ -18,160 +18,149 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }" x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
     <div class="min-h-screen bg-[hsl(var(--background))]">
         <!-- Sidebar -->
-        <aside class="sidebar hidden lg:block">
-            <div class="flex flex-col h-full">
-                <!-- Logo -->
-                <div class="flex items-center gap-3 px-6 py-5 border-b border-[hsl(var(--border))]">
-                    <img src="{{ asset('logo.png') }}" alt="Logo" class="w-8 h-8 object-contain">
-                    <span class="font-semibold text-[hsl(var(--foreground))]">RPP Generator</span>
-                </div>
+        <aside class="sidebar hidden lg:flex flex-col transition-all duration-300" :class="sidebarCollapsed ? '!w-20' : '!w-64'">
+            <!-- Logo -->
+            <div class="flex items-center px-6 h-16 border-b border-[hsl(var(--border))] shrink-0" :class="sidebarCollapsed ? 'justify-center px-0' : 'gap-3'">
+                <img src="{{ asset('logo.png') }}" alt="Logo" class="w-8 h-8 object-contain shrink-0">
+                <span class="font-semibold text-[hsl(var(--foreground))] whitespace-nowrap transition-opacity duration-300" x-show="!sidebarCollapsed" x-transition>RPP Generator</span>
+            </div>
 
-                <!-- Navigation -->
-                <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-                    <a href="{{ route('dashboard') }}"
-                        class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                            </path>
-                        </svg>
-                        Dashboard
-                    </a>
+            <!-- Navigation -->
+            <nav class="flex-1 py-6 space-y-1 overflow-y-auto overflow-x-hidden" :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+                <a href="{{ route('dashboard') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('dashboard') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Dashboard</span>
+                </a>
 
-                    <a href="{{ route('rpp.index') }}"
-                        class="sidebar-link {{ request()->routeIs('rpp.*') && !request()->routeIs('rpp.create') ? 'active' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                        RPP Saya
-                    </a>
+                <a href="{{ route('rpp.index') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('rpp.*') && !request()->routeIs('rpp.create') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">RPP Saya</span>
+                </a>
 
-                    <a href="{{ route('rpp.create') }}"
-                        class="sidebar-link {{ request()->routeIs('rpp.create') ? 'active' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                            </path>
-                        </svg>
-                        Buat RPP Baru
-                    </a>
+                <a href="{{ route('rpp.create') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('rpp.create') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Buat RPP Baru</span>
+                </a>
 
-                    <a href="{{ route('sts.index') }}"
-                        class="sidebar-link {{ request()->routeIs('sts.*') ? 'active' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                            </path>
-                        </svg>
-                        Buat Soal STS AI
-                    </a>
+                <a href="{{ route('sts.index') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('sts.*') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Buat Soal STS AI</span>
+                </a>
 
-                    @if (auth()->user()->isAdmin())
-                        <div class="pt-4 mt-4 border-t border-[hsl(var(--border))]">
-                            <p
-                                class="px-4 mb-2 text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                                Admin</p>
-                            <a href="{{ route('admin.users.index') }}"
-                                class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                                    </path>
-                                </svg>
-                                Kelola User
-                            </a>
-                            <a href="{{ route('admin.guru.index') }}"
-                                class="sidebar-link {{ request()->routeIs('admin.guru.*') ? 'active' : '' }}">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                    </path>
-                                </svg>
-                                Kelola Guru
-                            </a>
-                            <a href="{{ route('settings.index') }}"
-                                class="sidebar-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                    </path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                Pengaturan Sekolah
-                            </a>
-                        </div>
-                    @endif
-                </nav>
-
-                <!-- User Menu -->
-                <div class="px-4 py-4 border-t border-[hsl(var(--border))]">
-                    <div class="flex items-center gap-3 mb-3 px-2">
-                        <div class="w-8 h-8 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center">
-                            <span class="text-sm font-medium text-[hsl(var(--secondary-foreground))]">
-                                {{ substr(auth()->user()->name, 0, 1) }}
-                            </span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-[hsl(var(--foreground))] truncate">
-                                {{ auth()->user()->name }}
-                            </p>
-                            <p class="text-xs text-[hsl(var(--muted-foreground))] truncate">
-                                {{ ucfirst(auth()->user()->role) }}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="space-y-1">
-                        <a href="{{ route('profile.edit') }}" class="sidebar-link">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                @if (auth()->user()->isAdmin())
+                    <div class="pt-4 mt-4 border-t border-[hsl(var(--border))]">
+                        <p class="px-4 mb-2 text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider" x-show="!sidebarCollapsed">Admin</p>
+                        <a href="{{ route('admin.users.index') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
-                            Profile
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Kelola User</span>
                         </a>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="sidebar-link w-full text-left text-[hsl(var(--destructive))]">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                    </path>
-                                </svg>
-                                Logout
-                            </button>
-                        </form>
+                        <a href="{{ route('admin.guru.index') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('admin.guru.*') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Kelola Guru</span>
+                        </a>
+                        <a href="{{ route('admin.rpp.index') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('admin.rpp.*') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">RPP Guru</span>
+                        </a>
+                        <a href="{{ route('settings.index') }}" class="sidebar-link" :class="{ 'active': {{ request()->routeIs('settings.*') ? 'true' : 'false' }}, 'justify-center px-0': sidebarCollapsed }">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Pengaturan Sekolah</span>
+                        </a>
                     </div>
+                @endif
+            </nav>
+
+            <!-- User Menu -->
+            <div class="py-4 border-t border-[hsl(var(--border))] shrink-0" :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+                <div class="flex items-center mb-3" :class="sidebarCollapsed ? 'justify-center' : 'gap-3 px-2'">
+                    <div class="w-8 h-8 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center shrink-0">
+                        <span class="text-sm font-medium text-[hsl(var(--secondary-foreground))]">
+                            {{ substr(auth()->user()->name, 0, 1) }}
+                        </span>
+                    </div>
+                    <div class="flex-1 min-w-0" x-show="!sidebarCollapsed">
+                        <p class="text-sm font-medium text-[hsl(var(--foreground))] truncate">
+                            {{ auth()->user()->name }}
+                        </p>
+                        <p class="text-xs text-[hsl(var(--muted-foreground))] truncate">
+                            {{ ucfirst(auth()->user()->role) }}
+                        </p>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <a href="{{ route('profile.edit') }}" class="sidebar-link" :class="{ 'justify-center px-0': sidebarCollapsed }">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Profile</span>
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="sidebar-link w-full text-left text-[hsl(var(--destructive))]" :class="{ 'justify-center px-0': sidebarCollapsed }">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap ml-3">Logout</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <div class="lg:pl-64">
+        <div class="transition-all duration-300" :class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'">
             <!-- Top Header -->
             <header
                 class="sticky top-0 z-30 flex items-center justify-between h-16 px-6 border-b border-[hsl(var(--border))] bg-[hsl(var(--background))/0.8] backdrop-blur-lg">
-                <!-- Mobile Menu Button -->
-                <button type="button" class="lg:hidden p-2 -ml-2 rounded-lg hover:bg-[hsl(var(--accent))]" x-data
-                    @click="$dispatch('toggle-sidebar')">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
+                <div class="flex items-center">
+                    <!-- Desktop Sidebar Toggle -->
+                    <button type="button" class="hidden lg:block p-2 -ml-2 mr-3 rounded-lg hover:bg-[hsl(var(--accent))] transition-colors text-[hsl(var(--muted-foreground))]" @click="sidebarCollapsed = !sidebarCollapsed" title="Toggle Sidebar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!sidebarCollapsed">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                        </svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="sidebarCollapsed" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
 
-                <!-- Page Title -->
-                @isset($header)
-                    <h1 class="text-lg font-semibold text-[hsl(var(--foreground))]">
-                        {{ $header }}
-                    </h1>
-                @else
-                    <div></div>
-                @endisset
+                    <!-- Mobile Menu Button -->
+                    <button type="button" class="lg:hidden p-2 -ml-2 mr-3 rounded-lg hover:bg-[hsl(var(--accent))]" x-data
+                        @click="$dispatch('toggle-sidebar')">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Page Title -->
+                    @isset($header)
+                        <h1 class="text-lg font-semibold text-[hsl(var(--foreground))]">
+                            {{ $header }}
+                        </h1>
+                    @else
+                        <div></div>
+                    @endisset
+                </div>
 
                 <!-- Right Side -->
                 <div class="flex items-center gap-4">
@@ -291,6 +280,15 @@
                                     </path>
                                 </svg>
                                 Kelola Guru
+                            </a>
+                            <a href="{{ route('admin.rpp.index') }}"
+                                class="sidebar-link {{ request()->routeIs('admin.rpp.*') ? 'active' : '' }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg>
+                                RPP Guru
                             </a>
                             <a href="{{ route('settings.index') }}"
                                 class="sidebar-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
