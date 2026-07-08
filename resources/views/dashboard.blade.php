@@ -107,7 +107,7 @@
                     <x-ui.card>
                         <div class="text-center">
                             <p class="text-3xl font-bold text-[hsl(var(--foreground))]">
-                                {{ number_format($adminStats['deepseek']['total_tokens'] + $adminStats['gemini']['total_tokens']) }}
+                                {{ number_format($adminStats['deepseek']['total_tokens']) }}
                             </p>
                             <p class="text-sm text-[hsl(var(--muted-foreground))]">Total Token AI</p>
                         </div>
@@ -122,8 +122,7 @@
                 </div>
 
                 <!-- Per-Provider Token Breakdown -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <!-- DeepSeek -->
+                <div class="grid grid-cols-1 gap-4 mt-4">
                     <x-ui.card class="border-blue-200">
                         <x-slot name="header">
                             <div class="flex items-center gap-2">
@@ -146,35 +145,6 @@
                             <div>
                                 <p class="text-lg font-bold text-green-600">Rp
                                     {{ number_format($adminStats['deepseek']['cost']['total_cost_idr'], 0, ',', '.') }}
-                                </p>
-                                <p class="text-xs text-[hsl(var(--muted-foreground))]">Biaya</p>
-                            </div>
-                        </div>
-                    </x-ui.card>
-
-                    <!-- Gemini -->
-                    <x-ui.card class="border-purple-200">
-                        <x-slot name="header">
-                            <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-                                <h4 class="font-semibold text-purple-700">Gemini 2.5 Flash</h4>
-                            </div>
-                        </x-slot>
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <p class="text-xl font-bold text-purple-700">
-                                    {{ number_format($adminStats['gemini']['total_tokens']) }}</p>
-                                <p class="text-xs text-[hsl(var(--muted-foreground))]">Total Tokens</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">
-                                    {{ number_format($adminStats['gemini']['input_tokens']) }} in</p>
-                                <p class="text-sm text-gray-600">
-                                    {{ number_format($adminStats['gemini']['output_tokens']) }} out</p>
-                            </div>
-                            <div>
-                                <p class="text-lg font-bold text-green-600">Rp
-                                    {{ number_format($adminStats['gemini']['cost']['total_cost_idr'], 0, ',', '.') }}
                                 </p>
                                 <p class="text-xs text-[hsl(var(--muted-foreground))]">Biaya</p>
                             </div>

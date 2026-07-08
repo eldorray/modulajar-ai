@@ -1,14 +1,14 @@
 # 🎓 Modul Ajar AI Generator
 
-Aplikasi web untuk membuat **Modul Ajar / RPP** (Rencana Pelaksanaan Pembelajaran) sesuai format **Kurikulum Merdeka Kemdikbud** menggunakan teknologi AI (DeepSeek / Gemini).
+Aplikasi web untuk membuat **Modul Ajar / RPP** (Rencana Pelaksanaan Pembelajaran) sesuai format **Kurikulum Merdeka Kemdikbud** menggunakan teknologi AI DeepSeek.
 
 ![Laravel](https://img.shields.io/badge/Laravel-11-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-blue)
-![AI](https://img.shields.io/badge/AI-DeepSeek%20%7C%20Gemini-green)
+![AI](https://img.shields.io/badge/AI-DeepSeek-green)
 
 ## ✨ Fitur
 
--   🤖 **AI-Powered Generation** - Modul Ajar dibuat otomatis oleh AI (DeepSeek Chat atau Gemini 2.5 Flash)
+-   🤖 **AI-Powered Generation** - Modul Ajar dibuat otomatis oleh DeepSeek Chat
 -   📄 **Format Kemdikbud** - Output sesuai standar Modul Ajar Kurikulum Merdeka
 -   📥 **Export PDF** - Download hasil dalam format PDF profesional
 -   🏫 **Pengaturan Sekolah** - Kustomisasi logo, nama sekolah, NSM, NPSN untuk muncul di PDF
@@ -20,7 +20,7 @@ Aplikasi web untuk membuat **Modul Ajar / RPP** (Rencana Pelaksanaan Pembelajara
 -   **Backend**: Laravel 11, PHP 8.2+
 -   **Frontend**: Blade, TailwindCSS, Alpine.js
 -   **Database**: MySQL / SQLite
--   **AI Provider**: DeepSeek API / Google Gemini API
+-   **AI Provider**: DeepSeek API
 -   **PDF**: DomPDF
 
 ## 📦 Instalasi
@@ -61,20 +61,11 @@ DB_PASSWORD=
 
 ### 5. Konfigurasi AI Provider
 
-Pilih salah satu provider AI dan tambahkan ke `.env`:
-
-**Untuk DeepSeek:**
+Tambahkan konfigurasi DeepSeek ke `.env`:
 
 ```env
-AI_DEFAULT_PROVIDER=deepseek
+AI_PROVIDER=deepseek
 DEEPSEEK_API_KEY=your_deepseek_api_key
-```
-
-**Untuk Gemini:**
-
-```env
-AI_DEFAULT_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### 6. Migrasi Database
@@ -177,8 +168,7 @@ php artisan view:cache
 │   │   ├── Rpp.php
 │   │   └── SchoolSetting.php
 │   └── Services/
-│       ├── DeepSeekService.php    # AI DeepSeek
-│       └── GeminiService.php      # AI Gemini
+│       └── DeepSeekService.php    # AI DeepSeek
 ├── resources/views/
 │   ├── rpp/
 │   │   ├── create.blade.php       # Form Generate
@@ -195,7 +185,6 @@ php artisan view:cache
 | Provider         | Input Token           | Output Token |
 | ---------------- | --------------------- | ------------ |
 | DeepSeek         | $0.28/1M (cache miss) | $0.42/1M     |
-| Gemini 2.5 Flash | $0.30/1M              | $2.50/1M     |
 
 Dashboard menampilkan estimasi biaya dalam Rupiah (kurs: $1 = Rp 16.717).
 

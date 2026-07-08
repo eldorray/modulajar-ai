@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('rpp_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('provider')->default('google');
-            $table->string('model_name')->default('gemini-1.5-flash');
+            $table->string('provider')->default('deepseek');
+            $table->string('model_name')->default('deepseek-chat');
             $table->integer('input_tokens')->default(0);
             $table->integer('output_tokens')->default(0);
             $table->integer('total_tokens')->default(0);

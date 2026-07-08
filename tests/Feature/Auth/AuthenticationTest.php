@@ -15,6 +15,8 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
+        $response->assertSee('Masuk ke RPP Generator AI');
+        $response->assertSee('Modul ajar, STS, dan dashboard guru dalam satu ruang kerja.');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

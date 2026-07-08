@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Rpp;
 use App\Models\SchoolSetting;
 use App\Services\DeepSeekService;
-use App\Services\GeminiService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,15 +13,9 @@ class RppController extends Controller
 {
     protected $aiService;
 
-    public function __construct(GeminiService $geminiService, DeepSeekService $deepSeekService)
+    public function __construct(DeepSeekService $deepSeekService)
     {
-        // Select AI provider based on configuration
-        $provider = config('ai.default', 'gemini');
-
-        $this->aiService = match ($provider) {
-            'deepseek' => $deepSeekService,
-            default => $geminiService,
-        };
+        $this->aiService = $deepSeekService;
     }
 
     /**

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-hidden">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,15 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
         .hero-gradient {
             position: absolute;
             top: 0;
@@ -47,9 +55,28 @@
             z-index: -1;
             border-radius: 50%;
         }
+        @media (max-width: 640px) {
+            .hero-gradient {
+                height: 520px;
+            }
+            .hero-glow-1 {
+                top: -80px;
+                left: -95px;
+                width: 260px;
+                height: 260px;
+                filter: blur(70px);
+            }
+            .hero-glow-2 {
+                top: 20px;
+                right: -120px;
+                width: 300px;
+                height: 300px;
+                filter: blur(80px);
+            }
+        }
     </style>
 </head>
-<body class="text-gray-900 antialiased min-h-screen flex flex-col relative overflow-x-hidden selection:bg-orange-100 selection:text-orange-900">
+<body class="text-gray-900 antialiased min-h-screen flex flex-col relative w-full max-w-full overflow-x-hidden selection:bg-orange-100 selection:text-orange-900">
 
     <!-- Background Gradients -->
     <div class="hero-gradient"></div>
@@ -57,17 +84,17 @@
     <div class="hero-glow-2"></div>
 
     <!-- Navigation -->
-    <nav class="relative z-50 py-6">
+    <nav class="relative z-50 py-4 sm:py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center gap-3">
                 <!-- Logo -->
-                <a href="/" class="flex items-center gap-2">
+                <a href="/" class="flex min-w-0 items-center gap-2">
                     <div class="w-8 h-8 rounded bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-sm">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
-                    <span class="font-bold text-xl tracking-tight">RPP Gen.</span>
+                    <span class="font-bold text-lg sm:text-xl tracking-tight truncate">RPP Gen.</span>
                 </a>
 
                 <!-- Centered Links (Desktop) -->
@@ -79,11 +106,11 @@
                 <div>
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="inline-flex items-center justify-center px-5 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold transition-all shadow-sm">
+                            <a href="{{ url('/dashboard') }}" class="inline-flex shrink-0 items-center justify-center px-4 sm:px-5 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-xs sm:text-sm font-semibold transition-all shadow-sm">
                                 Dashboard &rarr;
                             </a>
                         @else
-                            <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-5 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold transition-all shadow-sm">
+                            <a href="{{ route('login') }}" class="inline-flex shrink-0 items-center justify-center px-4 sm:px-5 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-xs sm:text-sm font-semibold transition-all shadow-sm">
                                 Mulai Sekarang &rarr;
                             </a>
                         @endauth
@@ -94,27 +121,27 @@
     </nav>
 
     <!-- Hero Section -->
-    <main class="flex-grow pt-16 sm:pt-24 pb-20 relative">
+    <main class="flex-grow pt-10 sm:pt-24 pb-14 sm:pb-20 relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             
             <!-- Badge -->
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm mb-8 animate-fade-up">
+            <div class="inline-flex max-w-full flex-wrap items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm mb-6 sm:mb-8 animate-fade-up">
                 <span class="text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 text-transparent bg-clip-text">New</span>
                 <span class="text-xs font-medium text-gray-600 border-l border-gray-200 pl-2">✨ Fitur AI Pintar</span>
             </div>
 
             <!-- Heading -->
-            <h1 class="text-5xl sm:text-6xl md:text-7xl font-[800] tracking-tight text-gray-900 mb-6 max-w-4xl mx-auto leading-[1.05] animate-fade-up delay-100">
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-[800] tracking-tight text-gray-900 mb-5 sm:mb-6 max-w-4xl mx-auto leading-[1.08] sm:leading-[1.05] break-words animate-fade-up delay-100">
                 Buat Modul Ajar dan Soal Sempurna. Dengan Strategi AI Cerdas.
             </h1>
             
             <!-- Subtitle -->
-            <p class="text-lg text-gray-500 mb-10 max-w-2xl mx-auto animate-fade-up delay-200 font-medium">
+            <p class="text-base sm:text-lg text-gray-500 mb-8 sm:mb-10 max-w-2xl mx-auto animate-fade-up delay-200 font-medium">
                 Tingkatkan alur kerja Anda untuk hasil mengajar yang superior dengan alat terpadu dan cerdas.
             </p>
 
             <!-- Mini Checks -->
-            <div class="flex flex-wrap justify-center gap-6 text-sm font-semibold text-gray-600 mb-10 animate-fade-up delay-300">
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-3 sm:gap-6 text-sm font-semibold text-gray-600 mb-8 sm:mb-10 animate-fade-up delay-300">
                 <div class="flex items-center gap-2">
                     <div class="w-4 h-4 rounded-full bg-orange-100 flex items-center justify-center text-orange-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
                     Dapat Disesuaikan
@@ -130,20 +157,20 @@
             </div>
 
             <!-- CTA Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20 animate-fade-up delay-400">
+            <div class="flex w-full max-w-sm sm:max-w-none mx-auto flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-14 sm:mb-20 animate-fade-up delay-400">
                 @auth
-                    <a href="{{ url('/dashboard') }}" class="px-8 py-3.5 rounded-full bg-[#121212] text-white font-semibold text-sm hover:bg-black transition-colors shadow-lg flex items-center gap-2 w-full sm:w-auto">
+                    <a href="{{ url('/dashboard') }}" class="px-8 py-3.5 rounded-full bg-[#121212] text-white font-semibold text-sm hover:bg-black transition-colors shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto">
                         Buka Dashboard
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>
                 @else
                     @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="px-8 py-3.5 rounded-full bg-[#121212] text-white font-semibold text-sm hover:bg-black transition-colors shadow-lg flex items-center gap-2 w-full sm:w-auto">
+                    <a href="{{ route('register') }}" class="px-8 py-3.5 rounded-full bg-[#121212] text-white font-semibold text-sm hover:bg-black transition-colors shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto">
                         Mulai Gratis
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>
                     @endif
-                    <a href="{{ route('login') }}" class="px-8 py-3.5 rounded-full bg-white text-gray-900 border border-gray-200 font-semibold text-sm hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto">
+                    <a href="{{ route('login') }}" class="px-8 py-3.5 rounded-full bg-white text-gray-900 border border-gray-200 font-semibold text-sm hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                         Masuk Akun
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                     </a>
@@ -152,13 +179,13 @@
 
             <!-- Social Proof -->
             <div class="animate-fade-up delay-500">
-                <p class="text-xs font-semibold text-gray-400 mb-6 uppercase tracking-widest">Bergabung dengan 4.000+ guru yang telah berkembang</p>
-                <div class="flex flex-wrap justify-center items-center gap-8 text-gray-400">
+                <p class="text-xs font-semibold text-gray-400 mb-6 uppercase tracking-wide sm:tracking-widest">Bergabung dengan 4.000+ guru yang telah berkembang</p>
+                <div class="flex flex-wrap justify-center items-center gap-x-5 gap-y-3 sm:gap-8 text-gray-400">
                     <!-- Fictional Logos (using generic shapes/text for now) -->
-                    <div class="flex items-center gap-2 text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Grapho</div>
-                    <div class="flex items-center gap-2 text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle></svg> Signum</div>
-                    <div class="flex items-center gap-2 text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"></path></svg> Vectra</div>
-                    <div class="flex items-center gap-2 text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg> Optimal</div>
+                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Grapho</div>
+                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle></svg> Signum</div>
+                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"></path></svg> Vectra</div>
+                    <div class="flex items-center gap-2 text-base sm:text-lg font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg> Optimal</div>
                 </div>
             </div>
             
@@ -224,23 +251,23 @@
     </main>
 
     <!-- Features Section -->
-    <section id="fitur" class="py-24 bg-white relative">
+    <section id="fitur" class="py-16 sm:py-24 bg-white relative overflow-hidden">
         <div class="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Valuable Features</p>
-                <h2 class="text-3xl md:text-[40px] font-[800] text-gray-900 mb-6 tracking-tight">Solusi Modul Ajar yang Disesuaikan</h2>
+            <div class="text-center mb-10 sm:mb-16">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide sm:tracking-widest mb-4">Valuable Features</p>
+                <h2 class="text-3xl md:text-[40px] font-[800] text-gray-900 mb-5 sm:mb-6 tracking-tight">Solusi Modul Ajar yang Disesuaikan</h2>
                 <p class="text-gray-500 max-w-2xl mx-auto font-medium text-sm leading-relaxed">Sesuaikan platform kami dengan kebutuhan mengajar unik Anda dengan solusi yang fleksibel dan terstruktur untuk Kurikulum Merdeka.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Card 1 -->
-                <div class="bg-[#F8F9FA] rounded-3xl p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
+                <div class="bg-[#F8F9FA] rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
                     <div class="absolute top-6 right-6 w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-orange-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
                     <h3 class="font-bold text-[17px] text-gray-900 mb-2">Modul Ajar Otomatis</h3>
                     <p class="text-gray-500 text-[13px] mb-8 pr-12 leading-relaxed">Hasilkan RPP berstandar secara akurat.</p>
-                    <div class="bg-white rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
+                    <div class="bg-white rounded-2xl sm:rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 sm:p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
                         <div class="text-[10px] font-bold text-gray-400 mb-1">Average Daily Output</div>
                         <div class="w-full h-1 bg-gray-100 rounded-full mb-3"></div>
                         <div class="flex justify-between items-end mb-4">
@@ -256,13 +283,13 @@
                 </div>
                 
                 <!-- Card 2 -->
-                <div class="bg-[#F8F9FA] rounded-3xl p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
+                <div class="bg-[#F8F9FA] rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
                     <div class="absolute top-6 right-6 w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-orange-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </div>
                     <h3 class="font-bold text-[17px] text-gray-900 mb-2">Soal STS AI</h3>
                     <p class="text-gray-500 text-[13px] mb-8 pr-12 leading-relaxed">Buat Soal Sumatif Tengah Semester beserta kuncinya.</p>
-                    <div class="bg-white rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
+                    <div class="bg-white rounded-2xl sm:rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 sm:p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
                         <div class="flex justify-between items-center mb-4">
                             <div class="flex gap-2">
                                 <div class="w-4 h-4 rounded-full bg-orange-100"></div>
@@ -278,13 +305,13 @@
                 </div>
 
                 <!-- Card 3 -->
-                <div class="bg-[#F8F9FA] rounded-3xl p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
+                <div class="bg-[#F8F9FA] rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
                     <div class="absolute top-6 right-6 w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-orange-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     </div>
                     <h3 class="font-bold text-[17px] text-gray-900 mb-2">Kolaborasi Tim</h3>
                     <p class="text-gray-500 text-[13px] mb-8 pr-12 leading-relaxed">Kelola profil guru dengan sangat efisien.</p>
-                    <div class="bg-white rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
+                    <div class="bg-white rounded-2xl sm:rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 sm:p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-10 h-10 rounded-full bg-gray-200 relative">
                                 <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
@@ -303,38 +330,38 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Wide Card 1 -->
-                <div class="bg-[#F8F9FA] rounded-3xl p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
+                <div class="bg-[#F8F9FA] rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
                     <div class="absolute top-6 right-6 w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-orange-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
                     </div>
                     <h3 class="font-bold text-[17px] text-gray-900 mb-2">Format Ekspor PDF Terstruktur</h3>
                     <p class="text-gray-500 text-[13px] mb-8">Format siap cetak dengan tata letak yang bersih dan terstruktur untuk diserahkan ke Kepala Sekolah.</p>
-                    <div class="bg-white rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 flex items-center justify-center transform group-hover:-translate-y-2 transition-transform duration-300 mx-8">
-                        <div class="flex gap-5 w-full">
+                    <div class="bg-white rounded-2xl sm:rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 sm:p-5 flex items-center justify-center transform group-hover:-translate-y-2 transition-transform duration-300 mx-0 sm:mx-8">
+                        <div class="flex min-w-0 gap-4 sm:gap-5 w-full">
                             <div class="w-16 h-20 bg-gray-50 rounded shadow-sm border border-gray-200 flex flex-col p-2">
                                 <div class="w-full h-1 bg-gray-300 rounded-full mb-1"></div>
                                 <div class="w-1/2 h-1 bg-gray-300 rounded-full mb-3"></div>
                                 <div class="w-full h-0.5 bg-gray-200 mb-1"></div>
                                 <div class="w-3/4 h-0.5 bg-gray-200 mb-1"></div>
                             </div>
-                            <div class="flex-1 py-1">
+                            <div class="min-w-0 flex-1 py-1">
                                 <div class="w-1/2 h-2 bg-gray-300 rounded-full mb-3"></div>
                                 <div class="w-full h-1.5 bg-gray-100 rounded-full mb-2"></div>
                                 <div class="w-4/5 h-1.5 bg-gray-100 rounded-full mb-4"></div>
-                                <div class="w-1/3 h-6 bg-orange-50 text-orange-500 rounded flex items-center justify-center text-[9px] font-bold">Download PDF</div>
+                                <div class="w-24 max-w-full h-6 bg-orange-50 text-orange-500 rounded flex items-center justify-center text-[9px] font-bold">Download PDF</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Wide Card 2 -->
-                <div class="bg-[#F8F9FA] rounded-3xl p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
+                <div class="bg-[#F8F9FA] rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group hover:bg-gray-100 transition-colors">
                     <div class="absolute top-6 right-6 w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-orange-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
                     </div>
                     <h3 class="font-bold text-[17px] text-gray-900 mb-2">Dashboard Terpusat</h3>
                     <p class="text-gray-500 text-[13px] mb-8">Pantau sisa token AI Anda dan riwayat pembuatan dokumen dalam satu layar yang sangat informatif.</p>
-                    <div class="bg-white rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 transform group-hover:-translate-y-2 transition-transform duration-300 mx-8">
+                    <div class="bg-white rounded-2xl sm:rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 sm:p-5 transform group-hover:-translate-y-2 transition-transform duration-300 mx-0 sm:mx-8">
                         <div class="flex gap-3 mb-4">
                             <div class="flex-1 bg-gray-50 rounded-xl p-3 border border-gray-100">
                                 <div class="w-6 h-6 rounded-full bg-blue-100 mb-2"></div>
@@ -356,13 +383,13 @@
     </section>
 
     <!-- Benefits Section -->
-    <section class="py-24 bg-white border-t border-gray-50">
+    <section class="py-16 sm:py-24 bg-white border-t border-gray-50 overflow-hidden">
         <div class="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
                 
                 <!-- Left Side -->
                 <div>
-                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Benefits</p>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wide sm:tracking-widest mb-4">Benefits</p>
                     <h2 class="text-3xl md:text-[42px] font-[800] text-gray-900 mb-6 tracking-tight leading-[1.1]">
                         Buka Era Baru Operasional Unggul dan Inovasi
                     </h2>
@@ -381,7 +408,7 @@
                     <!-- Line connector -->
                     <div class="absolute left-[11px] top-6 bottom-6 w-0.5 bg-orange-100 -z-10 rounded-full"></div>
                     
-                    <div class="flex gap-6">
+                    <div class="flex gap-4 sm:gap-6">
                         <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5 z-10 border-4 border-white">
                             <div class="w-2 h-2 rounded-full bg-orange-500"></div>
                         </div>
@@ -391,7 +418,7 @@
                         </div>
                     </div>
                     
-                    <div class="flex gap-6">
+                    <div class="flex gap-4 sm:gap-6">
                         <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5 z-10 border-4 border-white">
                             <div class="w-2 h-2 rounded-full bg-orange-500"></div>
                         </div>
@@ -401,7 +428,7 @@
                         </div>
                     </div>
                     
-                    <div class="flex gap-6">
+                    <div class="flex gap-4 sm:gap-6">
                         <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5 z-10 border-4 border-white">
                             <div class="w-2 h-2 rounded-full bg-orange-500"></div>
                         </div>
@@ -411,7 +438,7 @@
                         </div>
                     </div>
 
-                    <div class="flex gap-6">
+                    <div class="flex gap-4 sm:gap-6">
                         <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5 z-10 border-4 border-white">
                             <div class="w-2 h-2 rounded-full bg-orange-500"></div>
                         </div>
@@ -427,7 +454,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-[#fafafa] py-16 border-t border-gray-100 mt-auto">
+    <footer class="bg-[#fafafa] py-12 sm:py-16 border-t border-gray-100 mt-auto overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <a href="/" class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded bg-gray-900 flex items-center justify-center">
@@ -442,7 +469,7 @@
                 &copy; {{ date('Y') }} RPP Generator AI. Developed by Fahmie.
             </div>
             
-            <div class="flex gap-6 text-sm font-medium text-gray-500">
+            <div class="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm font-medium text-gray-500">
                 <a href="#" class="hover:text-gray-900 transition-colors">Privacy</a>
                 <a href="#" class="hover:text-gray-900 transition-colors">Terms</a>
                 <a href="#" class="hover:text-gray-900 transition-colors">Contact</a>

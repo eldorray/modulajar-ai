@@ -16,10 +16,6 @@ class DashboardController extends Controller
     const DEEPSEEK_PRICE_INPUT_CACHE_MISS = 0.28;    // $0.28 per 1M input tokens (cache miss)
     const DEEPSEEK_PRICE_OUTPUT_PER_MILLION = 0.42;  // $0.42 per 1M output tokens
 
-    // Gemini 2.5 Flash Pricing (per 1 million tokens in USD)
-    const GEMINI_PRICE_INPUT_PER_MILLION = 0.30;   // $0.30 per 1M input tokens
-    const GEMINI_PRICE_OUTPUT_PER_MILLION = 2.50;  // $2.50 per 1M output tokens
-    
     const USD_TO_IDR = 16717;               // Exchange rate USD to IDR
 
     /**
@@ -27,22 +23,12 @@ class DashboardController extends Controller
      */
     private function getProviderInfo(): array
     {
-        $provider = config('ai.default', 'gemini');
-        
-        return match ($provider) {
-            'deepseek' => [
-                'name' => 'DeepSeek Chat (V3.2)',
-                'input_price' => self::DEEPSEEK_PRICE_INPUT_CACHE_MISS, // Using cache miss price as default
-                'input_price_cache_hit' => self::DEEPSEEK_PRICE_INPUT_CACHE_HIT,
-                'output_price' => self::DEEPSEEK_PRICE_OUTPUT_PER_MILLION,
-            ],
-            default => [
-                'name' => 'Gemini 2.5 Flash',
-                'input_price' => self::GEMINI_PRICE_INPUT_PER_MILLION,
-                'input_price_cache_hit' => null,
-                'output_price' => self::GEMINI_PRICE_OUTPUT_PER_MILLION,
-            ],
-        };
+        return [
+            'name' => 'DeepSeek Chat (V3.2)',
+            'input_price' => self::DEEPSEEK_PRICE_INPUT_CACHE_MISS,
+            'input_price_cache_hit' => self::DEEPSEEK_PRICE_INPUT_CACHE_HIT,
+            'output_price' => self::DEEPSEEK_PRICE_OUTPUT_PER_MILLION,
+        ];
     }
 
     /**
@@ -68,39 +54,6 @@ class DashboardController extends Controller
             'total_cost_usd' => $totalCostUsd,
             'input_cost_idr' => $inputCostIdr,
             'output_cost_idr' => $outputCostIdr,
-            'total_cost_idr' => $totalCostIdr,
-            'provider' => $providerInfo,
-        ];
-    }
-
-    /**
-     * Calculate token cost for specific provider.
-     */
-    private function calculateTokenCostForProvider(int $inputTokens, int $outputTokens, string $provider): array
-    {
-        $providerInfo = match ($provider) {
-            'deepseek' => [
-                'name' => 'DeepSeek Chat',
-                'input_price' => self::DEEPSEEK_PRICE_INPUT_CACHE_MISS,
-                'output_price' => self::DEEPSEEK_PRICE_OUTPUT_PER_MILLION,
-            ],
-            default => [
-                'name' => 'Gemini 2.5 Flash',
-                'input_price' => self::GEMINI_PRICE_INPUT_PER_MILLION,
-                'output_price' => self::GEMINI_PRICE_OUTPUT_PER_MILLION,
-            ],
-        };
-        
-        // Calculate cost in USD
-        $inputCostUsd = ($inputTokens / 1000000) * $providerInfo['input_price'];
-        $outputCostUsd = ($outputTokens / 1000000) * $providerInfo['output_price'];
-        $totalCostUsd = $inputCostUsd + $outputCostUsd;
-
-        // Convert to IDR
-        $totalCostIdr = $totalCostUsd * self::USD_TO_IDR;
-
-        return [
-            'total_cost_usd' => $totalCostUsd,
             'total_cost_idr' => $totalCostIdr,
             'provider' => $providerInfo,
         ];
@@ -142,30 +95,15 @@ class DashboardController extends Controller
         // Admin stats
         $adminStats = null;
         if ($user->isAdmin()) {
-            // Get tokens by provider (using deepseek and google as logged)
             $deepseekTokens = AiUsageLog::where('provider', 'deepseek')->selectRaw('
                 COALESCE(SUM(input_tokens), 0) as input_tokens,
                 COALESCE(SUM(output_tokens), 0) as output_tokens,
                 COALESCE(SUM(total_tokens), 0) as total_tokens
             ')->first();
 
-            $geminiTokens = AiUsageLog::whereIn('provider', ['gemini', 'google'])->selectRaw('
-                COALESCE(SUM(input_tokens), 0) as input_tokens,
-                COALESCE(SUM(output_tokens), 0) as output_tokens,
-                COALESCE(SUM(total_tokens), 0) as total_tokens
-            ')->first();
-
-            // Calculate costs for each provider
-            $deepseekCost = $this->calculateTokenCostForProvider(
+            $deepseekCost = $this->calculateTokenCost(
                 $deepseekTokens->input_tokens ?? 0,
-                $deepseekTokens->output_tokens ?? 0,
-                'deepseek'
-            );
-
-            $geminiCost = $this->calculateTokenCostForProvider(
-                $geminiTokens->input_tokens ?? 0,
-                $geminiTokens->output_tokens ?? 0,
-                'gemini'
+                $deepseekTokens->output_tokens ?? 0
             );
 
             $adminStats = [
@@ -177,17 +115,10 @@ class DashboardController extends Controller
                     'total_tokens' => $deepseekTokens->total_tokens ?? 0,
                     'cost' => $deepseekCost,
                 ],
-                'gemini' => [
-                    'input_tokens' => $geminiTokens->input_tokens ?? 0,
-                    'output_tokens' => $geminiTokens->output_tokens ?? 0,
-                    'total_tokens' => $geminiTokens->total_tokens ?? 0,
-                    'cost' => $geminiCost,
-                ],
-                'total_cost_idr' => $deepseekCost['total_cost_idr'] + $geminiCost['total_cost_idr'],
+                'total_cost_idr' => $deepseekCost['total_cost_idr'],
             ];
         }
 
         return view('dashboard', compact('stats', 'recentRpps', 'adminStats', 'userTokens', 'userCost'));
     }
 }
-

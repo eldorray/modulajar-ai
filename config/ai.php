@@ -7,9 +7,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option controls the default AI provider that will be used for
-    | generating RPP content. Supported: "gemini", "deepseek"
+    | generating RPP content.
     |
     */
 
-    'default' => env('AI_PROVIDER', 'gemini'),
+    'default' => env('AI_PROVIDER', 'deepseek'),
 ];
