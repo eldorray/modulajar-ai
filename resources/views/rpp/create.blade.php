@@ -289,6 +289,19 @@
                                 <span class="block text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Peduli lingkungan: sanitasi, sampah 3R, air, energi, penghijauan</span>
                             </span>
                         </label>
+                        <label class="flex items-start gap-2 cursor-pointer hover:bg-[hsl(var(--muted))] p-2 rounded transition-colors">
+                            <input
+                                type="checkbox"
+                                name="kka"
+                                value="1"
+                                {{ old('kka') ? 'checked' : '' }}
+                                class="mt-1 h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--ring))]"
+                            >
+                            <span class="text-sm text-[hsl(var(--foreground))]">
+                                <span class="font-medium">🤖 KKA (Koding &amp; Kecerdasan Artifisial)</span>
+                                <span class="block text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Berpikir komputasional, literasi AI, algoritma, etika digital</span>
+                            </span>
+                        </label>
                     </div>
                 </div>
 

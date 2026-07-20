@@ -290,6 +290,7 @@
             if (isset($content['refleksi']) || isset($content['refleksi_guru'])) $tocItems[] = 'Refleksi';
             if (isset($content['integrasi_panca_cinta'])) $tocItems[] = 'Integrasi Panca Cinta';
             if (isset($content['integrasi_adiwiyata'])) $tocItems[] = 'Integrasi Adiwiyata';
+            if (isset($content['integrasi_kka'])) $tocItems[] = 'Integrasi Koding & Kecerdasan Artifisial';
             if (isset($content['glosarium'])) $tocItems[] = 'Glosarium';
             if (isset($content['daftar_pustaka'])) $tocItems[] = 'Daftar Pustaka';
             $tocLetter = 'A';
@@ -748,6 +749,29 @@
             <tr>
                 <td class="label-cell">{{ $item['komponen'] ?? '-' }}</td>
                 <td>{{ $item['kegiatan'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- INTEGRASI KKA (KODING & KECERDASAN ARTIFISIAL) --}}
+    @if(isset($content['integrasi_kka']))
+    <div class="section-letter">{{ $huruf++ }}. Integrasi Koding &amp; Kecerdasan Artifisial (KKA)</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Aspek KKA</th>
+                <th>Implementasi dalam Pembelajaran</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['integrasi_kka'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['aspek'] ?? '-' }}</td>
+                <td>{{ $item['implementasi'] ?? '-' }}</td>
             </tr>
             @endif
             @endforeach

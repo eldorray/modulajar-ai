@@ -208,13 +208,16 @@ class RppWordExporter
                 $para
             );
         }
-        if (isset($content['integrasi_panca_cinta']) || isset($content['integrasi_adiwiyata'])) {
+        if (isset($content['integrasi_panca_cinta']) || isset($content['integrasi_adiwiyata']) || isset($content['integrasi_kka'])) {
             $bagian = [];
             if (isset($content['integrasi_panca_cinta'])) {
                 $bagian[] = 'integrasi nilai-nilai Panca Cinta';
             }
             if (isset($content['integrasi_adiwiyata'])) {
                 $bagian[] = 'integrasi program Adiwiyata (Sekolah Peduli dan Berbudaya Lingkungan)';
+            }
+            if (isset($content['integrasi_kka'])) {
+                $bagian[] = 'integrasi Koding dan Kecerdasan Artifisial (KKA)';
             }
             $section->addText(
                 'Selain itu, RPPM ini memuat '.implode(' serta ', $bagian).' yang dihubungkan secara '
@@ -320,6 +323,9 @@ class RppWordExporter
         }
         if (isset($content['integrasi_adiwiyata'])) {
             $items[] = 'Integrasi Adiwiyata';
+        }
+        if (isset($content['integrasi_kka'])) {
+            $items[] = 'Integrasi Koding & Kecerdasan Artifisial';
         }
         if (isset($content['glosarium'])) {
             $items[] = 'Glosarium';
@@ -601,6 +607,18 @@ class RppWordExporter
                 }
             }
             $this->twoColRedTable($section, 'Komponen Adiwiyata', 'Kegiatan / Aksi Nyata', $rows);
+        }
+
+        // INTEGRASI KKA (KODING & KECERDASAN ARTIFISIAL)
+        if (isset($content['integrasi_kka'])) {
+            $this->sectionLetter($section, $huruf++, 'Integrasi Koding & Kecerdasan Artifisial (KKA)');
+            $rows = [];
+            foreach ($content['integrasi_kka'] as $item) {
+                if (is_array($item)) {
+                    $rows[] = [(string) ($item['aspek'] ?? '-'), (string) ($item['implementasi'] ?? '-')];
+                }
+            }
+            $this->twoColRedTable($section, 'Aspek KKA', 'Implementasi dalam Pembelajaran', $rows);
         }
 
         // GLOSARIUM

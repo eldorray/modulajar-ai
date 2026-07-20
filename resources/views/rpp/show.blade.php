@@ -260,6 +260,29 @@
         </x-ui.card>
         @endif
 
+        <!-- Integrasi KKA (Koding & Kecerdasan Artifisial) -->
+        @if(isset($content['integrasi_kka']))
+        <x-ui.card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🤖</span>
+                    <h3 class="text-lg font-semibold">Integrasi Koding &amp; Kecerdasan Artifisial</h3>
+                </div>
+                <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Berpikir komputasional, literasi AI, dan etika digital</p>
+            </x-slot>
+            <div class="space-y-3">
+                @foreach($content['integrasi_kka'] as $item)
+                    @if(is_array($item))
+                    <div class="p-3 bg-gradient-to-r from-indigo-50 to-sky-50 rounded-lg border border-indigo-100">
+                        <p class="font-semibold text-indigo-700">{{ $item['aspek'] ?? '' }}</p>
+                        <p class="text-sm text-indigo-600 mt-1">{{ $item['implementasi'] ?? '' }}</p>
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+        </x-ui.card>
+        @endif
+
         <!-- Sarana Prasarana -->
         @if(isset($content['sarana_prasarana']))
         <x-ui.card>

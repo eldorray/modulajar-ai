@@ -66,11 +66,13 @@ class RppController extends Controller
             'tema' => 'nullable|string|in:'.implode(',', array_keys(config('rpp_themes'))),
             'panca_cinta' => 'nullable|boolean',
             'adiwiyata' => 'nullable|boolean',
+            'kka' => 'nullable|boolean',
         ]);
 
         // Optional value-integration flags (checkboxes: present only when checked)
         $validated['panca_cinta'] = $request->boolean('panca_cinta');
         $validated['adiwiyata'] = $request->boolean('adiwiyata');
+        $validated['kka'] = $request->boolean('kka');
 
         // Normalize jenis_asesmen to array → comma-separated string for storage
         $jenisAsesmenRaw = $validated['jenis_asesmen'] ?? [];

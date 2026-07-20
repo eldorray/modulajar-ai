@@ -341,6 +341,22 @@
             <td class="page-col">15</td>
         </tr>
         @endif
+        @if(isset($content['integrasi_panca_cinta']) || isset($content['integrasi_adiwiyata']) || isset($content['integrasi_kka']))
+        <tr class="level-1">
+            <td>Integrasi Nilai &amp; Karakter</td>
+            <td class="dots"></td>
+            <td class="page-col"></td>
+        </tr>
+        @if(isset($content['integrasi_panca_cinta']))
+        <tr class="level-2"><td>Integrasi Panca Cinta</td><td class="dots"></td><td class="page-col"></td></tr>
+        @endif
+        @if(isset($content['integrasi_adiwiyata']))
+        <tr class="level-2"><td>Integrasi Adiwiyata</td><td class="dots"></td><td class="page-col"></td></tr>
+        @endif
+        @if(isset($content['integrasi_kka']))
+        <tr class="level-2"><td>Integrasi Koding &amp; Kecerdasan Artifisial</td><td class="dots"></td><td class="page-col"></td></tr>
+        @endif
+        @endif
         <tr class="level-1">
             <td>Lampiran</td>
             <td class="dots"></td>
@@ -550,9 +566,11 @@
             </tr>
 
             {{-- PERTEMUAN 1 - MEMAHAMI --}}
+            {{-- Satu baris per pengalaman (tanpa rowspan): DomPDF menghilangkan
+                 border kiri/kanan sel rowspan yang melewati batas halaman. --}}
             @if(!empty($p1))
             <tr>
-                <td class="col-pengalaman" rowspan="3">Memahami</td>
+                <td class="col-pengalaman">Memahami</td>
                 <td>
                     <div style="font-weight:bold;margin-bottom:4px;">Pertemuan 1</div>
                     @foreach($p1['tujuan_pembelajaran'] ?? [] as $tp)
@@ -568,10 +586,7 @@
                         </li>
                         @endforeach
                     </ol>
-                </td>
-            </tr>
-            <tr>
-                <td>
+
                     <div class="sub-section">Identifikasi Masalah</div>
                     <ol start="{{ $startIdentifikasi }}">
                         @foreach($p1['identifikasi_masalah'] ?? [] as $s)
@@ -581,10 +596,7 @@
                         </li>
                         @endforeach
                     </ol>
-                </td>
-            </tr>
-            <tr>
-                <td>
+
                     <div class="sub-section">Pengumpulan Data</div>
                     <ol start="{{ $startPengumpulan }}">
                         @foreach($p1['pengumpulan_data'] ?? [] as $s)
@@ -601,7 +613,7 @@
             {{-- PERTEMUAN 2 - MENGAPLIKASI --}}
             @if(!empty($p2))
             <tr>
-                <td class="col-pengalaman" rowspan="2">Mengaplikasi</td>
+                <td class="col-pengalaman">Mengaplikasi</td>
                 <td>
                     <div style="font-weight:bold;margin-bottom:4px;">Pertemuan 2</div>
                     @foreach($p2['tujuan_pembelajaran'] ?? [] as $tp)
@@ -617,10 +629,7 @@
                         </li>
                         @endforeach
                     </ol>
-                </td>
-            </tr>
-            <tr>
-                <td>
+
                     <div class="sub-section">Pengolahan Data</div>
                     <ol start="{{ $startP2b }}">
                         @foreach($p2['pengolahan_data_2'] ?? [] as $s)
@@ -637,7 +646,7 @@
             {{-- PERTEMUAN 3 - MEREFLEKSI --}}
             @if(!empty($p3))
             <tr>
-                <td class="col-pengalaman" rowspan="2">Merefleksi</td>
+                <td class="col-pengalaman">Merefleksi</td>
                 <td>
                     <div style="font-weight:bold;margin-bottom:4px;">Pertemuan 3</div>
                     @foreach($p3['tujuan_pembelajaran'] ?? [] as $tp)
@@ -653,10 +662,7 @@
                         </li>
                         @endforeach
                     </ol>
-                </td>
-            </tr>
-            <tr>
-                <td>
+
                     <div class="sub-section">Penarikan Kesimpulan (Generalisasi)</div>
                     <ol start="{{ $startP3b }}">
                         @foreach($p3['penarikan_kesimpulan'] ?? [] as $s)
@@ -1077,6 +1083,85 @@
         </table>
     </div>
 </div>
+
+{{-- =============================================================
+     INTEGRASI NILAI & KARAKTER (opsional, per centang)
+     ============================================================= --}}
+@if(isset($content['integrasi_panca_cinta']) || isset($content['integrasi_adiwiyata']) || isset($content['integrasi_kka']))
+@php $huruf = 'E'; @endphp
+<div class="page-break">
+    <div class="section-letter">Integrasi Nilai &amp; Karakter</div>
+
+    {{-- INTEGRASI PANCA CINTA --}}
+    @if(isset($content['integrasi_panca_cinta']))
+    <div class="section-letter">{{ $huruf++ }}. Integrasi Panca Cinta</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Nilai Panca Cinta</th>
+                <th>Implementasi dalam Pembelajaran</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['integrasi_panca_cinta'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['nilai'] ?? '-' }}</td>
+                <td>{{ $item['implementasi'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- INTEGRASI ADIWIYATA --}}
+    @if(isset($content['integrasi_adiwiyata']))
+    <div class="section-letter">{{ $huruf++ }}. Integrasi Adiwiyata</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Komponen Adiwiyata</th>
+                <th>Kegiatan / Aksi Nyata</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['integrasi_adiwiyata'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['komponen'] ?? '-' }}</td>
+                <td>{{ $item['kegiatan'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    {{-- INTEGRASI KKA (KODING & KECERDASAN ARTIFISIAL) --}}
+    @if(isset($content['integrasi_kka']))
+    <div class="section-letter">{{ $huruf++ }}. Integrasi Koding &amp; Kecerdasan Artifisial (KKA)</div>
+    <table class="tbl-red">
+        <thead>
+            <tr>
+                <th style="width:32%;">Aspek KKA</th>
+                <th>Implementasi dalam Pembelajaran</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($content['integrasi_kka'] as $item)
+            @if(is_array($item))
+            <tr>
+                <td class="label-cell">{{ $item['aspek'] ?? '-' }}</td>
+                <td>{{ $item['implementasi'] ?? '-' }}</td>
+            </tr>
+            @endif
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+</div>
+@endif
 
 {{-- =============================================================
      LAMPIRAN 1: LKPD

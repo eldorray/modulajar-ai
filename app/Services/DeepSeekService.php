@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Log;
 class DeepSeekService
 {
     protected ?string $apiKey;
+
     protected string $model;
+
     protected string $endpoint;
 
     public function __construct()
@@ -30,33 +32,33 @@ class DeepSeekService
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout($isDeepLearning ? 300 : 120)->post($this->endpoint, [
                 'model' => $this->model,
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'Anda adalah seorang ahli pendidikan Indonesia yang bertugas membuat Rencana Pelaksanaan Pembelajaran (RPP) / Modul Ajar. Berikan output dalam format JSON yang valid.'
+                        'content' => 'Anda adalah seorang ahli pendidikan Indonesia yang bertugas membuat Rencana Pelaksanaan Pembelajaran (RPP) / Modul Ajar. Berikan output dalam format JSON yang valid.',
                     ],
                     [
                         'role' => 'user',
-                        'content' => $prompt
-                    ]
+                        'content' => $prompt,
+                    ],
                 ],
                 'temperature' => 0.7,
                 'max_tokens' => 8192,
                 'response_format' => [
-                    'type' => 'json_object'
+                    'type' => 'json_object',
                 ],
             ]);
 
             if ($response->failed()) {
                 Log::error('DeepSeek API Error', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => $response->body(),
                 ]);
-                
+
                 // Better error messages based on status code
                 $errorMessage = match ($response->status()) {
                     429 => 'Batas kuota API tercapai. Silakan tunggu beberapa saat dan coba lagi.',
@@ -66,7 +68,7 @@ class DeepSeekService
                     500, 503 => 'Server AI sedang tidak tersedia. Silakan coba lagi nanti.',
                     default => 'Gagal menghasilkan RPP. Silakan coba lagi.',
                 };
-                
+
                 return [
                     'success' => false,
                     'error' => $errorMessage,
@@ -74,10 +76,10 @@ class DeepSeekService
             }
 
             $result = $response->json();
-            
+
             // Extract content from response
             $content = $this->extractContent($result);
-            
+
             // Log token usage
             $this->logUsage($result, $userId, $rppId);
 
@@ -89,12 +91,12 @@ class DeepSeekService
         } catch (\Exception $e) {
             Log::error('DeepSeek Service Exception', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Terjadi kesalahan: ' . $e->getMessage(),
+                'error' => 'Terjadi kesalahan: '.$e->getMessage(),
             ];
         }
     }
@@ -120,12 +122,12 @@ class DeepSeekService
 
         // Check if using Kurikulum Berbasis Cinta (Kemenag)
         if ($kurikulum === 'Kurikulum Berbasis Cinta') {
-            return $this->buildKBCPrompt($data) . $this->integrationDirective($data);
+            return $this->buildKBCPrompt($data).$this->integrationDirective($data);
         }
 
         // Check if using Kurikulum Merdeka Deep Learning (RPPM)
         if ($kurikulum === 'Kurikulum Merdeka Deep Learning') {
-            return $this->buildRPPMPrompt($data) . $this->integrationDirective($data);
+            return $this->buildRPPMPrompt($data).$this->integrationDirective($data);
         }
 
         $prompt = <<<PROMPT
@@ -316,7 +318,7 @@ PENTING:
 - Gunakan bahasa Indonesia yang baik dan benar
 PROMPT;
 
-        return $prompt . $this->integrationDirective($data);
+        return $prompt.$this->integrationDirective($data);
     }
 
     /**
@@ -328,8 +330,9 @@ PROMPT;
     {
         $panca = ! empty($data['panca_cinta']);
         $adiwiyata = ! empty($data['adiwiyata']);
+        $kka = ! empty($data['kka']);
 
-        if (! $panca && ! $adiwiyata) {
+        if (! $panca && ! $adiwiyata && ! $kka) {
             return '';
         }
 
@@ -373,10 +376,28 @@ Tambahkan key ini di ROOT JSON:
 TXT;
         }
 
+        if ($kka) {
+            $keys[] = '"integrasi_kka"';
+            $blocks[] = <<<TXT
+
+
+### INTEGRASI KKA (Koding & Kecerdasan Artifisial)
+Integrasikan pendekatan Koding dan Kecerdasan Artifisial (KKA) ke dalam pembelajaran topik "{$topik}". Untuk SETIAP aspek, tuliskan implementasi yang KONKRET dan relevan dengan topik, sesuai jenjang/fase peserta didik (untuk fase rendah gunakan aktivitas unplugged/tanpa perangkat bila perlu). Hindari slogan atau kalimat umum.
+Tambahkan key ini di ROOT JSON:
+"integrasi_kka": [
+  {"aspek": "Berpikir Komputasional (dekomposisi, pola, abstraksi, algoritma)", "implementasi": "cara konkret aspek ini diterapkan saat belajar {$topik}"},
+  {"aspek": "Literasi Digital & Kecerdasan Artifisial", "implementasi": "..."},
+  {"aspek": "Pemecahan Masalah Algoritmik", "implementasi": "..."},
+  {"aspek": "Kreativitas & Inovasi Digital", "implementasi": "..."},
+  {"aspek": "Etika Digital & Penggunaan AI yang Bijak", "implementasi": "..."}
+]
+TXT;
+        }
+
         $keyList = implode(' dan ', $keys);
         $header = "\n\n## INTEGRASI NILAI TAMBAHAN (WAJIB)\nSelain seluruh struktur JSON di atas, WAJIB tambahkan key {$keyList} di ROOT objek JSON (sejajar dengan key lain, BUKAN di dalamnya). Isi dengan konten SPESIFIK dan SUBSTANTIF sesuai topik \"{$topik}\"; hindari kalimat generik.";
 
-        return $header . implode('', $blocks);
+        return $header.implode('', $blocks);
     }
 
     /**
@@ -399,7 +420,7 @@ TXT;
 
         // Normalize jenis_asesmen into array
         $asesmenArray = $data['jenis_asesmen_array'] ?? null;
-        if (!is_array($asesmenArray)) {
+        if (! is_array($asesmenArray)) {
             $asesmenRaw = $data['jenis_asesmen'] ?? 'Diagnostik Kognitif, Diagnostik Non-Kognitif, Formatif, Sumatif';
             $asesmenArray = array_filter(array_map('trim', explode(',', $asesmenRaw)));
         }
@@ -426,10 +447,10 @@ TXT;
         if ($hasSumatif) {
             $asesmenParts[] = '"sumatif":{"deskripsi":"Asesmen akhir ketercapaian tujuan pembelajaran tentang '.$topik.'","waktu":"Setelah seluruh CP selesai","bentuk":"Tes tertulis (pilihan ganda dan essay)","kisi_kisi":[{"tujuan":"tujuan sumatif 1","indikator":"indikator 1","level":"C3","nomor":1},{"tujuan":"tujuan sumatif 2","indikator":"indikator 2","level":"C4","nomor":2}]}';
         }
-        $asesmenJson = '"asesmen":{' . implode(',', $asesmenParts) . '}';
+        $asesmenJson = '"asesmen":{'.implode(',', $asesmenParts).'}';
 
         $asesmenList = implode(', ', $asesmenArray);
-        $asesmenInstruksi = 'WAJIB isi HANYA bagian asesmen berikut: ' . $asesmenList . '. JANGAN tambahkan key asesmen lain selain yang diminta.';
+        $asesmenInstruksi = 'WAJIB isi HANYA bagian asesmen berikut: '.$asesmenList.'. JANGAN tambahkan key asesmen lain selain yang diminta.';
 
         return <<<PROMPT
 Buat RPPM (Rencana Pelaksanaan Pembelajaran Mendalam) Kurikulum Merdeka Deep Learning dalam format JSON.
@@ -516,22 +537,24 @@ PROMPT;
     {
         try {
             $text = $result['choices'][0]['message']['content'] ?? null;
-            
-            if (!$text) {
+
+            if (! $text) {
                 return null;
             }
 
             // Parse JSON response
             $content = json_decode($text, true);
-            
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::warning('Failed to parse DeepSeek response as JSON', ['text' => $text]);
+
                 return null;
             }
 
             return $content;
         } catch (\Exception $e) {
             Log::error('Error extracting content', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -543,7 +566,7 @@ PROMPT;
     {
         try {
             $usage = $result['usage'] ?? [];
-            
+
             AiUsageLog::create([
                 'user_id' => $userId,
                 'rpp_id' => $rppId,
@@ -567,33 +590,33 @@ PROMPT;
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(120)->post($this->endpoint, [
                 'model' => $this->model,
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'Anda adalah seorang Guru Profesional dan Ahli Kurikulum yang berpengalaman dalam menyusun asesmen sesuai Kurikulum Merdeka. Berikan output dalam format JSON yang valid.'
+                        'content' => 'Anda adalah seorang Guru Profesional dan Ahli Kurikulum yang berpengalaman dalam menyusun asesmen sesuai Kurikulum Merdeka. Berikan output dalam format JSON yang valid.',
                     ],
                     [
                         'role' => 'user',
-                        'content' => $prompt
-                    ]
+                        'content' => $prompt,
+                    ],
                 ],
                 'temperature' => 0.5,
                 'max_tokens' => 8192,
                 'response_format' => [
-                    'type' => 'json_object'
+                    'type' => 'json_object',
                 ],
             ]);
 
             if ($response->failed()) {
                 Log::error('DeepSeek STS API Error', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => $response->body(),
                 ]);
-                
+
                 $errorMessage = match ($response->status()) {
                     429 => 'Batas kuota API tercapai. Silakan tunggu beberapa saat dan coba lagi.',
                     401 => 'API Key tidak valid. Periksa konfigurasi DEEPSEEK_API_KEY.',
@@ -602,7 +625,7 @@ PROMPT;
                     500, 503 => 'Server AI sedang tidak tersedia. Silakan coba lagi nanti.',
                     default => 'Gagal menghasilkan soal STS. Silakan coba lagi.',
                 };
-                
+
                 return [
                     'success' => false,
                     'error' => $errorMessage,
@@ -624,13 +647,14 @@ PROMPT;
             // Log usage (reuse existing method)
             $this->logUsage($result, $userId, $stsId);
 
-            if (!$content) {
+            if (! $content) {
                 $rawText = $result['choices'][0]['message']['content'] ?? '(empty)';
                 Log::error('DeepSeek STS: Failed to parse AI response content', [
                     'finish_reason' => $finishReason,
                     'raw_response_length' => strlen($rawText),
                     'raw_response_preview' => substr($rawText, 0, 500),
                 ]);
+
                 return [
                     'success' => false,
                     'error' => $finishReason === 'length'
@@ -647,12 +671,12 @@ PROMPT;
         } catch (\Exception $e) {
             Log::error('DeepSeek STS Service Exception', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Terjadi kesalahan: ' . $e->getMessage(),
+                'error' => 'Terjadi kesalahan: '.$e->getMessage(),
             ];
         }
     }
@@ -699,4 +723,3 @@ Isi SEMUA soal sesuai jumlah. Proporsi: LOTS 30%, MOTS 40%, HOTS 30%. JSON valid
 PROMPT;
     }
 }
-
