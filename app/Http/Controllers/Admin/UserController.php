@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Imports\UsersImport;
 use App\Exports\UsersTemplateExport;
+use App\Http\Controllers\Controller;
+use App\Imports\UsersImport;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -19,7 +19,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::latest()->paginate(15);
-        
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -70,7 +70,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:admin,guru'],
         ]);
@@ -81,7 +81,7 @@ class UserController extends Controller
             'role' => $validated['role'],
         ]);
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->update(['password' => Hash::make($validated['password'])]);
         }
 
@@ -104,6 +104,98 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'User berhasil dihapus.');
+    }
+
+    /**
+     * Reset password satu user dan simpan password sementaranya.
+     */
+    public function resetPassword(Request $request, User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Gunakan halaman profil untuk mengganti password sendiri.');
+        }
+
+        $validated = $request->validate([
+            'password' => ['nullable', 'string', 'min:8', 'max:64'],
+        ]);
+
+        $password = $validated['password'] ?? self::generatePassword();
+
+        self::simpanPassword($user, $password);
+
+        return back()->with('success', "Password {$user->name} berhasil direset. Password baru tampil di kolom Password.");
+    }
+
+    /**
+     * Reset password beberapa user sekaligus.
+     */
+    public function resetPasswordBatch(Request $request)
+    {
+        $validated = $request->validate([
+            'users' => ['required', 'array', 'min:1'],
+            'users.*' => ['integer', 'exists:users,id'],
+            'password' => ['nullable', 'string', 'min:8', 'max:64'],
+        ], [
+            'users.required' => 'Pilih minimal satu user.',
+        ]);
+
+        $users = User::whereIn('id', $validated['users'])
+            ->where('id', '!=', auth()->id())
+            ->get();
+
+        if ($users->isEmpty()) {
+            return back()->with('error', 'Tidak ada user yang bisa direset. Akun sendiri dilewati.');
+        }
+
+        foreach ($users as $user) {
+            // Password seragam bila admin mengisinya, acak bila dikosongkan
+            $password = $validated['password'] ?? self::generatePassword();
+
+            self::simpanPassword($user, $password);
+        }
+
+        $catatan = count($validated['users']) > $users->count() ? ' Akun sendiri dilewati.' : '';
+
+        return back()->with('success', "Password {$users->count()} user berhasil direset.{$catatan}");
+    }
+
+    /**
+     * Hapus password sementara dari database (password login tetap berlaku).
+     */
+    public function clearTempPassword(User $user)
+    {
+        $user->forceFill(['temp_password' => null, 'temp_password_at' => null])->save();
+
+        return back()->with('success', "Password sementara {$user->name} dihapus dari daftar.");
+    }
+
+    /**
+     * Simpan password baru + salinan sementaranya.
+     * forceFill dipakai karena temp_password sengaja di luar $fillable
+     * supaya tidak bisa diisi lewat request biasa.
+     */
+    private static function simpanPassword(User $user, string $password): void
+    {
+        $user->forceFill([
+            'password' => Hash::make($password),
+            'temp_password' => $password,
+            'temp_password_at' => now(),
+        ])->save();
+    }
+
+    /**
+     * Password acak tanpa karakter yang mudah tertukar (0/O, 1/l/I).
+     */
+    private static function generatePassword(int $length = 10): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+        $password = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        return $password;
     }
 
     /**
@@ -147,14 +239,15 @@ class UserController extends Controller
             $failures = $e->failures();
             $errors = [];
             foreach ($failures as $failure) {
-                $errors[] = "Baris {$failure->row()}: " . implode(', ', $failure->errors());
+                $errors[] = "Baris {$failure->row()}: ".implode(', ', $failure->errors());
             }
-            
-            return back()->with('error', 'Gagal import: ' . implode(' | ', array_slice($errors, 0, 3)));
+
+            return back()->with('error', 'Gagal import: '.implode(' | ', array_slice($errors, 0, 3)));
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle database errors with Indonesian messages
             $errorMessage = $this->translateDatabaseError($e->getMessage());
-            return back()->with('error', 'Gagal import: ' . $errorMessage);
+
+            return back()->with('error', 'Gagal import: '.$errorMessage);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal import: Terjadi kesalahan. Pastikan format file sesuai template.');
         }
@@ -174,7 +267,7 @@ class UserController extends Controller
         if (str_contains($message, 'cannot be null')) {
             return 'Data tidak lengkap. Pastikan semua kolom wajib terisi.';
         }
-        
+
         return 'Terjadi kesalahan database. Periksa format data Anda.';
     }
 }

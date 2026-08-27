@@ -53,6 +53,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class);
         Route::get('users-template', [UserController::class, 'downloadTemplate'])->name('users.template');
         Route::post('users-import', [UserController::class, 'import'])->name('users.import');
+        Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('users-reset-password-batch', [UserController::class, 'resetPasswordBatch'])->name('users.reset-password-batch');
+        Route::delete('users/{user}/temp-password', [UserController::class, 'clearTempPassword'])->name('users.clear-temp-password');
 
         // Guru Management
         Route::resource('guru', GuruController::class)->except(['create', 'store', 'destroy']);

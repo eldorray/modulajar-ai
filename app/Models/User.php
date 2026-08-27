@@ -33,6 +33,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'temp_password',
         'remember_token',
     ];
 
@@ -46,6 +47,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'temp_password' => 'encrypted',
+            'temp_password_at' => 'datetime',
         ];
     }
 
@@ -89,4 +92,3 @@ class User extends Authenticatable
         return $this->role === 'guru';
     }
 }
-
