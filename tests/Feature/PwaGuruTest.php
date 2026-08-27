@@ -50,6 +50,17 @@ class PwaGuruTest extends TestCase
             ->assertSee('beforeinstallprompt', false);
     }
 
+    public function test_banner_install_menyediakan_fallback_chrome_android(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('androidChrome', false)
+            ->assertSee('samsungbrowser', false)
+            ->assertSee('!this.snoozed()', false)
+            ->assertSee('Pasang aplikasi melalui menu Chrome', false)
+            ->assertSee('Tambahkan ke layar utama', false);
+    }
+
     public function test_menu_detail_membuka_halaman_pwa_dan_akun_di_pojok(): void
     {
         $guru = User::factory()->create(['role' => 'guru']);

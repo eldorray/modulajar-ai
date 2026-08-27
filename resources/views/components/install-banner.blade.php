@@ -25,12 +25,20 @@
         </button>
     </div>
 
-    <!-- Panduan iOS (Safari tidak menyediakan prompt bawaan) -->
+    <!-- Panduan manual ketika browser tidak menyediakan prompt pemasangan bawaan -->
     <div x-show="guide" x-cloak @click.self="guide = false" class="fixed inset-0 z-50 flex items-end bg-[#08183A]/60 backdrop-blur-sm">
         <div class="w-full rounded-t-[26px] bg-white p-6">
-            <h2 class="pwa-install-title text-[16px] font-extrabold">Pasang lewat Safari</h2>
-            <ol class="mt-3 space-y-2.5 text-[13px] leading-5 text-[#0A1F44]">
+            <h2 class="pwa-install-title text-[16px] font-extrabold" x-text="guideTitle"></h2>
+            <ol x-show="ios" class="mt-3 space-y-2.5 text-[13px] leading-5 text-[#0A1F44]">
                 @foreach (['Ketuk tombol Bagikan di bilah bawah Safari.', 'Pilih Tambahkan ke Layar Utama.', 'Ketuk Tambah, lalu buka RPP Guru dari layar utama.'] as $i => $langkah)
+                    <li class="flex gap-2.5">
+                        <span class="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#EDF3FF] text-[10px] font-extrabold text-[#1552F0]">{{ $i + 1 }}</span>
+                        {{ $langkah }}
+                    </li>
+                @endforeach
+            </ol>
+            <ol x-show="androidChrome" class="mt-3 space-y-2.5 text-[13px] leading-5 text-[#0A1F44]">
+                @foreach (['Ketuk menu tiga titik di kanan atas Chrome.', 'Pilih Pasang aplikasi atau Tambahkan ke layar utama.', 'Konfirmasi Pasang, lalu buka RPP Guru dari layar utama.'] as $i => $langkah)
                     <li class="flex gap-2.5">
                         <span class="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#EDF3FF] text-[10px] font-extrabold text-[#1552F0]">{{ $i + 1 }}</span>
                         {{ $langkah }}
@@ -78,7 +86,9 @@
             guide: false,
             prompt: null,
             ios: false,
+            androidChrome: false,
             hint: 'Akses cepat dari layar utama.',
+            guideTitle: 'Pasang aplikasi',
             key: 'pwa-install-snooze',
 
             init() {
@@ -87,9 +97,11 @@
                 if (this.snoozed()) return;
 
                 this.ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
+                this.androidChrome = /android/i.test(navigator.userAgent) && /chrome|crios/i.test(navigator.userAgent) && !/edg|opr|opera|samsungbrowser/i.test(navigator.userAgent);
 
                 if (this.ios) {
                     this.hint = 'Bagikan → Tambahkan ke Layar Utama.';
+                    this.guideTitle = 'Pasang lewat Safari';
                     setTimeout(() => this.show = true, 1200);
                     return;
                 }
@@ -99,6 +111,18 @@
                     this.prompt = event;
                     this.show = true;
                 });
+
+                // Chrome Android dapat menahan beforeinstallprompt karena engagement,
+                // prompt pernah ditolak, atau evaluasi installability belum selesai.
+                // Banner tetap tersedia dan mengarahkan pengguna ke menu Chrome.
+                if (this.androidChrome) {
+                    this.hint = 'Pasang dari Chrome ke layar utama.';
+                    this.guideTitle = 'Pasang aplikasi melalui menu Chrome';
+                    setTimeout(() => {
+                        const installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                        if (!this.prompt && !installed && !this.snoozed()) this.show = true;
+                    }, 1800);
+                }
 
                 window.addEventListener('appinstalled', () => {
                     this.show = false;
@@ -112,7 +136,10 @@
                     return;
                 }
 
-                if (!this.prompt) return;
+                if (!this.prompt) {
+                    if (this.androidChrome) this.guide = true;
+                    return;
+                }
 
                 this.prompt.prompt();
                 const { outcome } = await this.prompt.userChoice;
