@@ -50,6 +50,40 @@ class PwaGuruTest extends TestCase
             ->assertSee('beforeinstallprompt', false);
     }
 
+    public function test_menu_detail_membuka_isi_modul_versi_lengkap_dan_akun_di_pojok(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+        $rpp = $this->rppFor($guru);
+
+        $response = $this->actingAs($guru)->get(route('pwa.home'))->assertOk();
+
+        // Menu Detail mengarah ke halaman isi modul (rpp/{id}) milik modul terakhir
+        $response->assertSee(route('rpp.show', $rpp), false);
+
+        // Urutan navigasi: Home, Modul, tombol generate, Detail, Akun (pojok)
+        $response->assertSeeInOrder(['>Home<', '>Modul<', 'pwa-fab', '>Detail<', '>Akun<'], false);
+
+        // Menu Desktop tidak lagi ada di navigasi bawah
+        $response->assertDontSee('>Desktop<', false);
+    }
+
+    public function test_halaman_isi_modul_tidak_memantulkan_sesi_standalone(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+        $rpp = $this->rppFor($guru);
+
+        // Halaman modul lengkap boleh dibuka dari PWA terpasang
+        $this->actingAs($guru)->get(route('rpp.show', $rpp))
+            ->assertOk()
+            ->assertDontSee('window.location.replace', false)
+            ->assertSee('Kembali ke aplikasi');
+
+        // Halaman desktop lain tetap dipantulkan ke aplikasi
+        $this->actingAs($guru)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('window.location.replace', false);
+    }
+
     public function test_banner_install_muncul_di_halaman_welcome(): void
     {
         $this->get('/')

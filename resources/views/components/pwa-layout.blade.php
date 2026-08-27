@@ -2,7 +2,13 @@
     'title' => 'RPP Guru',
     'active' => 'home',
     'header' => null,
+    // Modul yang dibuka menu "Detail". Kosong = pakai modul terakhir yang selesai.
+    'detail' => null,
 ])
+
+@php
+    $detailRpp = $detail ?? \App\Models\Rpp::forUser(auth()->id())->completed()->latest()->first();
+@endphp
 
 <!DOCTYPE html>
 <html lang="id" class="pwa-root">
@@ -344,8 +350,14 @@
                     ['key' => 'rpp', 'label' => 'Modul', 'url' => route('pwa.rpp.index'), 'icon' => 'M7 4h8l4 4v12H7zM15 4v4h4M9.5 13h6M9.5 16.5h4'],
                 ];
                 $navItemsRight = [
+                    [
+                        'key' => 'detail',
+                        'label' => 'Detail',
+                        // Isi modul versi lengkap (di desktop: rpp/{id})
+                        'url' => $detailRpp ? route('rpp.show', $detailRpp) : route('pwa.rpp.index'),
+                        'icon' => 'M4 5.5h16M4 10h16M4 14.5h11M4 19h8',
+                    ],
                     ['key' => 'akun', 'label' => 'Akun', 'url' => route('pwa.akun'), 'icon' => 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'],
-                    ['key' => 'desktop', 'label' => 'Desktop', 'url' => route('dashboard'), 'icon' => 'M4 5.5h16v9.5H4zM9 19h6M12 15.5V19', 'hideStandalone' => true],
                 ];
             @endphp
 

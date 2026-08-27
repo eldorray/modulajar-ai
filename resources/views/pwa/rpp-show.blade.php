@@ -6,7 +6,7 @@
     };
 @endphp
 
-<x-pwa-layout :title="$rpp->mata_pelajaran" active="rpp">
+<x-pwa-layout :title="$rpp->mata_pelajaran" active="rpp" :detail="$rpp">
     <x-slot name="header">
         <div class="relative z-10 pt-3">
             <div class="flex items-center gap-3">
