@@ -45,9 +45,37 @@ class PwaGuruTest extends TestCase
 
         $this->actingAs($guru)->get(route('pwa.home'))
             ->assertOk()
-            ->assertSee('Pasang RPP Guru')
+            ->assertSee('Pasang aplikasi RPP Guru')
             ->assertSee('Tambahkan ke Layar Utama')
             ->assertSee('beforeinstallprompt', false);
+    }
+
+    public function test_banner_install_muncul_di_halaman_welcome(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('manifest.webmanifest', false)
+            ->assertSee('Pasang aplikasi RPP Guru')
+            ->assertSee('beforeinstallprompt', false);
+    }
+
+    public function test_akses_desktop_ditutup_saat_aplikasi_terpasang(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+
+        // Tautan ke tampilan desktop ditandai untuk disembunyikan saat standalone
+        $this->actingAs($guru)->get(route('pwa.home'))
+            ->assertSee('data-hide-standalone', false)
+            ->assertSee('display-mode: standalone', false);
+
+        $this->actingAs($guru)->get(route('pwa.akun'))
+            ->assertSee('data-hide-standalone', false);
+
+        // Halaman desktop mengembalikan sesi standalone ke aplikasi
+        $this->actingAs($guru)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('display-mode: standalone', false)
+            ->assertSee(route('pwa.home'), false);
     }
 
     public function test_guru_tidak_bisa_membuka_modul_guru_lain(): void

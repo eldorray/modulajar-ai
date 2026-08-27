@@ -15,6 +15,13 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
+    <script>
+        // Aplikasi yang sudah dipasang tetap di dalam PWA, bukan tampilan desktop.
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            window.location.replace('{{ route('pwa.home') }}');
+        }
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 

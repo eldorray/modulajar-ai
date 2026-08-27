@@ -24,6 +24,13 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:600,700,800|inter:400,500,600,700" rel="stylesheet">
 
+    <script>
+        // Tandai sesi standalone sedini mungkin supaya tautan desktop tidak berkedip.
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            document.documentElement.classList.add('is-standalone');
+        }
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -288,6 +295,13 @@
             box-shadow: var(--sh-brand);
         }
 
+        /* Aplikasi terpasang: tutup jalan ke tampilan desktop */
+        @media all and (display-mode: standalone) {
+            [data-hide-standalone] { display: none !important; }
+        }
+
+        html.is-standalone [data-hide-standalone] { display: none !important; }
+
         @media (prefers-reduced-motion: reduce) {
             .pop-in, .pwa-fab, .float, .slide-up, .grow-bar { animation: none !important; }
             .press, .pwa-nav-item { transition: none; }
@@ -319,50 +333,7 @@
         </main>
     </div>
 
-    <!-- Banner pasang aplikasi -->
-    <div x-data="pwaInstall()" x-show="show" x-cloak
-        class="fixed inset-x-0 bottom-[88px] z-40 mx-auto max-w-[430px] px-5">
-        <div class="slide-up pwa-card flex items-center gap-3 p-3 pr-2.5">
-            <img src="{{ asset('icons/icon-192.png') }}" alt="" class="h-10 w-10 shrink-0 rounded-xl object-contain">
-
-            <div class="min-w-0 flex-1">
-                <p class="pwa-display text-[13px] font-extrabold leading-tight">Pasang RPP Guru</p>
-                <p class="pwa-sub mt-0.5 text-[11px] leading-4" x-text="hint"></p>
-            </div>
-
-            <button type="button" @click="install()"
-                class="press shrink-0 rounded-xl px-3.5 py-2.5 text-[12px] font-bold text-white"
-                style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)">
-                Pasang
-            </button>
-
-            <button type="button" @click="dismiss()" aria-label="Tutup banner" class="press shrink-0 rounded-lg p-1.5 text-[#A9BBD6]">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
-                </svg>
-            </button>
-        </div>
-
-        <!-- Panduan iOS (Safari tidak menyediakan prompt bawaan) -->
-        <div x-show="guide" x-cloak @click.self="guide = false"
-            class="fixed inset-0 z-50 flex items-end bg-[#08183A]/60 backdrop-blur-sm">
-            <div class="slide-up w-full rounded-t-[26px] bg-white p-6">
-                <h2 class="pwa-display text-[16px] font-extrabold">Pasang lewat Safari</h2>
-                <ol class="mt-3 space-y-2.5 text-[13px] leading-5">
-                    @foreach (['Ketuk tombol Bagikan di bilah bawah Safari.', 'Pilih Tambahkan ke Layar Utama.', 'Ketuk Tambah, lalu buka RPP Guru dari layar utama.'] as $i => $langkah)
-                        <li class="flex gap-2.5">
-                            <span class="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-extrabold"
-                                style="background: var(--brand-50); color: var(--brand-700)">{{ $i + 1 }}</span>
-                            {{ $langkah }}
-                        </li>
-                    @endforeach
-                </ol>
-                <button type="button" @click="guide = false"
-                    class="press mt-5 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white"
-                    style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500))">Mengerti</button>
-            </div>
-        </div>
-    </div>
+    <x-install-banner variant="app" />
 
     <!-- Navigasi bawah + tombol generate -->
     <nav class="pwa-nav fixed bottom-0 left-0 right-0 z-30">
@@ -374,7 +345,7 @@
                 ];
                 $navItemsRight = [
                     ['key' => 'akun', 'label' => 'Akun', 'url' => route('pwa.akun'), 'icon' => 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'],
-                    ['key' => 'desktop', 'label' => 'Desktop', 'url' => route('dashboard'), 'icon' => 'M4 5.5h16v9.5H4zM9 19h6M12 15.5V19'],
+                    ['key' => 'desktop', 'label' => 'Desktop', 'url' => route('dashboard'), 'icon' => 'M4 5.5h16v9.5H4zM9 19h6M12 15.5V19', 'hideStandalone' => true],
                 ];
             @endphp
 
@@ -395,7 +366,9 @@
             </div>
 
             @foreach ($navItemsRight as $item)
-                <a href="{{ $item['url'] }}" class="pwa-nav-item flex flex-col items-center gap-0.5" data-active="{{ $active === $item['key'] ? 'true' : 'false' }}">
+                <a href="{{ $item['url'] }}" class="pwa-nav-item flex flex-col items-center gap-0.5"
+                    data-active="{{ $active === $item['key'] ? 'true' : 'false' }}"
+                    @if ($item['hideStandalone'] ?? false) data-hide-standalone @endif>
                     <svg class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}" />
                     </svg>
@@ -405,85 +378,6 @@
         </div>
     </nav>
 
-    <script>
-        function pwaInstall() {
-            return {
-                show: false,
-                guide: false,
-                prompt: null,
-                ios: false,
-                hint: 'Akses lebih cepat dari layar utama.',
-                key: 'pwa-install-snooze',
-
-                init() {
-                    // Sudah terpasang / dibuka standalone: jangan tampilkan apa pun.
-                    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-                    if (standalone || this.snoozed()) return;
-
-                    this.ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
-
-                    if (this.ios) {
-                        this.hint = 'Bagikan → Tambahkan ke Layar Utama.';
-                        setTimeout(() => this.show = true, 1200);
-                        return;
-                    }
-
-                    window.addEventListener('beforeinstallprompt', (event) => {
-                        event.preventDefault();
-                        this.prompt = event;
-                        this.show = true;
-                    });
-
-                    window.addEventListener('appinstalled', () => {
-                        this.show = false;
-                        this.snooze(365);
-                    });
-                },
-
-                async install() {
-                    if (this.ios) {
-                        this.guide = true;
-                        return;
-                    }
-
-                    if (!this.prompt) return;
-
-                    this.prompt.prompt();
-                    const { outcome } = await this.prompt.userChoice;
-                    this.prompt = null;
-                    this.show = false;
-                    this.snooze(outcome === 'accepted' ? 365 : 7);
-                },
-
-                dismiss() {
-                    this.show = false;
-                    this.snooze(7);
-                },
-
-                snooze(days) {
-                    try {
-                        localStorage.setItem(this.key, String(Date.now() + days * 86400000));
-                    } catch (error) {
-                        // Mode privat: banner cukup hilang untuk sesi ini.
-                    }
-                },
-
-                snoozed() {
-                    try {
-                        return Number(localStorage.getItem(this.key) || 0) > Date.now();
-                    } catch (error) {
-                        return false;
-                    }
-                },
-            };
-        }
-    </script>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/app' }));
-        }
-    </script>
 </body>
 
 </html>

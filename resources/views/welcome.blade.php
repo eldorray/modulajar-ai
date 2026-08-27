@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RPP Generator AI - Buat Modul Ajar Kurikulum Merdeka</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <meta name="theme-color" content="#1552F0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="RPP Guru">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -483,6 +490,8 @@
             </div>
         </div>
     </footer>
+
+    <x-install-banner variant="landing" />
 
 </body>
 </html>
