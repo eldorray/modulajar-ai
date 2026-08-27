@@ -32,7 +32,7 @@ class PwaGuruTest extends TestCase
         $guru = User::factory()->create(['role' => 'guru']);
         $rpp = $this->rppFor($guru);
 
-        $this->actingAs($guru)->get(route('pwa.home'))->assertOk()->assertSee('Modul Ajar dibuat');
+        $this->actingAs($guru)->get(route('pwa.home'))->assertOk()->assertSee('Modul ajar dibuat');
         $this->actingAs($guru)->get(route('pwa.rpp.index'))->assertOk()->assertSee('Matematika');
         $this->actingAs($guru)->get(route('pwa.rpp.create'))->assertOk()->assertSee('Generate Modul Ajar');
         $this->actingAs($guru)->get(route('pwa.rpp.show', $rpp))->assertOk()->assertSee('Bilangan bulat');

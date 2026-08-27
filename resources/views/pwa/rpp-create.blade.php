@@ -7,14 +7,14 @@
                 </svg>
             </a>
             <div>
-                <p class="text-[12px] font-medium text-white/70">Generate dengan AI</p>
-                <h1 class="text-[20px] font-extrabold leading-tight">Buat Modul Ajar</h1>
+                <p class="pwa-hero-eyebrow">Generate dengan AI</p>
+                <h1 class="pwa-display pwa-hero-title">Buat Modul Ajar</h1>
             </div>
         </div>
     </x-slot>
 
     @if ($errors->any())
-        <div class="pop-in rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12.5px] font-medium text-rose-700">
+        <div class="pop-in rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12.5px] font-semibold text-rose-700">
             Periksa kembali kolom yang ditandai.
         </div>
     @endif
@@ -37,16 +37,16 @@
                 <button type="button" @click="open = (open === '{{ $key }}' ? '' : '{{ $key }}')"
                     class="press flex w-full items-center justify-between px-4 py-4 text-left">
                     <span>
-                        <span class="block text-[14.5px] font-bold">{{ $judul }}</span>
-                        <span class="block text-[11.5px] text-[#7C90AF]">{{ $sub }}</span>
+                        <span class="pwa-display block text-[14px] font-extrabold">{{ $judul }}</span>
+                        <span class="pwa-sub block text-[11.5px] font-medium">{{ $sub }}</span>
                     </span>
-                    <svg class="h-5 w-5 text-[#9DB2D3] transition-transform duration-300" :class="open === '{{ $key }}' && 'rotate-180'"
+                    <svg class="h-5 w-5 transition-transform duration-300" style="color: #A9BBD6" :class="open === '{{ $key }}' && 'rotate-180'"
                         fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
                     </svg>
                 </button>
 
-                <div x-show="open === '{{ $key }}'" x-transition.origin.top class="space-y-4 border-t border-[#EDF2FA] px-4 py-4">
+                <div x-show="open === '{{ $key }}'" x-transition.origin.top class="space-y-4 border-t px-4 py-4" style="border-color: var(--line)">
                     @if ($key === 'identitas')
                         <div>
                             <label class="pwa-label" for="nama_guru">Nama penyusun</label>
@@ -60,7 +60,7 @@
                                     <option value="{{ $j }}" @selected(old('jenjang', 'MI') === $j)>{{ $j }}</option>
                                 @endforeach
                             </select>
-                            <p class="mt-1 text-[11px] text-[#7C90AF]">Menentukan logo dan nama sekolah di cover dokumen.</p>
+                            <p class="pwa-sub mt-1 text-[11px]">Menentukan logo dan nama sekolah di cover dokumen.</p>
                         </div>
                         <div>
                             <label class="pwa-label" for="kepala_sekolah">Kepala sekolah</label>
@@ -228,8 +228,8 @@
                                     <label class="press cursor-pointer" title="{{ $tema['label'] }}">
                                         <input type="radio" name="tema" value="{{ $key }}" class="peer sr-only"
                                             @checked(old('tema', 'merah') === $key)>
-                                        <span class="block h-9 w-9 rounded-full ring-1 ring-[#DDE7F7] transition peer-checked:ring-[3px] peer-checked:ring-[#0B4FD9]"
-                                            style="background: linear-gradient(135deg, #{{ $tema['primary'] }} 60%, #{{ $tema['accent'] }} 60%)"></span>
+                                        <span class="block h-9 w-9 rounded-full ring-1 ring-[#E9EFFA] transition peer-checked:ring-[3px] peer-checked:ring-[#1552F0]"
+                                            style="background: linear-gradient(135deg, #{{ $tema['primary'] }} 60%, #{{ $tema['accent'] }} 60%); box-shadow: var(--sh-soft)"></span>
                                     </label>
                                 @endforeach
                             </div>
@@ -239,21 +239,21 @@
             </section>
         @endforeach
 
-        <button type="submit"
-            class="press sticky bottom-24 w-full rounded-2xl bg-gradient-to-r from-[#0B4FD9] to-[#2E90FA] py-4 text-[15px] font-extrabold text-white shadow-[0_16px_30px_-12px_rgba(11,79,217,.95)]">
+        <button type="submit" class="pwa-display press sticky bottom-[92px] w-full rounded-2xl py-4 text-[15px] font-extrabold text-white"
+            style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)">
             Generate Modul Ajar
         </button>
     </form>
 
     <!-- Progress generate -->
     <div x-data="pwaGenerate()" x-show="show" x-cloak
-        class="fixed inset-0 z-50 flex items-end bg-[#0B2545]/60 backdrop-blur-sm sm:items-center sm:justify-center">
-        <div class="pop-in w-full rounded-t-[28px] bg-white p-6 text-center sm:max-w-sm sm:rounded-[28px]">
+        class="fixed inset-0 z-50 flex items-end bg-[#08183A]/60 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div class="slide-up w-full rounded-t-[26px] bg-white p-6 text-center sm:max-w-sm sm:rounded-[26px]">
             <template x-if="!done && !failed">
                 <div>
                     <img src="{{ asset('logo.png') }}" alt="" class="float mx-auto mb-4 h-16 w-16 object-contain">
-                    <h2 class="text-[17px] font-extrabold">AI sedang menyusun</h2>
-                    <p class="mt-1 text-[12.5px] text-[#7C90AF]" x-text="step"></p>
+                    <h2 class="pwa-display text-[17px] font-extrabold">AI sedang menyusun</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="step"></p>
                 </div>
             </template>
 
@@ -264,8 +264,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 class="text-[17px] font-extrabold text-emerald-600">Modul ajar siap</h2>
-                    <p class="mt-1 text-[12.5px] text-[#7C90AF]">Membuka dokumen…</p>
+                    <h2 class="pwa-display text-[17px] font-extrabold" style="color: var(--mint)">Modul ajar siap</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium">Membuka dokumen…</p>
                 </div>
             </template>
 
@@ -276,18 +276,18 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </div>
-                    <h2 class="text-[17px] font-extrabold text-rose-600">Generate gagal</h2>
-                    <p class="mt-1 text-[12.5px] text-[#7C90AF]" x-text="message"></p>
-                    <button @click="reset()" class="press mt-5 w-full rounded-2xl bg-[#0B4FD9] py-3.5 text-[14px] font-bold text-white">Tutup</button>
+                    <h2 class="pwa-display text-[17px] font-extrabold" style="color: var(--rose)">Generate gagal</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="message"></p>
+                    <button @click="reset()" class="press mt-5 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white" style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500))">Tutup</button>
                 </div>
             </template>
 
             <div class="mt-5" x-show="!failed">
-                <div class="h-2.5 w-full overflow-hidden rounded-full bg-[#EDF2FA]">
-                    <div class="h-full rounded-full bg-gradient-to-r from-[#0B4FD9] to-[#2E90FA] transition-all duration-300"
+                <div class="h-2.5 w-full overflow-hidden rounded-full" style="background: #F1F5FD">
+                    <div class="h-full rounded-full transition-all duration-300" style="background: linear-gradient(90deg, var(--brand-700), var(--brand-500))"
                         :style="'width: ' + progress + '%'"></div>
                 </div>
-                <p class="mt-2 text-[11.5px] font-bold text-[#0B4FD9]" x-text="Math.round(progress) + '%'"></p>
+                <p class="mt-2 text-[11.5px] font-extrabold" style="color: var(--brand-700)" x-text="Math.round(progress) + '%'"></p>
             </div>
         </div>
     </div>

@@ -1,68 +1,68 @@
 <x-pwa-layout title="Modul Ajar Saya" active="rpp">
     <x-slot name="header">
-        <div class="flex items-center justify-between pt-3">
+        <div class="relative z-10 flex items-end justify-between pt-3">
             <div>
-                <p class="text-[13px] font-medium text-white/70">Koleksi kamu</p>
-                <h1 class="text-[22px] font-extrabold leading-tight">Modul Ajar Saya</h1>
+                <p class="pwa-hero-eyebrow">Koleksi kamu</p>
+                <h1 class="pwa-display pwa-hero-title">Modul Ajar</h1>
             </div>
-            <span class="pwa-card-glass px-3 py-2 text-[12px] font-bold">{{ $rpps->total() }} dokumen</span>
+            <span class="rounded-full bg-white/18 px-3 py-1.5 text-[11.5px] font-bold ring-1 ring-white/25">
+                {{ $rpps->total() }} dokumen
+            </span>
         </div>
     </x-slot>
 
     @forelse ($rpps as $i => $rpp)
         @php
-            $badge = match ($rpp->status) {
-                'completed' => ['Selesai', 'bg-emerald-50 text-emerald-600'],
-                'processing' => ['Diproses', 'bg-amber-50 text-amber-600'],
-                default => ['Gagal', 'bg-rose-50 text-rose-600'],
+            $status = match ($rpp->status) {
+                'completed' => ['Selesai', 'mint'],
+                'processing' => ['Proses', 'amber'],
+                default => ['Gagal', 'rose'],
             };
         @endphp
-        <article class="pwa-card pop-in p-4" style="--d: {{ $i * 60 }}ms">
-            <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <h2 class="truncate text-[15px] font-bold">{{ $rpp->mata_pelajaran }}</h2>
-                    <p class="mt-0.5 line-clamp-2 text-[12px] leading-5 text-[#7C90AF]">{{ $rpp->topik }}</p>
-                </div>
-                <span class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold {{ $badge[1] }}">{{ $badge[0] }}</span>
-            </div>
+        <a href="{{ route('pwa.rpp.show', $rpp) }}" class="pwa-card press pop-in flex items-start gap-3 p-3.5" style="--d: {{ $i * 55 }}ms">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px]"
+                style="background: var(--{{ $status[1] }}-50); color: var(--{{ $status[1] }})">
+                <svg class="h-[19px] w-[19px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h8l4 4v12H7zM15 4v4h4" />
+                </svg>
+            </span>
 
-            <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-semibold text-[#4A648C]">
-                <span class="rounded-lg bg-[#F2F7FF] px-2 py-1">{{ $rpp->jenjang ?? 'MI' }}</span>
-                <span class="rounded-lg bg-[#F2F7FF] px-2 py-1">Fase {{ $rpp->fase }}</span>
-                @if ($rpp->kelas)
-                    <span class="rounded-lg bg-[#F2F7FF] px-2 py-1">Kelas {{ $rpp->kelas }}</span>
-                @endif
-                <span class="rounded-lg bg-[#F2F7FF] px-2 py-1">{{ $rpp->created_at->translatedFormat('d M Y') }}</span>
-            </div>
+            <span class="min-w-0 flex-1">
+                <span class="flex items-start justify-between gap-2">
+                    <span class="truncate text-[14px] font-bold">{{ $rpp->mata_pelajaran }}</span>
+                    <span class="pwa-badge shrink-0" style="background: var(--{{ $status[1] }}-50); color: var(--{{ $status[1] }})">{{ $status[0] }}</span>
+                </span>
+                <span class="pwa-sub mt-0.5 block truncate text-[11.5px] font-medium">{{ $rpp->topik }}</span>
 
-            <div class="mt-4 flex items-center gap-2">
-                <a href="{{ route('pwa.rpp.show', $rpp) }}"
-                    class="press flex-1 rounded-xl bg-[#0B4FD9] py-2.5 text-center text-[13px] font-bold text-white shadow-[0_10px_20px_-12px_rgba(11,79,217,.95)]">
-                    Buka
-                </a>
-                @if ($rpp->status === 'completed')
-                    <a href="{{ route('rpp.pdf', $rpp) }}"
-                        class="press rounded-xl border border-[#DDE7F7] bg-[#F8FBFF] px-4 py-2.5 text-[13px] font-bold text-[#0B4FD9]">
-                        PDF
-                    </a>
-                @endif
-            </div>
-        </article>
+                <span class="mt-2 flex flex-wrap gap-1.5">
+                    <span class="pwa-chip-meta">{{ $rpp->jenjang ?? 'MI' }}</span>
+                    <span class="pwa-chip-meta">Fase {{ $rpp->fase }}</span>
+                    @if ($rpp->kelas)
+                        <span class="pwa-chip-meta">Kelas {{ $rpp->kelas }}</span>
+                    @endif
+                    <span class="pwa-chip-meta">{{ $rpp->created_at->translatedFormat('d M Y') }}</span>
+                </span>
+            </span>
+
+            <svg class="mt-3 h-4 w-4 shrink-0" style="color: #A9BBD6" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+        </a>
     @empty
-        <div class="pwa-card pop-in p-7 text-center">
-            <img src="{{ asset('logo.png') }}" alt="" class="float mx-auto mb-3 h-16 w-16 object-contain">
-            <p class="text-[15px] font-bold">Belum ada modul ajar</p>
-            <p class="mt-1 text-[12.5px] leading-5 text-[#7C90AF]">Modul yang kamu generate akan tersimpan di sini.</p>
-            <a href="{{ route('pwa.rpp.create') }}"
-                class="press mt-5 inline-flex rounded-full bg-[#0B4FD9] px-6 py-3 text-[13px] font-bold text-white shadow-[0_12px_24px_-10px_rgba(11,79,217,.95)]">
+        <div class="pwa-card pop-in p-8 text-center">
+            <img src="{{ asset('logo.png') }}" alt="" class="float mx-auto mb-4 h-16 w-16 object-contain">
+            <p class="pwa-display text-[15px] font-extrabold">Belum ada modul ajar</p>
+            <p class="pwa-sub mt-1 text-[12.5px] leading-5">Modul yang kamu buat akan tersimpan di sini.</p>
+            <a href="{{ route('pwa.rpp.create') }}" class="press mt-5 inline-flex rounded-full px-6 py-3 text-[13px] font-bold text-white"
+                style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)">
                 Buat sekarang
             </a>
         </div>
     @endforelse
 
     @if ($rpps->hasPages())
-        <div class="pwa-card p-3">
-            {{ $rpps->links() }}
+        <div class="pwa-card px-3 py-2">
+            {{ $rpps->onEachSide(1)->links() }}
         </div>
     @endif
 </x-pwa-layout>
