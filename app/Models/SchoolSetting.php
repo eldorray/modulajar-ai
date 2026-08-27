@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class SchoolSetting extends Model
 {
+    /** Unit sekolah yang didukung. */
+    public const JENJANG = ['MI', 'SMP'];
+
     protected $fillable = [
+        'jenjang',
         'logo',
         'nama_sekolah',
         'nsm',
@@ -17,10 +21,18 @@ class SchoolSetting extends Model
     ];
 
     /**
-     * Get the first (and only) settings record, or create one if it doesn't exist.
+     * Get the settings for a school unit (MI/SMP), creating the row if needed.
      */
-    public static function getSettings(): self
+    public static function getSettings(?string $jenjang = null): self
     {
-        return self::firstOrCreate(['id' => 1]);
+        return self::firstOrCreate(['jenjang' => self::normalizeJenjang($jenjang)]);
+    }
+
+    /**
+     * Fall back to MI for null/unknown values.
+     */
+    public static function normalizeJenjang(?string $jenjang): string
+    {
+        return in_array($jenjang, self::JENJANG, true) ? $jenjang : 'MI';
     }
 }

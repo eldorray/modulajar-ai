@@ -14,6 +14,16 @@
                 <!-- Identitas Guru & Sekolah -->
                 <div class="space-y-4 pb-4 border-b border-[hsl(var(--border))]">
                     <h3 class="text-sm font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Identitas Penyusun</h3>
+
+                    <x-ui.select
+                        name="jenjang"
+                        label="Unit Sekolah"
+                        :options="collect(\App\Models\SchoolSetting::JENJANG)->mapWithKeys(fn ($j) => [$j => $j])->all()"
+                        :value="old('jenjang', 'MI')"
+                        :error="$errors->first('jenjang')"
+                        required
+                    />
+                    <p class="text-xs text-[hsl(var(--muted-foreground))] -mt-2">Menentukan logo, nama sekolah, dan kop surat yang dipakai pada cover PDF/Word. Atur per unit di menu Pengaturan Sekolah.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-ui.input

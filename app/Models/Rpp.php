@@ -13,6 +13,7 @@ class Rpp extends Model
 
     protected $fillable = [
         'user_id',
+        'jenjang',
         'nama_guru',
         'kepala_sekolah',
         'nip_kepala_sekolah',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>RPP Generator AI - Buat Modul Ajar dan Soal STS</title>
+    <title>RPP Generator AI - Buat Modul Ajar Kurikulum Merdeka</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     
     <!-- Google Fonts: Inter -->
@@ -132,7 +132,7 @@
 
             <!-- Heading -->
             <h1 class="text-4xl sm:text-6xl md:text-7xl font-[800] tracking-tight text-gray-900 mb-5 sm:mb-6 max-w-4xl mx-auto leading-[1.08] sm:leading-[1.05] break-words animate-fade-up delay-100">
-                Buat Modul Ajar dan Soal Sempurna. Dengan Strategi AI Cerdas.
+                Buat Modul Ajar Sempurna. Dengan Strategi AI Cerdas.
             </h1>
             
             <!-- Subtitle -->
@@ -239,7 +239,7 @@
                     <div class="w-6 h-6 rounded-full bg-gray-200 border-2 border-white relative z-30"></div>
                     <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white -ml-4 relative z-20"></div>
                     <div class="w-6 h-6 rounded-full bg-orange-200 border-2 border-white -ml-4 relative z-10"></div>
-                    <div class="text-[10px] text-gray-500 font-semibold ml-2">Modul Ajar & STS</div>
+                    <div class="text-[10px] text-gray-500 font-semibold ml-2">Modul Ajar & RPPM</div>
                 </div>
                 <div class="flex gap-4 p-3 bg-white rounded-xl shadow-sm border border-gray-100">
                     <div>
@@ -248,7 +248,7 @@
                     </div>
                     <div class="w-px bg-gray-100"></div>
                     <div>
-                        <div class="text-[9px] text-gray-400 font-semibold mb-1">Soal STS</div>
+                        <div class="text-[9px] text-gray-400 font-semibold mb-1">Deep Learning</div>
                         <div class="text-sm font-bold text-gray-800"><span class="text-green-500 mr-1">&uarr;</span>2,900</div>
                     </div>
                 </div>
@@ -294,8 +294,8 @@
                     <div class="absolute top-6 right-6 w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-orange-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </div>
-                    <h3 class="font-bold text-[17px] text-gray-900 mb-2">Soal STS AI</h3>
-                    <p class="text-gray-500 text-[13px] mb-8 pr-12 leading-relaxed">Buat Soal Sumatif Tengah Semester beserta kuncinya.</p>
+                    <h3 class="font-bold text-[17px] text-gray-900 mb-2">Ekspor PDF & Word</h3>
+                    <p class="text-gray-500 text-[13px] mb-8 pr-12 leading-relaxed">Unduh modul ajar siap cetak dengan kop sekolah.</p>
                     <div class="bg-white rounded-2xl sm:rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 sm:p-5 transform group-hover:-translate-y-2 transition-transform duration-300">
                         <div class="flex justify-between items-center mb-4">
                             <div class="flex gap-2">

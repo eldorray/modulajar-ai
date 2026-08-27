@@ -15,7 +15,7 @@
     <select {{ $attributes->merge(['class' => 'input cursor-pointer' . ($error ? ' border-[hsl(var(--destructive))]' : '')]) }}>
         <option value="">{{ $placeholder }}</option>
         @foreach($options as $value => $text)
-            <option value="{{ $value }}">{{ $text }}</option>
+            <option value="{{ $value }}" @selected((string) $attributes->get('value') === (string) $value)>{{ $text }}</option>
         @endforeach
     </select>
     

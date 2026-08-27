@@ -44,6 +44,8 @@ class RppController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'from' => 'nullable|string|in:pwa',
+            'jenjang' => 'required|string|in:'.implode(',', SchoolSetting::JENJANG),
             'nama_guru' => 'required|string|max:255',
             'kepala_sekolah' => 'nullable|string|max:255',
             'nip_kepala_sekolah' => 'nullable|string|max:50',
@@ -90,6 +92,7 @@ class RppController extends Controller
         // Create RPP with processing status
         $rpp = Rpp::create([
             'user_id' => Auth::id(),
+            'jenjang' => $validated['jenjang'],
             'nama_guru' => $validated['nama_guru'],
             'kepala_sekolah' => $validated['kepala_sekolah'] ?? null,
             'nip_kepala_sekolah' => $validated['nip_kepala_sekolah'] ?? null,
@@ -129,18 +132,21 @@ class RppController extends Controller
                 'status' => 'completed',
             ]);
 
+            // Form dari PWA guru kembali ke tampilan mobile
+            $showRoute = $request->input('from') === 'pwa'
+                ? route('pwa.rpp.show', $rpp)
+                : route('rpp.show', $rpp);
+
             // Return JSON for AJAX requests
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'redirect_url' => route('rpp.show', $rpp),
+                    'redirect_url' => $showRoute,
                     'message' => 'RPP berhasil dibuat!',
                 ]);
             }
 
-            return redirect()
-                ->route('rpp.show', $rpp)
-                ->with('success', 'RPP berhasil dibuat!');
+            return redirect($showRoute)->with('success', 'RPP berhasil dibuat!');
         }
 
         $rpp->update(['status' => 'failed']);
@@ -183,7 +189,7 @@ class RppController extends Controller
             abort(403);
         }
 
-        $schoolSettings = SchoolSetting::getSettings();
+        $schoolSettings = SchoolSetting::getSettings($rpp->jenjang);
 
         $isDeepLearning = $rpp->kurikulum === 'Kurikulum Merdeka Deep Learning';
         $viewName = $isDeepLearning ? 'rpp.pdf_deep_learning' : 'rpp.pdf';
@@ -221,7 +227,7 @@ class RppController extends Controller
                 ->with('error', 'Modul Ajar belum selesai di-generate.');
         }
 
-        $schoolSettings = SchoolSetting::getSettings();
+        $schoolSettings = SchoolSetting::getSettings($rpp->jenjang);
         $viewName = $rpp->kurikulum === 'Kurikulum Merdeka Deep Learning'
             ? 'rpp.pdf_deep_learning'
             : 'rpp.pdf';
@@ -264,7 +270,7 @@ class RppController extends Controller
         }
 
         $phpWord = app(\App\Services\RppWordExporter::class)
-            ->export($rpp, SchoolSetting::getSettings());
+            ->export($rpp, SchoolSetting::getSettings($rpp->jenjang));
 
         $filename = 'RPPM_'.str_replace(' ', '_', $rpp->mata_pelajaran).'_'.$rpp->id.'.docx';
 

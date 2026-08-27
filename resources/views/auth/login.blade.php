@@ -9,7 +9,7 @@
         <p class="text-xs font-bold uppercase tracking-[0.18em] text-orange-600">Selamat datang kembali</p>
         <h1 class="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">Masuk ke RPP Generator AI</h1>
         <p class="mt-3 text-sm font-medium leading-6 text-gray-500">
-            Modul ajar, STS, dan dashboard guru dalam satu ruang kerja.
+            Modul ajar, ekspor dokumen, dan dashboard guru dalam satu ruang kerja.
         </p>
     </div>
 

@@ -8,15 +8,26 @@
             </x-ui.alert>
         @endif
 
+        <!-- Tab Unit Sekolah -->
+        <div class="flex gap-2 mb-4">
+            @foreach (\App\Models\SchoolSetting::JENJANG as $j)
+                <a href="{{ route('settings.index', ['unit' => $j]) }}"
+                    class="px-4 py-2 rounded-lg text-sm font-medium transition {{ $unit === $j ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]' }}">
+                    {{ $j }}
+                </a>
+            @endforeach
+        </div>
+
         <x-ui.card>
             <x-slot name="header">
-                <h2 class="text-xl font-semibold text-[hsl(var(--foreground))]">Identitas Sekolah</h2>
+                <h2 class="text-xl font-semibold text-[hsl(var(--foreground))]">Identitas Sekolah &mdash; {{ $unit }}</h2>
                 <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Data ini akan ditampilkan pada dokumen Modul
-                    Ajar (PDF) dan Kop Surat STS.</p>
+                    Ajar (PDF dan Word).</p>
             </x-slot>
 
             <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
+                <input type="hidden" name="jenjang" value="{{ $unit }}">
 
                 <!-- Logo Upload -->
                 <div class="space-y-4 pb-4 border-b border-[hsl(var(--border))]">
@@ -177,8 +188,9 @@
 
         <div class="mt-6">
             <x-ui.alert type="info">
-                <strong>Info:</strong> Logo dan kop surat akan ditampilkan pada halaman sampul PDF Modul Ajar dan Soal
-                STS.
+                <strong>Info:</strong> Setiap unit ({{ implode(' & ', \App\Models\SchoolSetting::JENJANG) }}) punya
+                logo, kop surat, dan identitas sendiri. Cover PDF Modul Ajar memakai data unit yang dipilih saat
+                generate.
             </x-ui.alert>
         </div>
     </div>
@@ -187,15 +199,18 @@
     <form id="delete-logo-form" action="{{ route('settings.delete-logo') }}" method="POST" class="hidden">
         @csrf
         @method('DELETE')
+        <input type="hidden" name="jenjang" value="{{ $unit }}">
     </form>
     <form id="delete-logo-kanan-form" action="{{ route('settings.delete-logo-kanan') }}" method="POST"
         class="hidden">
         @csrf
         @method('DELETE')
+        <input type="hidden" name="jenjang" value="{{ $unit }}">
     </form>
     <form id="delete-kop-surat-form" action="{{ route('settings.delete-kop-surat') }}" method="POST"
         class="hidden">
         @csrf
         @method('DELETE')
+        <input type="hidden" name="jenjang" value="{{ $unit }}">
     </form>
 </x-app-layout>

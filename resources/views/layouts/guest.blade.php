@@ -45,7 +45,7 @@
                                 Siapkan perangkat ajar tanpa memulai dari halaman kosong.
                             </h1>
                             <p class="mt-6 max-w-lg text-base font-medium leading-8 text-gray-600">
-                                RPP Generator AI membantu guru menyusun modul ajar, soal STS, ekspor PDF, dan memantau token dalam satu dashboard yang rapi.
+                                RPP Generator AI membantu guru menyusun modul ajar, ekspor PDF dan Word, serta memantau token dalam satu dashboard yang rapi.
                             </p>
 
                             <div class="mt-10 grid max-w-xl grid-cols-2 gap-4">
@@ -65,8 +65,8 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17a4 4 0 100-8 4 4 0 000 8zm7-1.5L21 18m-6-9V5m-4 4H7" />
                                         </svg>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-950">STS lebih cepat</p>
-                                    <p class="mt-2 text-xs leading-5 text-gray-500">Buat soal dan kunci jawaban dari satu alur.</p>
+                                    <p class="text-sm font-bold text-gray-950">Dua unit sekolah</p>
+                                    <p class="mt-2 text-xs leading-5 text-gray-500">Profil MI dan SMP terpisah untuk cover dokumen.</p>
                                 </div>
                             </div>
                         </section>
