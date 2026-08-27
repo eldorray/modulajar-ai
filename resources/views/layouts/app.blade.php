@@ -45,8 +45,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }" x-init="$watch('sidebarCollapsed', val =>
-
+<body class="font-sans antialiased"
+    x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }"
+    x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
     <a href="{{ route('pwa.home') }}"
         class="pwa-return fixed left-1/2 top-3 z-50 -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#1552F0] px-4 py-2 text-xs font-bold text-white shadow-lg">
         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
@@ -54,7 +55,6 @@
         </svg>
         Kembali ke aplikasi
     </a>
- localStorage.setItem('sidebarCollapsed', val))">
     <div class="min-h-screen bg-[hsl(var(--background))]">
         <!-- Sidebar -->
         <aside class="sidebar hidden lg:flex flex-col transition-all duration-300" :class="sidebarCollapsed ? '!w-20' : '!w-64'">
