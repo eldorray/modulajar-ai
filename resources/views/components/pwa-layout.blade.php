@@ -353,8 +353,8 @@
                     [
                         'key' => 'detail',
                         'label' => 'Detail',
-                        // Isi modul versi lengkap (di desktop: rpp/{id})
-                        'url' => $detailRpp ? route('rpp.show', $detailRpp) : route('pwa.rpp.index'),
+                        // Isi modul lengkap, halaman khusus PWA
+                        'url' => $detailRpp ? route('pwa.rpp.detail', $detailRpp) : route('pwa.rpp.index'),
                         'icon' => 'M4 5.5h16M4 10h16M4 14.5h11M4 19h8',
                     ],
                     ['key' => 'akun', 'label' => 'Akun', 'url' => route('pwa.akun'), 'icon' => 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'],

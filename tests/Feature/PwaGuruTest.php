@@ -50,21 +50,61 @@ class PwaGuruTest extends TestCase
             ->assertSee('beforeinstallprompt', false);
     }
 
-    public function test_menu_detail_membuka_isi_modul_versi_lengkap_dan_akun_di_pojok(): void
+    public function test_menu_detail_membuka_halaman_pwa_dan_akun_di_pojok(): void
     {
         $guru = User::factory()->create(['role' => 'guru']);
         $rpp = $this->rppFor($guru);
 
         $response = $this->actingAs($guru)->get(route('pwa.home'))->assertOk();
 
-        // Menu Detail mengarah ke halaman isi modul (rpp/{id}) milik modul terakhir
-        $response->assertSee(route('rpp.show', $rpp), false);
+        // Menu Detail mengarah ke halaman isi modul khusus PWA, bukan versi desktop
+        $response->assertSee(route('pwa.rpp.detail', $rpp), false);
 
         // Urutan navigasi: Home, Modul, tombol generate, Detail, Akun (pojok)
         $response->assertSeeInOrder(['>Home<', '>Modul<', 'pwa-fab', '>Detail<', '>Akun<'], false);
 
         // Menu Desktop tidak lagi ada di navigasi bawah
         $response->assertDontSee('>Desktop<', false);
+    }
+
+    public function test_halaman_isi_modul_pwa_menampilkan_seluruh_bagian(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+        $rpp = $this->rppFor($guru, ['content_result' => [
+            'informasi_umum' => ['mata_pelajaran' => 'Matematika', 'jenjang' => 'MI'],
+            'komponen_inti' => [
+                'tujuan_pembelajaran' => ['Menjelaskan bilangan bulat', 'Menghitung operasi campuran'],
+            ],
+            'asesmen' => [
+                'formatif' => [['nomor' => 1, 'teknik' => 'Observasi diskusi kelompok']],
+            ],
+            'lampiran' => ['lkpd' => ['judul' => 'LKPD Bilangan Bulat']],
+        ]]);
+
+        $this->actingAs($guru)->get(route('pwa.rpp.detail', $rpp))
+            ->assertOk()
+            ->assertSee('Isi modul lengkap')
+            // Judul bagian dan isinya ikut ter-render
+            ->assertSeeInOrder(['Informasi umum', 'Komponen inti', 'Asesmen', 'Lampiran'])
+            ->assertSee('Menjelaskan bilangan bulat')
+            ->assertSee('Observasi diskusi kelompok')
+            ->assertSee('LKPD Bilangan Bulat')
+            // Label kunci JSON diubah jadi teks yang enak dibaca
+            ->assertSee('Tujuan Pembelajaran')
+            ->assertDontSee('tujuan_pembelajaran')
+            // Halaman ini memakai layout PWA, bukan layout desktop
+            ->assertSee('pwa-nav', false)
+            ->assertDontSee('sidebarCollapsed', false);
+    }
+
+    public function test_guru_tidak_bisa_membuka_isi_modul_guru_lain(): void
+    {
+        $pemilik = User::factory()->create(['role' => 'guru']);
+        $lain = User::factory()->create(['role' => 'guru']);
+
+        $this->actingAs($lain)
+            ->get(route('pwa.rpp.detail', $this->rppFor($pemilik)))
+            ->assertForbidden();
     }
 
     public function test_halaman_isi_modul_tidak_memantulkan_sesi_standalone(): void

@@ -80,9 +80,9 @@
                     </a>
                 @endforeach
             </div>
-            <a href="{{ route('rpp.show', $rpp) }}" class="press mt-2.5 block rounded-2xl py-3 text-center text-[12.5px] font-bold"
+            <a href="{{ route('pwa.rpp.detail', $rpp) }}" class="press mt-2.5 block rounded-2xl py-3 text-center text-[12.5px] font-bold"
                 style="background: var(--brand-50); color: var(--brand-700)">
-                Buka versi lengkap
+                Lihat isi modul lengkap
             </a>
         </section>
     @elseif ($rpp->status === 'processing')

@@ -82,6 +82,21 @@ class GuruAppController extends Controller
     }
 
     /**
+     * Isi modul lengkap, versi PWA.
+     */
+    public function detail(Rpp $rpp)
+    {
+        if ($rpp->user_id !== Auth::id() && ! Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        return view('pwa.rpp-detail', [
+            'rpp' => $rpp,
+            'daftarModul' => Rpp::forUser($rpp->user_id)->completed()->latest()->limit(20)->get(),
+        ]);
+    }
+
+    /**
      * Akun guru.
      */
     public function akun()
