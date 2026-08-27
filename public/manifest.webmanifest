@@ -3,7 +3,7 @@
   "short_name": "RPP Guru",
   "description": "Buat dan kelola Modul Ajar langsung dari ponsel.",
   "start_url": "/app",
-  "scope": "/app",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#EAF2FF",

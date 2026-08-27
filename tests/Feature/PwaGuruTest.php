@@ -173,6 +173,21 @@ class PwaGuruTest extends TestCase
         $this->get(route('pwa.offline'))->assertOk()->assertSee('Tidak ada koneksi');
     }
 
+    public function test_login_tetap_berada_di_dalam_jendela_pwa_standalone(): void
+    {
+        $manifest = json_decode(file_get_contents(public_path('manifest.webmanifest')), true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('/app', $manifest['start_url']);
+        $this->assertSame('/', $manifest['scope']);
+        $this->assertSame('standalone', $manifest['display']);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('manifest.webmanifest', false)
+            ->assertSee('mobile-web-app-capable', false)
+            ->assertSee('apple-mobile-web-app-capable', false);
+    }
+
     public function test_generate_dari_pwa_diarahkan_ke_tampilan_mobile(): void
     {
         $guru = User::factory()->create(['role' => 'guru']);

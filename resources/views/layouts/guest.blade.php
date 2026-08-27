@@ -2,10 +2,17 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-hidden">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+        <meta name="theme-color" content="#1552F0">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="RPP Guru">
+        <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
         <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
         <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
