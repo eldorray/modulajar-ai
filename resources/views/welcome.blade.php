@@ -12,6 +12,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="RPP Guru">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
+
+    <script>
+        // Landing page marketing bukan bagian aplikasi terpasang; balik ke PWA.
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            window.location.replace('{{ route('pwa.home') }}');
+        }
+    </script>
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

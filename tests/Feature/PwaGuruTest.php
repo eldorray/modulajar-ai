@@ -199,6 +199,23 @@ class PwaGuruTest extends TestCase
             ->assertSee('apple-mobile-web-app-capable', false);
     }
 
+    public function test_navigasi_web_disembunyikan_di_jendela_standalone(): void
+    {
+        // Halaman auth: header web (logo + tombol Beranda) mati saat standalone.
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('display-mode: standalone', false)
+            ->assertSee('data-hide-standalone', false)
+            ->assertSee('overscroll-behavior: none', false)
+            ->assertSee('data-auth-panel', false);
+
+        // Landing page marketing tidak boleh terbuka di dalam PWA.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('display-mode: standalone', false)
+            ->assertSee(route('pwa.home'), false);
+    }
+
     public function test_generate_dari_pwa_diarahkan_ke_tampilan_mobile(): void
     {
         $guru = User::factory()->create(['role' => 'guru']);

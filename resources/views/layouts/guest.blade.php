@@ -21,15 +21,76 @@
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
+        <script>
+            // Tandai sesi standalone sedini mungkin supaya chrome web tidak berkedip.
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                document.documentElement.classList.add('is-standalone');
+            }
+        </script>
+
+        <style>
+            /* Di dalam PWA tidak ada navigasi web: hanya form auth, layar terkunci. */
+            @media all and (display-mode: standalone) {
+                [data-hide-standalone] { display: none !important; }
+
+                html, body {
+                    height: 100%;
+                    overflow: hidden;
+                    overscroll-behavior: none;
+                }
+
+                [data-app-shell] { height: 100dvh; min-height: 100dvh; }
+                [data-app-frame] {
+                    height: 100%;
+                    min-height: 0;
+                    padding-top: calc(1.25rem + env(safe-area-inset-top));
+                    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+                }
+                [data-auth-main] { min-height: 0; }
+
+                /* ponytail: panel boleh geser sendiri hanya kalau form melebihi layar
+                   (keyboard iOS), supaya field tidak pernah jadi tak terjangkau. */
+                [data-auth-panel] {
+                    max-height: 100%;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
+                }
+            }
+
+            html.is-standalone [data-hide-standalone] { display: none !important; }
+
+            html.is-standalone,
+            html.is-standalone body {
+                height: 100%;
+                overflow: hidden;
+                overscroll-behavior: none;
+            }
+
+            html.is-standalone [data-app-shell] { height: 100dvh; min-height: 100dvh; }
+            html.is-standalone [data-app-frame] {
+                height: 100%;
+                min-height: 0;
+                padding-top: calc(1.25rem + env(safe-area-inset-top));
+                padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+            }
+            html.is-standalone [data-auth-main] { min-height: 0; }
+
+            html.is-standalone [data-auth-panel] {
+                max-height: 100%;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+        </style>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased overflow-x-hidden bg-white">
-        <div class="relative min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(251,146,60,0.18),_transparent_34rem),linear-gradient(135deg,_#fff7ed_0%,_#ffffff_45%,_#f8fafc_100%)]">
+        <div data-app-shell class="relative min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(251,146,60,0.18),_transparent_34rem),linear-gradient(135deg,_#fff7ed_0%,_#ffffff_45%,_#f8fafc_100%)]">
             <div class="pointer-events-none absolute -left-28 top-24 h-72 w-72 rounded-full bg-orange-200/40 blur-3xl"></div>
             <div class="pointer-events-none absolute -right-28 bottom-12 h-80 w-80 rounded-full bg-amber-100/70 blur-3xl"></div>
 
-            <div class="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-                <header class="flex items-center justify-between gap-4">
+            <div data-app-frame class="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+                <header data-hide-standalone class="flex items-center justify-between gap-4">
                     <a href="/" class="inline-flex min-h-11 min-w-0 items-center gap-3 rounded-full pr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/20">
                             <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -44,9 +105,9 @@
                     </a>
                 </header>
 
-                <main class="flex flex-1 items-center py-8 sm:py-10 lg:py-12">
+                <main data-auth-main class="flex flex-1 items-center py-8 sm:py-10 lg:py-12">
                     <div class="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(380px,440px)] lg:gap-12">
-                        <section class="hidden lg:block">
+                        <section data-hide-standalone class="hidden lg:block">
                             <p class="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Ruang kerja guru</p>
                             <h1 class="max-w-xl text-5xl font-black leading-[1.02] tracking-tight text-gray-950">
                                 Siapkan perangkat ajar tanpa memulai dari halaman kosong.
@@ -78,7 +139,7 @@
                             </div>
                         </section>
 
-                        <section class="mx-auto w-full max-w-md">
+                        <section data-auth-panel class="mx-auto w-full max-w-md">
                             <div class="overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/90 p-5 shadow-2xl shadow-orange-900/10 backdrop-blur sm:p-7">
                                 {{ $slot }}
                             </div>
