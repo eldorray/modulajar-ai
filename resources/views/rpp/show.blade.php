@@ -815,12 +815,13 @@
         @elseif($rpp->status === 'failed')
         <x-ui.alert type="error">
             <strong>Gagal Generate Modul Ajar</strong><br>
-            Terjadi kesalahan saat menghasilkan Modul Ajar. Silakan coba buat ulang.
+            {{ $rpp->failure_message ?: 'Terjadi kesalahan saat menghasilkan Modul Ajar. Silakan coba buat ulang.' }}
         </x-ui.alert>
         @else
         <x-ui.alert type="warning">
             Modul Ajar sedang dalam proses pembuatan...
         </x-ui.alert>
+        <script>setTimeout(() => window.location.reload(), 5000);</script>
         @endif
     </div>
 

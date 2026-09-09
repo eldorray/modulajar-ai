@@ -89,12 +89,13 @@
         <section class="pwa-card pop-in p-6 text-center" style="--d: 120ms">
             <div class="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-[3px]" style="border-color: var(--brand-50); border-top-color: var(--brand-700)"></div>
             <p class="pwa-display text-[14.5px] font-extrabold">Masih diproses</p>
-            <p class="pwa-sub mt-1 text-[12px]">Muat ulang halaman ini beberapa saat lagi.</p>
+            <p class="pwa-sub mt-1 text-[12px]">Halaman diperbarui otomatis setelah modul selesai.</p>
+            <script>setTimeout(() => window.location.reload(), 5000);</script>
         </section>
     @else
         <section class="pwa-card pop-in p-6 text-center" style="--d: 120ms">
             <p class="pwa-display text-[14.5px] font-extrabold" style="color: var(--rose)">Generate gagal</p>
-            <p class="pwa-sub mt-1 text-[12px] leading-5">Buat ulang modul dengan data yang sama.</p>
+            <p class="pwa-sub mt-1 text-[12px] leading-5">{{ $rpp->failure_message ?: 'Buat ulang modul dengan data yang sama.' }}</p>
             <a href="{{ route('pwa.rpp.create') }}" class="press mt-4 inline-flex rounded-full px-5 py-2.5 text-[12.5px] font-bold text-white"
                 style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)">Coba lagi</a>
         </section>

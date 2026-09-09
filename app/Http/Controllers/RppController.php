@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateRpp;
 use App\Models\Rpp;
 use App\Models\SchoolSetting;
 use App\Services\DeepSeekService;
@@ -148,58 +149,28 @@ class RppController extends Controller
             'kurikulum' => $validated['kurikulum'],
             'tema' => $validated['tema'] ?? 'merah',
             'desain' => $validated['desain'] ?? RppDocumentStyle::DEFAULT_DESIGN,
+            'generation_input' => $validated,
             'status' => 'processing',
         ]);
 
-        // Increase time limit for AI generation
-        $isDeepLearning = ($validated['kurikulum'] ?? '') === 'Kurikulum Merdeka Deep Learning';
-        set_time_limit($isDeepLearning ? 360 : 180);
+        // Semua form web memakai queue agar request tidak menunggu provider AI.
+        // Ini mencegah timeout PHP/Nginx/Hostinger pada dokumen RPP yang panjang.
+        GenerateRpp::dispatch($rpp->id)->afterCommit();
 
-        // Generate RPP using AI
-        $result = $this->aiService->generateRPP(
-            $validated,
-            Auth::id(),
-            $rpp->id
-        );
+        $showRoute = $request->input('from') === 'pwa'
+            ? route('pwa.rpp.show', $rpp)
+            : route('rpp.show', $rpp);
 
-        if ($result['success'] && $result['content']) {
-            $rpp->update([
-                'content_result' => $result['content'],
-                'status' => 'completed',
-            ]);
-
-            // Form dari PWA guru kembali ke tampilan mobile
-            $showRoute = $request->input('from') === 'pwa'
-                ? route('pwa.rpp.show', $rpp)
-                : route('rpp.show', $rpp);
-
-            // Return JSON for AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'redirect_url' => $showRoute,
-                    'message' => 'RPP berhasil dibuat!',
-                ]);
-            }
-
-            return redirect($showRoute)->with('success', 'RPP berhasil dibuat!');
-        }
-
-        $rpp->update(['status' => 'failed']);
-
-        $errorMessage = $result['error'] ?? 'Gagal membuat RPP. Silakan coba lagi.';
-
-        // Return JSON for AJAX requests
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => false,
-                'error' => $errorMessage,
-            ], 422);
+                'success' => true,
+                'status' => 'processing',
+                'redirect_url' => $showRoute,
+                'message' => 'RPP sedang dibuat. Halaman akan diperbarui setelah selesai.',
+            ], 202);
         }
 
-        return back()
-            ->withInput()
-            ->with('error', $errorMessage);
+        return redirect($showRoute)->with('success', 'RPP sedang dibuat.');
     }
 
     /**

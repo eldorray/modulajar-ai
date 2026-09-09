@@ -60,12 +60,12 @@ class GenerateRpp implements ShouldQueue
         $this->markFailed();
     }
 
-    private function markFailed(): void
+    private function markFailed(?string $message = null): void
     {
         Rpp::query()->whereKey($this->rppId)->where('status', 'processing')->update([
             'status' => 'failed',
             'failure_code' => 'AI_GENERATION_FAILED',
-            'failure_message' => 'RPP gagal dibuat. Silakan coba lagi.',
+            'failure_message' => $message ?: 'RPP gagal dibuat. Silakan coba lagi.',
             'failed_at' => now(),
         ]);
     }
