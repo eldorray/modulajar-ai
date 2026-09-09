@@ -1,0 +1,61 @@
+# =============================================================================
+# Document root = root repo Laravel (pola shared hosting Hostinger).
+#
+# Karena seluruh repo berada dalam jangkauan web server, berkas sensitif WAJIB
+# ditolak secara eksplisit — jangan hanya bergantung pada rewrite ke public/.
+# Kalau mod_rewrite mati, blok rewrite di bawah jadi no-op dan seluruh isi repo
+# akan tersaji, termasuk .env.
+#
+# Kenapa RedirectMatch, bukan <Directory>/<DirectoryMatch>:
+#   <Directory> dan <DirectoryMatch> HANYA sah di konfigurasi server dan vhost.
+#   Menaruhnya di .htaccess membuat Apache menjawab 500 untuk seluruh situs.
+#   RedirectMatch (mod_alias) sah di .htaccess dan tidak butuh mod_rewrite,
+#   jadi inilah lapisan yang tetap menahan walau mod_rewrite dimatikan.
+#
+# WAJIB diuji setelah deploy — semua harus 403/404, JANGAN 200:
+#   curl -I https://<domain>/.env
+#   curl -I https://<domain>/composer.json
+#   curl -I https://<domain>/storage/logs/laravel.log
+#   curl -I https://<domain>/app/Models/User.php
+#   curl -I https://<domain>/.git/config
+# =============================================================================
+
+# --- Lapisan 1: tolak path sensitif, tanpa butuh mod_rewrite -----------------
+
+# Direktori yang tidak boleh tersaji sama sekali.
+RedirectMatch 403 ^/+(app|bootstrap|config|database|docs|node_modules|openapi|resources|routes|scripts|storage|tests|ui-kit|vendor)(/|$)
+
+# Isi git dan berkas dotfile.
+RedirectMatch 403 ^/+\.(git|env|editorconfig|gitattributes|gitignore|superpowers)
+RedirectMatch 403 ^/+\.env
+
+# Manifest dependency, entry point CLI, konfigurasi build, dan dokumen repo.
+RedirectMatch 403 ^/+(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$
+RedirectMatch 403 ^/+(vite|tailwind|postcss)\.config\.js$
+RedirectMatch 403 ^/+.*\.(sh|sql|sqlite|log|md|yaml|yml|cjs|py|bak|old)$
+
+# Lapisan tambahan untuk berkas paling sensitif. <FilesMatch> sah di .htaccess
+# (berbeda dengan <Directory>), dan berlaku juga bila RedirectMatch dilewati.
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Matikan penjelajahan direktori.
+Options -Indexes
+
+# --- Lapisan 2: arahkan sisanya ke public/ -----------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Request yang sudah menunjuk public/ dilayani apa adanya.
+    RewriteCond %{REQUEST_URI} ^/+public/
+    RewriteRule ^ - [L]
+
+    # Halaman depan ditunjuk langsung ke front controller. Tanpa baris ini,
+    # '/' hanya menjadi 'public/' dan bergantung pada DirectoryIndex memuat
+    # index.php — kalau server tidak menyetelnya, halaman depan menjawab 404.
+    RewriteRule ^/?$ public/index.php [L]
+
+    # Sisanya masuk ke public/, tempat index.php Laravel berada.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
