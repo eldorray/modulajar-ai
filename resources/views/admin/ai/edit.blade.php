@@ -107,12 +107,17 @@
                         <input type="number" id="max_tokens" name="max_tokens" min="256" max="32768" step="256"
                             value="{{ old('max_tokens', $settings->max_tokens) }}"
                             class="input w-full @error('max_tokens') border-[hsl(var(--destructive))] @enderror"
-                            placeholder="8192">
+                            placeholder="16384">
                         @error('max_tokens')
                             <p class="text-sm text-[hsl(var(--destructive))]">{{ $message }}</p>
                         @enderror
                         <p class="text-xs text-[hsl(var(--muted-foreground))]">Batas panjang keluaran per permintaan.
-                            Terlalu kecil membuat modul terpotong.</p>
+                            Terlalu kecil membuat modul terpotong di tengah dan generate gagal.
+                            Kurikulum Deep Learning menghasilkan dokumen terpanjang; 8192 pernah tidak
+                            cukup, jadi pakai 16384 atau lebih. Pada model reasoning
+                            (<code>deepseek-reasoner</code>, <code>deepseek-v4-flash</code>) proses
+                            berpikirnya ikut memakan kuota ini, jadi butuh angka lebih besar lagi.
+                            Ini batas atas, bukan jatah — biaya mengikuti token yang benar-benar dipakai.</p>
                     </div>
                 </div>
 

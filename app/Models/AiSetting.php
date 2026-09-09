@@ -41,7 +41,12 @@ class AiSetting extends Model
             'model' => $row?->model ?: config('deepseek.model', 'deepseek-chat'),
             'endpoint' => $row?->endpoint ?: config('deepseek.endpoint'),
             'temperature' => $row?->temperature ?? 0.7,
-            'max_tokens' => $row?->max_tokens ?: 8192,
+            // 8192 terbukti tidak cukup: dokumen kurikulum Deep Learning terpotong
+            // di tengah JSON (finish_reason=length) sehingga generate gagal, dan
+            // pada model reasoning reasoning_content ikut memakan kuota yang sama.
+            // Ini batas atas, bukan jatah yang dipesan — biaya tetap mengikuti
+            // token yang benar-benar dihasilkan.
+            'max_tokens' => $row?->max_tokens ?: 16384,
         ];
     }
 

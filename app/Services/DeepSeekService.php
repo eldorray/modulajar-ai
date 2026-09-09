@@ -88,10 +88,32 @@ class DeepSeekService
             $result = $response->json();
 
             // Extract content from response
+            $finishReason = $result['choices'][0]['finish_reason'] ?? null;
             $content = $this->extractContent($result);
 
             // Log token usage
             $this->logUsage($result, $userId, $rppId);
+
+            // Content tidak terpakai WAJIB dilaporkan sebagai kegagalan dengan
+            // pesannya sendiri. Kalau dikembalikan sebagai success=true dengan
+            // content null, controller hanya melihat nilai falsy tanpa key
+            // 'error' dan menampilkan pesan generik "Gagal membuat RPP" —
+            // admin tidak dapat petunjuk apa pun soal penyebabnya.
+            if (! $content) {
+                $message = $this->contentFailureMessage($finishReason);
+
+                Log::error('DeepSeek: content tidak terpakai', [
+                    'finish_reason' => $finishReason,
+                    'model' => $this->model,
+                    'max_tokens' => $this->maxTokens,
+                    'completion_tokens' => $result['usage']['completion_tokens'] ?? null,
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => $message,
+                ];
+            }
 
             return [
                 'success' => true,
@@ -543,12 +565,44 @@ PROMPT;
     /**
      * Extract content from DeepSeek response.
      */
+    /**
+     * Pesan untuk respons 200 yang isinya tidak bisa dipakai.
+     *
+     * finish_reason 'length' berarti kuota max_tokens habis di tengah jawaban:
+     * JSON pasti tidak lengkap. Ini penyebab paling sering pada kurikulum Deep
+     * Learning, yang dokumennya jauh lebih panjang. Pada model reasoning,
+     * reasoning_content ikut memakan kuota yang sama.
+     */
+    protected function contentFailureMessage(?string $finishReason): string
+    {
+        if ($finishReason === 'length') {
+            return "Jawaban AI terpotong karena batas max_tokens ({$this->maxTokens}) tercapai, "
+                .'sehingga dokumennya tidak lengkap. Naikkan max_tokens di menu Pengaturan AI, '
+                .'atau pilih model dengan batas keluaran lebih besar.';
+        }
+
+        return 'Jawaban AI tidak berformat JSON yang bisa dibaca. Silakan coba lagi, '
+            .'atau ganti model di menu Pengaturan AI.';
+    }
+
     protected function extractContent(array $result): ?array
     {
         try {
             $text = $result['choices'][0]['message']['content'] ?? null;
 
+            // Setiap `return null` di bawah berakhir sebagai pesan generik
+            // "Gagal membuat RPP" di UI, karena controller melihat content falsy
+            // tanpa key 'error'. Jadi tiap jalur WAJIB mencatat alasannya —
+            // tanpa itu kegagalan produksi tidak bisa ditelusuri sama sekali.
             if (! $text) {
+                Log::error('DeepSeek: choices.0.message.content kosong', [
+                    'response_keys' => array_keys($result),
+                    'finish_reason' => $result['choices'][0]['finish_reason'] ?? null,
+                    // Bentuk respons saja, bukan isi lengkapnya, agar log tidak
+                    // membengkak dan tidak ikut menyimpan prompt pengguna.
+                    'choice_keys' => array_keys($result['choices'][0] ?? []),
+                ]);
+
                 return null;
             }
 
@@ -556,7 +610,22 @@ PROMPT;
             $content = json_decode($text, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::warning('Failed to parse DeepSeek response as JSON', ['text' => $text]);
+                Log::error('DeepSeek: content bukan JSON valid', [
+                    'json_error' => json_last_error_msg(),
+                    'finish_reason' => $result['choices'][0]['finish_reason'] ?? null,
+                    'text_length' => strlen($text),
+                    'text_head' => mb_substr($text, 0, 300),
+                    'text_tail' => mb_substr($text, -300),
+                ]);
+
+                return null;
+            }
+
+            if (blank($content)) {
+                Log::error('DeepSeek: content berupa JSON kosong', [
+                    'finish_reason' => $result['choices'][0]['finish_reason'] ?? null,
+                    'text_head' => mb_substr($text, 0, 300),
+                ]);
 
                 return null;
             }
