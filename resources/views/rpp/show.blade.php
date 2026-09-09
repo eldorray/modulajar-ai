@@ -33,12 +33,62 @@
                     </svg>
                     Word
                 </a>
-                <button type="button" onclick="cetakModulAjar('{{ route('rpp.print', $rpp) }}')" class="btn btn-primary btn-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                    </svg>
-                    Cetak
-                </button>
+
+                {{-- Desain & warna dokumen hanya parameter cetak: mengganti pilihan di sini
+                     me-render ulang dari content_result yang sudah ada, tanpa memanggil AI. --}}
+                <div class="relative" x-data="{
+                    open: false,
+                    desain: @js(\App\Support\RppDocumentStyle::design(null, $rpp->desain)),
+                    tema: @js(\App\Support\RppDocumentStyle::theme(null, $rpp->tema)),
+                    url(base) { return base + '?desain=' + this.desain + '&tema=' + this.tema; },
+                }" x-on:keydown.escape.window="open = false">
+                    <button type="button" class="btn btn-primary btn-sm" x-on:click="open = !open">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Unduh &amp; Cetak
+                    </button>
+
+                    <div x-show="open" x-cloak x-on:click.outside="open = false"
+                         class="absolute right-0 z-20 mt-2 w-72 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg text-left space-y-4">
+
+                        <div class="space-y-2">
+                            <span class="block text-xs font-medium text-[hsl(var(--muted-foreground))]">Desain dokumen</span>
+                            @foreach(config('rpp_designs') as $key => $desain)
+                            <label class="flex items-start gap-2 cursor-pointer">
+                                <input type="radio" value="{{ $key }}" x-model="desain" class="mt-1">
+                                <span>
+                                    <span class="block text-sm text-[hsl(var(--foreground))]">{{ $desain['label'] }}</span>
+                                    <span class="block text-xs text-[hsl(var(--muted-foreground))]">{{ $desain['deskripsi'] }}</span>
+                                </span>
+                            </label>
+                            @endforeach
+                        </div>
+
+                        <div class="space-y-2">
+                            <span class="block text-xs font-medium text-[hsl(var(--muted-foreground))]">Warna</span>
+                            <div class="flex items-center gap-2">
+                                @foreach(config('rpp_themes') as $key => $tema)
+                                <label class="cursor-pointer" title="{{ $tema['label'] }}">
+                                    <input type="radio" value="{{ $key }}" x-model="tema" class="peer sr-only">
+                                    <span class="block w-6 h-6 rounded-full border-2 border-transparent ring-1 ring-[hsl(var(--border))] peer-checked:border-[hsl(var(--foreground))] peer-checked:ring-2 transition"
+                                          style="background: linear-gradient(135deg, #{{ $tema['primary'] }} 60%, #{{ $tema['accent'] }} 60%);"></span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1 border-t border-[hsl(var(--border))]">
+                            <a x-bind:href="url(@js(route('rpp.pdf', $rpp)))" class="btn btn-primary btn-sm flex-1 justify-center">Unduh PDF</a>
+                            <button type="button" class="btn btn-outline btn-sm flex-1 justify-center"
+                                    x-on:click="cetakModulAjar(url(@js(route('rpp.print', $rpp)))); open = false">Cetak</button>
+                        </div>
+
+                        <p class="text-xs text-[hsl(var(--muted-foreground))]">
+                            Mengganti desain tidak membuat ulang isi modul — tidak memakai token AI.
+                        </p>
+                    </div>
+                </div>
                 @endif
             </div>
         </div>

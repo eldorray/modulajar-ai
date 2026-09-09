@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('ai', [AiSettingController::class, 'update'])->name('ai.update');
         Route::delete('ai/api-key', [AiSettingController::class, 'destroyApiKey'])->name('ai.delete-key');
         Route::post('ai/test', [AiSettingController::class, 'test'])->name('ai.test');
+        Route::post('ai/models', [AiSettingController::class, 'models'])->name('ai.models');
     });
 });
 

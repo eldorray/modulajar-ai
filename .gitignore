@@ -21,3 +21,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Cache Python skrip tooling
+__pycache__/
+*.pyc
+
+# Scratch brainstorm agent (lokal, jangan di-commit)
+.superpowers/

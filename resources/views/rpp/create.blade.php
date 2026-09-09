@@ -8,7 +8,9 @@
                 <p class="text-sm text-[hsl(var(--muted-foreground))] mt-1">Isi data lengkap di bawah ini untuk menghasilkan Modul Ajar sesuai format Kemdikbud.</p>
             </x-slot>
 
-            <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-6" x-data="{ loading: false }">
+            <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-6"
+                x-data="rppCoverPreview(@js($previewInit))" x-on:input="syncPreview($event)"
+                x-on:change="syncPreview($event)">
                 @csrf
 
                 <!-- Identitas Guru & Sekolah -->
@@ -315,11 +317,29 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[hsl(var(--border))]">
-                    <!-- Tema Warna Dokumen -->
-                    @php $temaTerpilih = old('tema', 'merah'); @endphp
-                    <div x-show="!loading" class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-[hsl(var(--muted-foreground))]">Tema warna:</span>
+                <!-- Desain & Tema Warna Dokumen + Pratinjau Sampul -->
+                @php
+                    $temaTerpilih = old('tema', 'merah');
+                    $desainTerpilih = old('desain', \App\Support\RppDocumentStyle::DEFAULT_DESIGN);
+                @endphp
+                <div x-show="!loading" class="flex flex-col gap-6 pt-4 border-t border-[hsl(var(--border))] sm:flex-row sm:items-start">
+                    <div class="flex-1 space-y-4">
+                        <div class="space-y-2">
+                            <span class="block text-sm font-medium text-[hsl(var(--muted-foreground))]">Desain dokumen:</span>
+                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                @foreach(config('rpp_designs') as $key => $desain)
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="desain" value="{{ $key }}" class="peer sr-only" {{ $desainTerpilih === $key ? 'checked' : '' }}>
+                                    <span class="block rounded-lg border border-[hsl(var(--border))] px-3 py-2 text-left transition peer-checked:border-[hsl(var(--foreground))] peer-checked:ring-1 peer-checked:ring-[hsl(var(--foreground))]">
+                                        <span class="block text-sm font-medium text-[hsl(var(--foreground))]">{{ $desain['label'] }}</span>
+                                        <span class="block text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{{ $desain['deskripsi'] }}</span>
+                                    </span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <span class="block text-sm font-medium text-[hsl(var(--muted-foreground))]">Tema warna:</span>
                         <div class="flex items-center gap-2">
                             @foreach(config('rpp_themes') as $key => $tema)
                             <label class="cursor-pointer" title="{{ $tema['label'] }}">
@@ -329,8 +349,144 @@
                             </label>
                             @endforeach
                         </div>
+                        <p class="text-xs text-[hsl(var(--muted-foreground))]">
+                            Pratinjau sampul di samping ikut isian form dan berubah saat desain atau
+                            tema diganti. Isi dokumen (kata pengantar, tabel, LKPD) baru dibuat setelah
+                            Generate, dan desain masih bisa diganti saat mengunduh tanpa generate ulang.
+                        </p>
                     </div>
 
+                    {{-- Sampul dirakit pada ukuran A4 asli (794x1123px @96dpi) lalu di-scale,
+                         supaya proporsi teks & ornamen sama persis dengan template cetaknya.
+                         Identitas sekolah diambil dari Alpine (bukan Blade) karena harus
+                         ikut berganti saat guru memilih unit MI/SMP.
+                         Tiap varian mencerminkan satu partial di rpp/partials/cover-*.blade.php;
+                         kalau partial itu berubah, blok di sini ikut diperbarui. --}}
+                    <div class="shrink-0 mx-auto sm:mx-0">
+                        <p class="mb-2 text-xs font-medium text-[hsl(var(--muted-foreground))]">Pratinjau sampul</p>
+                        <div class="relative overflow-hidden rounded-lg border border-[hsl(var(--border))] shadow-sm bg-white"
+                             style="width: 240px; height: 340px;">
+                            {{-- A4 @96dpi = 794x1123px. Skala 0.3022 = 240/794, jadi seluruh
+                                 halaman muat tepat di kotak 240x340 tanpa terpotong. --}}
+                            <div class="absolute top-0 left-0 origin-top-left text-center"
+                                 style="width: 794px; height: 1123px; transform: scale(0.3022); color: #1a1a1a;"
+                                 x-bind:style="{ fontFamily: design.fontCss }">
+
+                                <template x-if="design.ornamen">
+                                    <div>
+                                        <img class="absolute" style="top: 34px; left: 34px; width: 48px;" x-bind:src="decor('dots')" alt="">
+                                        <img class="absolute" style="top: 0; right: 0; width: 180px;" x-bind:src="decor('tr')" alt="">
+                                        <img class="absolute" style="bottom: 0; left: 0; width: 160px;" x-bind:src="decor('bl')" alt="">
+                                        <img class="absolute" style="bottom: 0; right: 0; width: 115px;" x-bind:src="decor('br')" alt="">
+                                    </div>
+                                </template>
+
+                                {{-- Kotak isi = area cetak sesungguhnya: A4 dikurangi margin
+                                     2.5cm dari @page (94.5px @96dpi) di keempat sisi. Tanpa ini
+                                     teks melebar ke seluruh lebar kertas dan tampak lebih besar
+                                     daripada hasil cetaknya. Ornamen sengaja di luar kotak ini
+                                     karena posisinya relatif ke tepi kertas, bukan ke area cetak. --}}
+                                <div class="absolute" style="top: 94.5px; left: 94.5px; width: 605px;">
+
+                                {{-- ---------- Klasik ---------- --}}
+                                <template x-if="design.cover === 'klasik'">
+                                    <div class="relative" style="z-index: 2; padding: 30px 20px 40px;">
+                                        <template x-if="school.logo">
+                                            <div style="margin-top: 40px; margin-bottom: 8px;">
+                                                <img x-bind:src="school.logo" alt="" style="max-height: 85px; max-width: 85px; display: inline-block;">
+                                            </div>
+                                        </template>
+                                        <template x-if="!school.logo">
+                                            <div style="margin-top: 40px; height: 85px;"></div>
+                                        </template>
+                                        <div style="font-size: 16px; font-weight: bold; letter-spacing: 1px;" x-text="school.name"></div>
+                                        <div style="font-size: 32px; font-weight: bold; line-height: 1.15; margin-top: 20px; letter-spacing: 1px; color: #4b5563;">
+                                            RENCANA PELAKSANAAN<br>PEMBELAJARAN MENDALAM<br>
+                                            <span style="font-size: 17px;" x-text="upper(f.kurikulum) || 'KURIKULUM MERDEKA'"></span>
+                                        </div>
+                                        <div style="font-size: 43px; font-weight: bold; letter-spacing: 1px; line-height: 1.15;"
+                                             x-bind:style="{ color: '#' + theme.accent }"
+                                             x-text="upper(f.mata_pelajaran) || 'MATA PELAJARAN'"></div>
+                                        <div style="font-size: 17px; color: #6b7280; margin-bottom: 20px;">
+                                            Semester <span x-text="f.semester || 'Ganjil'"></span> : Tahun Ajaran <span x-text="tahunAjaran"></span>
+                                        </div>
+                                        <div style="margin: 15px auto; width: 210px;"><img x-bind:src="garuda" alt="" style="width: 100%;"></div>
+                                        <div style="font-size: 16px; color: #374151; margin-top: 20px; margin-bottom: 5px;">Disusun oleh:</div>
+                                        <div style="font-size: 23px; font-weight: bold;"
+                                             x-bind:style="{ color: '#' + theme.primary }"
+                                             x-text="f.nama_guru || 'Nama Guru'"></div>
+                                    </div>
+                                </template>
+
+                                {{-- ---------- Modern ---------- --}}
+                                <template x-if="design.cover === 'modern'">
+                                    <div class="relative" style="z-index: 2; padding: 30px 0 40px;">
+                                        <template x-if="school.logo">
+                                            <div style="margin-bottom: 14px;">
+                                                <img x-bind:src="school.logo" alt="" style="max-height: 70px; max-width: 70px; display: inline-block;">
+                                            </div>
+                                        </template>
+                                        <div style="padding: 16px 20px; margin-bottom: 28px;" x-bind:style="{ backgroundColor: '#' + theme.primary }">
+                                            <div style="font-size: 19px; font-weight: bold; color: #ffffff; letter-spacing: 2px;" x-text="school.name"></div>
+                                        </div>
+                                        <div style="padding: 0 20px;">
+                                            <div style="font-size: 32px; font-weight: bold; line-height: 1.15; letter-spacing: 1px; color: #4b5563;">
+                                                RENCANA PELAKSANAAN<br>PEMBELAJARAN MENDALAM<br>
+                                                <span style="font-size: 17px;" x-text="upper(f.kurikulum) || 'KURIKULUM MERDEKA'"></span>
+                                            </div>
+                                            <div style="font-size: 43px; font-weight: bold; letter-spacing: 1px; line-height: 1.15;"
+                                                 x-bind:style="{ color: '#' + theme.accent }"
+                                                 x-text="upper(f.mata_pelajaran) || 'MATA PELAJARAN'"></div>
+                                            <div style="font-size: 17px; color: #6b7280; margin-bottom: 20px;">
+                                                Semester <span x-text="f.semester || 'Ganjil'"></span> : Tahun Ajaran <span x-text="tahunAjaran"></span>
+                                            </div>
+                                            <div style="margin: 15px auto; width: 210px;"><img x-bind:src="garuda" alt="" style="width: 100%;"></div>
+                                            <div style="font-size: 16px; color: #374151; margin-top: 20px; margin-bottom: 5px;">Disusun oleh:</div>
+                                            <div style="font-size: 23px; font-weight: bold;"
+                                                 x-bind:style="{ color: '#' + theme.primary }"
+                                                 x-text="f.nama_guru || 'Nama Guru'"></div>
+                                        </div>
+                                        <div style="padding: 7px 0; margin-top: 34px;" x-bind:style="{ backgroundColor: '#' + theme.dark }"></div>
+                                    </div>
+                                </template>
+
+                                {{-- ---------- Minimalis ---------- --}}
+                                <template x-if="design.cover === 'minimalis'">
+                                    <div class="relative" style="z-index: 2; padding: 30px 20px 40px;">
+                                        <template x-if="school.logo">
+                                            <div style="margin-top: 40px; margin-bottom: 8px;">
+                                                <img x-bind:src="school.logo" alt="" style="max-height: 85px; max-width: 85px; display: inline-block;">
+                                            </div>
+                                        </template>
+                                        <template x-if="!school.logo">
+                                            <div style="margin-top: 40px; height: 85px;"></div>
+                                        </template>
+                                        <div style="font-size: 15px; letter-spacing: 3px; color: #374151;" x-text="school.name"></div>
+                                        <div style="width: 45%; margin: 26px auto; border-top-width: 1px; border-top-style: solid;"
+                                             x-bind:style="{ borderTopColor: '#' + theme.primary }"></div>
+                                        <div style="font-size: 24px; line-height: 1.3; letter-spacing: 2px; color: #4b5563;">
+                                            RENCANA PELAKSANAAN<br>PEMBELAJARAN MENDALAM<br>
+                                            <span style="font-size: 15px; letter-spacing: 1px;" x-text="upper(f.kurikulum) || 'KURIKULUM MERDEKA'"></span>
+                                        </div>
+                                        <div style="font-size: 37px; font-weight: bold; letter-spacing: 1px; line-height: 1.2; margin-top: 6px;"
+                                             x-bind:style="{ color: '#' + theme.primary }"
+                                             x-text="upper(f.mata_pelajaran) || 'MATA PELAJARAN'"></div>
+                                        <div style="font-size: 17px; color: #6b7280; margin-bottom: 20px;">
+                                            Semester <span x-text="f.semester || 'Ganjil'"></span> : Tahun Ajaran <span x-text="tahunAjaran"></span>
+                                        </div>
+                                        <div style="width: 45%; margin: 22px auto; border-top: 1px solid #d1d5db;"></div>
+                                        <div style="margin: 15px auto; width: 210px;"><img x-bind:src="garuda" alt="" style="width: 100%;"></div>
+                                        <div style="font-size: 16px; color: #374151; margin-top: 20px; margin-bottom: 5px;">Disusun oleh:</div>
+                                        <div style="font-size: 20px; font-weight: bold; color: #1f2937;" x-text="f.nama_guru || 'Nama Guru'"></div>
+                                    </div>
+                                </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-end gap-4 pt-4 border-t border-[hsl(var(--border))]">
                     <div class="flex items-center gap-4">
                     <a href="{{ route('rpp.index') }}" class="btn btn-outline" x-show="!loading">Batal</a>
 
@@ -488,6 +644,51 @@
         </div>
 
         <script>
+            function rppCoverPreview(init) {
+                return {
+                    loading: false,
+                    themes: init.themes,
+                    designs: init.designs,
+                    schools: init.schools,
+                    decorBase: init.decorBase,
+                    garuda: init.garuda,
+                    tahunAjaran: init.tahunAjaran,
+                    f: init.fields,
+
+                    get school() {
+                        return this.schools[this.f.jenjang] || Object.values(this.schools)[0];
+                    },
+
+                    get theme() {
+                        return this.themes[this.f.tema] || Object.values(this.themes)[0];
+                    },
+
+                    get design() {
+                        const d = this.designs[this.f.desain] || Object.values(this.designs)[0];
+                        // fontCss dipisah namanya supaya tidak tertukar dengan properti
+                        // 'font' milik CSS. Semua x-bind:style di pratinjau WAJIB bentuk
+                        // objek: bentuk string menimpa seluruh atribut style, sehingga
+                        // transform: scale() pada pembungkus ikut terhapus.
+                        return { cover: d.cover, ornamen: d.ornamen, fontCss: d.font };
+                    },
+
+                    decor(part) {
+                        return this.decorBase + 'decor-' + (this.themes[this.f.tema] ? this.f.tema : 'merah') + '-' + part + '.png';
+                    },
+
+                    upper(value) {
+                        return (value || '').toUpperCase();
+                    },
+
+                    syncPreview(event) {
+                        const name = event.target.name;
+                        if (name in this.f) {
+                            this.f[name] = event.target.value;
+                        }
+                    },
+                };
+            }
+
             function progressLoader() {
                 return {
                     show: false,

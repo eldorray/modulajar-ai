@@ -65,6 +65,77 @@ class AiSettingController extends Controller
     }
 
     /**
+     * Ambil daftar model yang tersedia dari provider.
+     *
+     * Endpoint yang disimpan adalah URL chat/completions penuh, sedangkan daftar
+     * model ada di {base}/models — jadi sufiksnya dipotong dulu. Endpoint dan key
+     * boleh dikirim dari form supaya admin bisa mengecek nilai baru sebelum
+     * menyimpannya; yang kosong diambil dari nilai efektif.
+     */
+    public function models(Request $request)
+    {
+        $validated = $request->validate([
+            'endpoint' => 'nullable|url:http,https|max:255',
+            'api_key' => 'nullable|string|max:255',
+        ]);
+
+        $config = AiSetting::resolved();
+        $endpoint = filled($validated['endpoint'] ?? null) ? $validated['endpoint'] : $config['endpoint'];
+        $apiKey = filled($validated['api_key'] ?? null) ? $validated['api_key'] : $config['api_key'];
+
+        if (blank($apiKey)) {
+            return response()->json(['message' => 'API key belum diisi.'], 422);
+        }
+
+        if (blank($endpoint)) {
+            return response()->json(['message' => 'Endpoint belum diisi.'], 422);
+        }
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->acceptJson()
+                ->timeout(20)
+                ->get($this->modelsUrl($endpoint));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghubungi provider: '.$e->getMessage()], 502);
+        }
+
+        if (! $response->successful()) {
+            return response()->json([
+                'message' => 'Provider menolak permintaan (HTTP '.$response->status().').',
+            ], 502);
+        }
+
+        $models = collect($response->json('data') ?? $response->json() ?? [])
+            ->map(fn ($item) => is_array($item) ? ($item['id'] ?? $item['name'] ?? null) : $item)
+            ->filter(fn ($id) => is_string($id) && $id !== '')
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($models->isEmpty()) {
+            return response()->json(['message' => 'Provider tidak mengembalikan daftar model.'], 502);
+        }
+
+        return response()->json(['models' => $models]);
+    }
+
+    /**
+     * Turunkan URL daftar model dari URL chat/completions.
+     */
+    private function modelsUrl(string $endpoint): string
+    {
+        $base = preg_replace('#/chat/completions/?$#', '', rtrim($endpoint, '/'));
+
+        // Endpoint tak berpola standar → buang satu segmen terakhir sebagai perkiraan.
+        if ($base === rtrim($endpoint, '/')) {
+            $base = rtrim(substr($base, 0, (int) strrpos($base, '/')), '/');
+        }
+
+        return $base.'/models';
+    }
+
+    /**
      * Tes koneksi ke endpoint AI dengan prompt minimal.
      */
     public function test()

@@ -33,13 +33,26 @@ class Rpp extends Model
         'jenis_asesmen',
         'kurikulum',
         'tema',
+        'desain',
         'content_result',
+        'generation_input',
+        'idempotency_key',
+        'request_fingerprint',
         'status',
+        'failure_code',
+        'failure_message',
+        'started_at',
+        'completed_at',
+        'failed_at',
     ];
 
     protected $casts = [
         'content_result' => 'array',
+        'generation_input' => 'array',
         'tanggal' => 'date',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'failed_at' => 'datetime',
     ];
 
     /**

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Rpp;
 use App\Models\SchoolSetting;
 use App\Services\DeepSeekService;
+use App\Support\RppDocumentStyle;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class RppController extends Controller
 {
@@ -35,7 +37,39 @@ class RppController extends Controller
      */
     public function create()
     {
-        return view('rpp.create');
+        // Bekal pratinjau sampul live di form (lihat rppCoverPreview() di rpp/create).
+        // Identitas kedua unit dikirim sekaligus supaya pratinjau ikut berganti saat
+        // guru memilih unit, tanpa perlu request ulang ke server.
+        $schools = collect(SchoolSetting::JENJANG)
+            ->mapWithKeys(function (string $jenjang) {
+                $setting = SchoolSetting::getSettings($jenjang);
+
+                return [$jenjang => [
+                    'name' => strtoupper($setting->nama_sekolah ?: 'NAMA SEKOLAH'),
+                    'logo' => $setting->logo ? Storage::url($setting->logo) : null,
+                ]];
+            })
+            ->all();
+
+        return view('rpp.create', [
+            'previewInit' => [
+                'themes' => config('rpp_themes'),
+                'designs' => config('rpp_designs'),
+                'schools' => $schools,
+                'decorBase' => asset('/'),
+                'garuda' => asset('garuda.png'),
+                'tahunAjaran' => date('Y').'/'.(date('Y') + 1),
+                'fields' => [
+                    'jenjang' => old('jenjang', 'MI'),
+                    'tema' => old('tema', RppDocumentStyle::DEFAULT_THEME),
+                    'desain' => old('desain', RppDocumentStyle::DEFAULT_DESIGN),
+                    'mata_pelajaran' => old('mata_pelajaran', ''),
+                    'kurikulum' => old('kurikulum', 'Kurikulum Merdeka'),
+                    'semester' => old('semester', ''),
+                    'nama_guru' => old('nama_guru', Auth::user()->name),
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -66,6 +100,7 @@ class RppController extends Controller
             'jenis_asesmen.*' => 'string|in:Diagnostik Kognitif,Diagnostik Non-Kognitif,Formatif,Sumatif',
             'kurikulum' => 'required|string|max:255',
             'tema' => 'nullable|string|in:'.implode(',', array_keys(config('rpp_themes'))),
+            'desain' => 'nullable|string|in:'.implode(',', array_keys(config('rpp_designs'))),
             'panca_cinta' => 'nullable|boolean',
             'adiwiyata' => 'nullable|boolean',
             'kka' => 'nullable|boolean',
@@ -112,6 +147,7 @@ class RppController extends Controller
             'jenis_asesmen' => $validated['jenis_asesmen'] ?? 'Formatif dan Sumatif',
             'kurikulum' => $validated['kurikulum'],
             'tema' => $validated['tema'] ?? 'merah',
+            'desain' => $validated['desain'] ?? RppDocumentStyle::DEFAULT_DESIGN,
             'status' => 'processing',
         ]);
 
@@ -182,7 +218,7 @@ class RppController extends Controller
     /**
      * Download RPP as PDF.
      */
-    public function downloadPdf(Rpp $rpp)
+    public function downloadPdf(Rpp $rpp, Request $request)
     {
         // Ensure user can only download their own RPPs
         if ($rpp->user_id !== Auth::id() && ! Auth::user()->isAdmin()) {
@@ -191,10 +227,15 @@ class RppController extends Controller
 
         $schoolSettings = SchoolSetting::getSettings($rpp->jenjang);
 
+        // Desain & tema boleh ditimpa lewat query saat mengunduh; nilai ngawur jatuh
+        // ke nilai dokumen, bukan error. Tidak ada panggilan AI di jalur ini.
+        $designKey = RppDocumentStyle::design($request->query('desain'), $rpp->desain);
+        $themeKey = RppDocumentStyle::theme($request->query('tema'), $rpp->tema);
+
         $isDeepLearning = $rpp->kurikulum === 'Kurikulum Merdeka Deep Learning';
         $viewName = $isDeepLearning ? 'rpp.pdf_deep_learning' : 'rpp.pdf';
 
-        $pdf = Pdf::loadView($viewName, compact('rpp', 'schoolSettings'));
+        $pdf = Pdf::loadView($viewName, compact('rpp', 'schoolSettings', 'designKey', 'themeKey'));
 
         // Set paper size; margins come from @page CSS rule in the template
         $pdf->setPaper('A4', 'portrait');
@@ -216,7 +257,7 @@ class RppController extends Controller
     /**
      * Show a print-friendly HTML view that auto-opens the browser print dialog.
      */
-    public function print(Rpp $rpp)
+    public function print(Rpp $rpp, Request $request)
     {
         if ($rpp->user_id !== Auth::id() && ! Auth::user()->isAdmin()) {
             abort(403);
@@ -236,6 +277,8 @@ class RppController extends Controller
             'rpp' => $rpp,
             'schoolSettings' => $schoolSettings,
             'print' => true,
+            'designKey' => RppDocumentStyle::design($request->query('desain'), $rpp->desain),
+            'themeKey' => RppDocumentStyle::theme($request->query('tema'), $rpp->tema),
         ]);
     }
 

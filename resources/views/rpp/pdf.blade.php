@@ -1,7 +1,7 @@
 @php
     // Palet tema warna dokumen (config/rpp_themes.php). Dihitung di paling atas
     // karena dipakai di dalam <style> pada <head>.
-    $themeKey = $rpp->tema ?? 'merah';
+    $themeKey = $themeKey ?? $rpp->tema ?? 'merah';
     $themeSet = config('rpp_themes.'.$themeKey) ?? config('rpp_themes.merah');
     $primary = '#'.$themeSet['primary'];
     $dark = '#'.$themeSet['dark'];
@@ -10,6 +10,13 @@
     $primaryTint = '#'.collect([0, 2, 4])
         ->map(fn ($i) => sprintf('%02x', (int) round(($h = hexdec(substr($themeSet['primary'], $i, 2))) + (255 - $h) * 0.9)))
         ->implode('');
+
+    // Skin dokumen (config/rpp_designs.php). CATATAN: JANGAN pakai nama $desain —
+    // di pdf_deep_learning.blade.php nama itu sudah dipakai untuk data
+    // $content['desain_pembelajaran'].
+    // Fallback dipertahankan agar view tetap benar bila dirender langsung.
+    $designKey = $designKey ?? $rpp->desain ?? 'klasik';
+    $design = config('rpp_designs.'.$designKey) ?? config('rpp_designs.klasik');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -18,118 +25,11 @@
     <title>RPPM - {{ $rpp->mata_pelajaran }}</title>
 
     <style>
-        @page {
-            margin: 2.5cm;
-            size: A4;
-        }
-        /* Reset bertarget — JANGAN reset `html` (dan jangan pakai `* {}`):
-           margin:0 pada html menggeser acuan posisi elemen fixed di DomPDF,
-           sehingga ornamen sudut (offset negatif) terlempar ke luar kanvas. */
-        body, div, p, h1, h2, h3, h4, ol, ul, li, table, thead, tbody, tr, th, td, span { margin: 0; padding: 0; }
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
-            line-height: 1.55;
-            color: #1a1a1a;
-        }
+@include('rpp.partials.skin-css')
 
-        /* ============== DECORATIONS ==============
-           Ornamen sudut = PNG transparan (di-generate GD, public/decor-*.png).
-           SVG, gradient, dan border-top triangle tidak dirender DomPDF;
-           gambar PNG dirender andal. position:fixed = berulang tiap halaman. */
-        .fx-dots { position: fixed; top: -1.6cm; left: -1.6cm; width: 48px; }
-        .fx-tr   { position: fixed; top: -2.5cm; right: -2.5cm; width: 180px; }
-        .fx-bl   { position: fixed; bottom: -2.5cm; left: -2.5cm; width: 160px; }
-        .fx-br   { position: fixed; bottom: -2.5cm; right: -2.5cm; width: 115px; }
-
-        .page-num { position: fixed; bottom: -1.7cm; right: 0; font-size: 12pt; font-weight: bold; color: #1a1a1a; }
-        .page-num:before { content: counter(page); }
-
-        /* ============== COVER PAGE ============== */
-        .cover {
-            page-break-after: always;
-            text-align: center;
-            padding: 30px 20px 40px;
-            position: relative;
-            /* JANGAN kasih height: DomPDF abaikan box-sizing utk height,
-               height + padding overflow → cover terdorong ke halaman 2.
-               Ornamen sudut sudah fixed per halaman, tak butuh cover full-height. */
-        }
-
-        .cover-school-logo { margin-bottom: 8px; margin-top: 40px; position: relative; z-index: 2; }
-        .cover-school-logo img { max-height: 85px; max-width: 85px; }
-        .cover-school-name { font-size: 12pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2; }
-        .cover-school-sub { font-size: 9pt; color: #555; letter-spacing: 1px; margin-bottom: 25px; position: relative; z-index: 2; }
-
-        .cover-title-main { font-size: 24pt; font-weight: bold; text-transform: uppercase; line-height: 1.15; margin: 15px 0 0; letter-spacing: 1px; color: #4b5563; position: relative; z-index: 2; }
-        .cover-subject { font-size: 32pt; font-weight: bold; color: {{ $accent }}; text-transform: uppercase; letter-spacing: 1px; margin: 0; line-height: 1.15; position: relative; z-index: 2; }
-        .cover-semester { font-size: 13pt; color: #6b7280; margin-bottom: 20px; position: relative; z-index: 2; }
-
-        .cover-garuda { margin: 15px auto; width: 210px; position: relative; z-index: 2; }
-        .cover-garuda img { width: 100%; max-width: 230px; }
-
-        .cover-author-label { font-size: 12pt; color: #374151; margin-top: 20px; margin-bottom: 5px; position: relative; z-index: 2; }
-        .cover-author-name { font-size: 17pt; font-weight: bold; color: {{ $primary }}; position: relative; z-index: 2; }
-
-        /* ============== TITLES ============== */
-        .page-title { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 20px; margin-top: 5px; }
-        .section-letter { font-size: 12pt; font-weight: bold; margin: 18px 0 8px; }
-
-        .page-break { page-break-before: always; }
-
-        /* ============== KATA PENGANTAR ============== */
-        .kata-pengantar-body { page-break-after: always; position: relative; z-index: 2; }
-        .kata-pengantar-body p { text-align: justify; text-indent: 35px; margin-bottom: 10px; line-height: 1.7; font-size: 11pt; }
-        .kata-pengantar-signature { text-align: right; margin-top: 35px; font-size: 11pt; }
-        .kata-pengantar-signature .space { height: 55px; }
-
-        /* ============== DAFTAR ISI ============== */
-        /* Tanpa page-break-after: bagian modul berikutnya sudah punya
-           page-break-before (double break = halaman kosong) */
-        .daftar-isi { width: 100%; border-collapse: collapse; position: relative; z-index: 2; }
-        .daftar-isi td { border: none; padding: 6px 0; font-size: 11pt; vertical-align: bottom; background: transparent; }
-        .daftar-isi .dots { border-bottom: 1px dotted #555; padding: 0 8px 4px 8px; }
-        .daftar-isi .page-col { text-align: right; width: 35px; }
-        .daftar-isi .level-1 td { font-weight: bold; }
-        .daftar-isi .level-2 td:first-child { padding-left: 20px; }
-
-        /* ============== TABLES ============== */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; position: relative; z-index: 2; background: white; }
-        th, td { border: 1px solid #666; padding: 6px 9px; vertical-align: top; font-size: 10.5pt; line-height: 1.5; }
-
-        .tbl-info td { border: none; padding: 3px 0; font-size: 11pt; background: transparent; }
-        .tbl-info td:first-child { width: 32%; }
-
-        .tbl-red thead th, .tbl-red tbody .row-head td { background-color: {{ $primary }}; color: #ffffff; font-weight: bold; text-align: center; padding: 7px 9px; border: 1px solid {{ $primary }}; }
-        .tbl-red tbody .row-sub td { background-color: #f5f5f5; font-weight: bold; }
-        .label-cell { font-weight: bold; background-color: #fafafa; width: 25%; }
-
-        .tbl-langkah th { background-color: {{ $primary }}; color: #ffffff; text-align: center; font-weight: bold; padding: 8px; border: 1px solid {{ $primary }}; }
-        .tbl-langkah .col-pengalaman { width: 20%; text-align: center; vertical-align: middle; background-color: {{ $primaryTint }}; font-weight: bold; color: {{ $primary }}; font-size: 12pt; padding: 15px 8px; }
+        /* ============== KHUSUS TEMPLATE MODUL AJAR ============== */
         .tbl-langkah .fase-sintaks { font-weight: bold; font-style: italic; margin: 8px 0 4px; }
         .tbl-langkah .durasi { font-size: 9.5pt; color: #444; font-weight: normal; }
-
-        /* ============== LKPD ============== */
-        .lkpd-wrapper { border: 2px solid {{ $primary }}; padding: 15px; }
-        .lkpd-header { text-align: center; border-bottom: 2px solid {{ $primary }}; padding-bottom: 10px; margin-bottom: 12px; }
-        .lkpd-title { font-size: 13pt; font-weight: bold; color: {{ $primary }}; text-transform: uppercase; }
-        .jawaban-box { border: 1px dashed #999; min-height: 55px; padding: 6px 8px; margin-top: 5px; color: #999; font-size: 9.5pt; background: #ffffff; }
-
-        /* ============== SIGNATURE ============== */
-        .signature-section { margin-top: 30px; page-break-inside: avoid; position: relative; z-index: 2; }
-        .signature-table td { border: none; text-align: center; font-size: 11pt; background: transparent; }
-        .signature-space { height: 60px; }
-        .signature-name { font-weight: bold; text-decoration: underline; }
-        .signature-nip { font-size: 10pt; }
-
-        /* ============== HELPERS ============== */
-        .text-bold { font-weight: bold; }
-        .text-red { color: {{ $primary }}; }
-        .text-center { text-align: center; }
-        .mt-5 { margin-top: 5px; } .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; }
-        .mb-5 { margin-bottom: 5px; } .mb-10 { margin-bottom: 10px; }
-        ol, ul { margin-left: 20px; }
-        ol li, ul li { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -157,38 +57,7 @@
 {{-- =============================================================
      COVER
      ============================================================= --}}
-{{-- Ornamen sudut: fixed langsung di bawah <body> (DomPDF tak merender fixed
-     di dalam parent position:relative). Berulang otomatis di semua halaman. --}}
-<img class="fx-dots" src="{{ $isPrint ? asset("decor-{$themeKey}-dots.png") : public_path("decor-{$themeKey}-dots.png") }}" alt="">
-<img class="fx-tr" src="{{ $isPrint ? asset("decor-{$themeKey}-tr.png") : public_path("decor-{$themeKey}-tr.png") }}" alt="">
-<img class="fx-bl" src="{{ $isPrint ? asset("decor-{$themeKey}-bl.png") : public_path("decor-{$themeKey}-bl.png") }}" alt="">
-<img class="fx-br" src="{{ $isPrint ? asset("decor-{$themeKey}-br.png") : public_path("decor-{$themeKey}-br.png") }}" alt="">
-<div class="page-num"></div>
-
-<div class="cover">
-    @if(isset($schoolSettings) && $schoolSettings->logo)
-    <div class="cover-school-logo">
-        <img src="{{ $isPrint ? asset('storage/' . $schoolSettings->logo) : storage_path('app/public/' . $schoolSettings->logo) }}" alt="Logo">
-    </div>
-    @endif
-    <div class="cover-school-name">{{ strtoupper($schoolName) }}</div>
-    @if($schoolCity)
-    <div class="cover-school-sub">{{ strtoupper($schoolCity) }}</div>
-    @endif
-
-    <div class="cover-title-main">RENCANA PELAKSANAAN<br>PEMBELAJARAN MENDALAM<br><span style="font-size:13pt;">{{ strtoupper($rpp->kurikulum ?? 'Kurikulum Merdeka') }}</span></div>
-    <div class="cover-subject">{{ strtoupper($rpp->mata_pelajaran) }}</div>
-    <div class="cover-semester">
-        Semester {{ $rpp->semester ?? 'Ganjil' }} : Tahun Ajaran {{ $tahunAjaran }}
-    </div>
-
-    <div class="cover-garuda">
-        <img src="{{ $garudaSrc }}" alt="Garuda Pancasila">
-    </div>
-
-    <div class="cover-author-label">Disusun oleh:</div>
-    <div class="cover-author-name">{{ $rpp->nama_guru }}</div>
-</div>
+@include('rpp.partials.cover')
 
 {{-- =============================================================
      KATA PENGANTAR
