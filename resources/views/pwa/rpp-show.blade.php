@@ -60,6 +60,7 @@
     </section>
 
     @if ($rpp->status === 'completed')
+        <a href="{{ route('rpp.edit', ['rpp' => $rpp, 'from' => 'pwa']) }}" class="pwa-card block p-4 font-bold text-center">Edit RPP &amp; Tema</a>
         <section class="pwa-card pop-in p-4" style="--d: 120ms">
             <h2 class="pwa-h2">Unduh &amp; cetak</h2>
             <div class="mt-3 grid grid-cols-3 gap-2">

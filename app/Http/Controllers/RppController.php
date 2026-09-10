@@ -218,6 +218,67 @@ class RppController extends Controller
         return view('rpp.show', compact('rpp'));
     }
 
+    public function edit(Request $request, Rpp $rpp)
+    {
+        $this->authorizeEditing($rpp);
+
+        return view('rpp.edit', [
+            'rpp' => $rpp,
+            'fields' => \App\Support\RppContentEditor::fields($rpp->content_result ?? []),
+            'fromPwa' => $request->query('from') === 'pwa',
+        ]);
+    }
+
+    private function authorizeEditing(Rpp $rpp): void
+    {
+        abort_unless($rpp->user_id === Auth::id() || Auth::user()->isAdmin(), 403);
+        abort_unless($rpp->status === 'completed', 409, 'Hanya RPP yang sudah selesai dapat diedit.');
+    }
+
+    public function update(Request $request, Rpp $rpp)
+    {
+        $this->authorizeEditing($rpp);
+        $validated = $request->validate([
+            'from' => 'nullable|in:pwa',
+            'revision' => 'nullable|string',
+            'nama_guru' => 'sometimes|required|string|max:255',
+            'kepala_sekolah' => 'sometimes|nullable|string|max:255',
+            'nip_kepala_sekolah' => 'sometimes|nullable|string|max:50',
+            'kota' => 'sometimes|nullable|string|max:100',
+            'tanggal' => 'sometimes|nullable|date',
+            'mata_pelajaran' => 'sometimes|required|string|max:255',
+            'topik' => 'sometimes|required|string|max:1000',
+            'kelas' => 'sometimes|nullable|string|max:20',
+            'semester' => 'sometimes|nullable|in:Ganjil,Genap',
+            'alokasi_waktu' => 'sometimes|required|string|max:100',
+            'tema' => 'sometimes|required|string|in:'.implode(',', array_keys(config('rpp_themes'))),
+            'desain' => 'sometimes|required|string|in:'.implode(',', array_keys(config('rpp_designs'))),
+            'content_fields' => 'sometimes|array|max:2000',
+            'content_fields.*' => 'nullable|string|max:50000',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rpp, $validated) {
+            $current = Rpp::query()->lockForUpdate()->findOrFail($rpp->id);
+            $this->authorizeEditing($current);
+            if (isset($validated['revision']) && $validated['revision'] !== hash('sha256', $current->toJson())) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['revision' => 'Dokumen telah berubah. Muat ulang halaman sebelum mengedit lagi.']);
+            }
+            $fields = \App\Support\RppContentEditor::fields($current->content_result ?? []);
+            $edits = $validated['content_fields'] ?? [];
+            foreach (array_keys($edits) as $index) {
+                if (! array_key_exists($index, $fields)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['content_fields' => 'Bagian isi tidak valid. Muat ulang halaman edit.']);
+                }
+            }
+            $attributes = collect($validated)->except(['from', 'revision', 'content_fields'])->all();
+            $attributes['content_result'] = \App\Support\RppContentEditor::replace($current->content_result ?? [], $fields, $edits);
+            $current->update($attributes);
+        });
+
+        return redirect()->route(($validated['from'] ?? null) === 'pwa' ? 'pwa.rpp.show' : 'rpp.show', $rpp)
+            ->with('success', 'RPP berhasil diperbarui tanpa membuat ulang dengan AI.');
+    }
+
     /**
      * Download RPP as PDF.
      */
