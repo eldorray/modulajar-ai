@@ -59,8 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('users/{user}/temp-password', [UserController::class, 'clearTempPassword'])->name('users.clear-temp-password');
 
         // Guru Management
-        Route::resource('guru', GuruController::class)->except(['create', 'store', 'destroy']);
-        Route::post('guru/sync', [GuruController::class, 'sync'])->name('guru.sync');
+        Route::resource('guru', GuruController::class)->except(['destroy']);
 
         // RPP dari Guru
         Route::get('rpp', [\App\Http\Controllers\Admin\RppController::class, 'index'])->name('rpp.index');
