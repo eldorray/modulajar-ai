@@ -165,7 +165,11 @@ class RppDocumentDesignTest extends TestCase
 
         $this->assertDatabaseCount('rpps', 0);
 
-        $this->actingAs($user)->post('/rpp', $payload + ['desain' => 'minimalis']);
+        \Illuminate\Support\Facades\Http::fake(['*' => \Illuminate\Support\Facades\Http::response([
+            'choices' => [['message' => ['content' => '{"informasi_umum":{"mata_pelajaran":"IPA"}}']]],
+        ])]);
+        $this->actingAs($user)->post('/rpp', $payload + ['desain' => 'minimalis'])
+            ->assertSessionHas('success');
 
         $this->assertSame('minimalis', Rpp::query()->latest('id')->first()?->desain);
     }

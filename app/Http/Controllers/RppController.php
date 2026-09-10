@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\GenerateRpp;
 use App\Models\Rpp;
 use App\Models\SchoolSetting;
 use App\Services\DeepSeekService;
@@ -153,9 +152,42 @@ class RppController extends Controller
             'status' => 'processing',
         ]);
 
-        // Semua form web memakai queue agar request tidak menunggu provider AI.
-        // Ini mencegah timeout PHP/Nginx/Hostinger pada dokumen RPP yang panjang.
-        GenerateRpp::dispatch($rpp->id)->afterCommit();
+        // WEB/PWA waits for completion without a queue worker. Allow headroom
+        // above the provider's 120s / 300s HTTP timeout.
+        try {
+            if (function_exists('set_time_limit')) {
+                set_time_limit($validated['kurikulum'] === 'Kurikulum Merdeka Deep Learning' ? 360 : 180);
+            }
+            $rpp->update(['started_at' => now()]);
+            $result = $this->aiService->generateRPP($validated, Auth::id(), $rpp->id);
+        } catch (\Throwable $exception) {
+            report($exception);
+            $result = ['success' => false, 'error' => 'RPP gagal dibuat. Silakan coba lagi.'];
+        }
+
+        if (! ($result['success'] ?? false) || empty($result['content'])) {
+            $message = $result['error'] ?? 'RPP gagal dibuat karena hasil AI kosong. Silakan coba lagi.';
+            $rpp->update([
+                'status' => 'failed',
+                'failure_code' => 'AI_GENERATION_FAILED',
+                'failure_message' => $message,
+                'failed_at' => now(),
+            ]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'status' => 'failed', 'error' => $message, 'message' => $message], 500);
+            }
+
+            return back()->withInput()->with('error', $message);
+        }
+
+        $rpp->update([
+            'content_result' => $result['content'],
+            'status' => 'completed',
+            'completed_at' => now(),
+            'failure_code' => null,
+            'failure_message' => null,
+        ]);
 
         $showRoute = $request->input('from') === 'pwa'
             ? route('pwa.rpp.show', $rpp)
@@ -164,13 +196,13 @@ class RppController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'status' => 'processing',
+                'status' => 'completed',
                 'redirect_url' => $showRoute,
-                'message' => 'RPP sedang dibuat. Halaman akan diperbarui setelah selesai.',
-            ], 202);
+                'message' => 'RPP berhasil dibuat dan siap diunduh.',
+            ]);
         }
 
-        return redirect($showRoute)->with('success', 'RPP sedang dibuat.');
+        return redirect($showRoute)->with('success', 'RPP berhasil dibuat dan siap diunduh.');
     }
 
     /**
@@ -197,6 +229,11 @@ class RppController extends Controller
         }
 
         $schoolSettings = SchoolSetting::getSettings($rpp->jenjang);
+
+        if ($rpp->status !== 'completed' || ! $rpp->content_result) {
+            return redirect()->route('rpp.show', $rpp)
+                ->with('error', 'Modul Ajar belum selesai di-generate.');
+        }
 
         // Desain & tema boleh ditimpa lewat query saat mengunduh; nilai ngawur jatuh
         // ke nilai dokumen, bukan error. Tidak ada panggilan AI di jalur ini.

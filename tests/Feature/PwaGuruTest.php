@@ -217,9 +217,10 @@ class PwaGuruTest extends TestCase
             ->assertSee(route('pwa.home'), false);
     }
 
-    public function test_generate_dari_pwa_langsung_mengantrikan_proses_dan_diarahkan_ke_tampilan_mobile(): void
+    public function test_generate_dari_pwa_selesai_sebelum_diarahkan_ke_tampilan_mobile(): void
     {
         Queue::fake();
+        Http::fake(['*' => Http::response(['choices' => [['message' => ['content' => json_encode(['informasi_umum' => ['mata_pelajaran' => 'IPA']])]]]])]);
         $guru = User::factory()->create(['role' => 'guru']);
 
         $response = $this->actingAs($guru)->postJson(route('rpp.store'), [
@@ -233,13 +234,13 @@ class PwaGuruTest extends TestCase
             'kurikulum' => 'Kurikulum Merdeka',
         ]);
 
-        $response->assertStatus(202)->assertJson(['success' => true, 'status' => 'processing']);
+        $response->assertOk()->assertJson(['success' => true, 'status' => 'completed']);
 
         $rpp = Rpp::latest('id')->firstOrFail();
         $this->assertSame(route('pwa.rpp.show', $rpp), $response->json('redirect_url'));
         $this->assertSame('SMP', $rpp->jenjang);
-        $this->assertSame('processing', $rpp->status);
+        $this->assertSame('completed', $rpp->status);
         $this->assertSame('Zat dan perubahannya', $rpp->generation_input['topik']);
-        Queue::assertPushed(\App\Jobs\GenerateRpp::class, fn ($job) => $job->rppId === $rpp->id);
+        Queue::assertNothingPushed();
     }
 }

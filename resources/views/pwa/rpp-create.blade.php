@@ -325,7 +325,7 @@
                         });
                         const data = await response.json();
 
-                        if (data.success) {
+                        if (response.ok && data.success && data.status === 'completed') {
                             this.finish(data.redirect_url);
                         } else {
                             this.fail(data.error || 'Periksa kembali data yang diisi.');

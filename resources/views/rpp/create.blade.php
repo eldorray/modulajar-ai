@@ -728,7 +728,7 @@
                             
                             const data = await response.json();
                             
-                            if (data.success) {
+                            if (response.ok && data.success && data.status === 'completed') {
                                 this.completeProgress(data.redirect_url);
                             } else {
                                 this.showError(data.error || 'Terjadi kesalahan. Silakan coba lagi.');
