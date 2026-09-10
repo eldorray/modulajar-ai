@@ -133,8 +133,8 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17a4 4 0 100-8 4 4 0 000 8zm7-1.5L21 18m-6-9V5m-4 4H7" />
                                         </svg>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-950">Dua unit sekolah</p>
-                                    <p class="mt-2 text-xs leading-5 text-gray-500">Profil MI dan SMP terpisah untuk cover dokumen.</p>
+                                    <p class="text-sm font-bold text-gray-950">Tiga unit sekolah</p>
+                                    <p class="mt-2 text-xs leading-5 text-gray-500">Profil MI/SD, SMP/MTs, dan SMA/SMK terpisah untuk cover dokumen.</p>
                                 </div>
                             </div>
                         </section>

@@ -150,7 +150,7 @@ class RppDocumentDesignTest extends TestCase
         $user = User::factory()->create();
 
         $payload = [
-            'jenjang' => 'MI',
+            'jenjang' => 'MI/SD',
             'nama_guru' => 'Bu Ratna',
             'mata_pelajaran' => 'IPA',
             'fase' => 'D',

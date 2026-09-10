@@ -60,7 +60,7 @@ class RppController extends Controller
                 'garuda' => asset('garuda.png'),
                 'tahunAjaran' => date('Y').'/'.(date('Y') + 1),
                 'fields' => [
-                    'jenjang' => old('jenjang', 'MI'),
+                    'jenjang' => old('jenjang', SchoolSetting::DEFAULT_JENJANG),
                     'tema' => old('tema', RppDocumentStyle::DEFAULT_THEME),
                     'desain' => old('desain', RppDocumentStyle::DEFAULT_DESIGN),
                     'mata_pelajaran' => old('mata_pelajaran', ''),

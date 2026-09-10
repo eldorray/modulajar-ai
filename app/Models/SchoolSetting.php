@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class SchoolSetting extends Model
 {
     /** Unit sekolah yang didukung. */
-    public const JENJANG = ['MI', 'SMP'];
+    public const JENJANG = ['MI/SD', 'SMP/MTs', 'SMA/SMK'];
+
+    public const DEFAULT_JENJANG = 'MI/SD';
 
     protected $fillable = [
         'jenjang',
@@ -21,18 +23,44 @@ class SchoolSetting extends Model
     ];
 
     /**
-     * Get the settings for a school unit (MI/SMP), creating the row if needed.
+     * Get the settings for a school unit, creating the row if needed.
      */
     public static function getSettings(?string $jenjang = null): self
     {
-        return self::firstOrCreate(['jenjang' => self::normalizeJenjang($jenjang)]);
+        $normalized = self::normalizeJenjang($jenjang);
+        $settings = self::where('jenjang', $normalized)->first();
+
+        if ($settings) {
+            return $settings;
+        }
+
+        $legacyUnits = match ($normalized) {
+            'MI/SD' => ['MI', 'SD'],
+            'SMP/MTs' => ['SMP', 'MTs'],
+            'SMA/SMK' => ['SMA', 'SMK'],
+        };
+
+        $settings = self::whereIn('jenjang', $legacyUnits)->first();
+
+        if ($settings) {
+            $settings->update(['jenjang' => $normalized]);
+
+            return $settings->refresh();
+        }
+
+        return self::create(['jenjang' => $normalized]);
     }
 
     /**
-     * Fall back to MI for null/unknown values.
+     * Normalize current and legacy school-unit values.
      */
     public static function normalizeJenjang(?string $jenjang): string
     {
-        return in_array($jenjang, self::JENJANG, true) ? $jenjang : 'MI';
+        return match ($jenjang) {
+            'MI', 'SD', 'MI/SD' => 'MI/SD',
+            'SMP', 'MTs', 'SMP/MTs' => 'SMP/MTs',
+            'SMA', 'SMK', 'SMA/SMK' => 'SMA/SMK',
+            default => self::DEFAULT_JENJANG,
+        };
     }
 }

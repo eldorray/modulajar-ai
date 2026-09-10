@@ -21,7 +21,7 @@
                         name="jenjang"
                         label="Unit Sekolah"
                         :options="collect(\App\Models\SchoolSetting::JENJANG)->mapWithKeys(fn ($j) => [$j => $j])->all()"
-                        :value="old('jenjang', 'MI')"
+                        :value="old('jenjang', \App\Models\SchoolSetting::DEFAULT_JENJANG)"
                         :error="$errors->first('jenjang')"
                         required
                     />
@@ -91,12 +91,12 @@
                             name="fase"
                             label="Fase/Jenjang"
                             :options="[
-                                'A' => 'Fase A (Kelas 1-2 SD)',
-                                'B' => 'Fase B (Kelas 3-4 SD)',
-                                'C' => 'Fase C (Kelas 5-6 SD)',
-                                'D' => 'Fase D (Kelas 7-9 SMP)',
-                                'E' => 'Fase E (Kelas 10 SMA)',
-                                'F' => 'Fase F (Kelas 11-12 SMA)',
+                                'A' => 'Fase A (Kelas 1-2 MI/SD)',
+                                'B' => 'Fase B (Kelas 3-4 MI/SD)',
+                                'C' => 'Fase C (Kelas 5-6 MI/SD)',
+                                'D' => 'Fase D (Kelas 7-9 SMP/MTs)',
+                                'E' => 'Fase E (Kelas 10 SMA/SMK)',
+                                'F' => 'Fase F (Kelas 11-12 SMA/SMK)',
                                 'RA' => 'RA (Raudhatul Athfal)',
                                 'MI Rendah' => 'MI Kelas 1-3 (Madrasah Ibtidaiyah)',
                                 'MI Tinggi' => 'MI Kelas 4-6 (Madrasah Ibtidaiyah)',
@@ -359,7 +359,7 @@
                     {{-- Sampul dirakit pada ukuran A4 asli (794x1123px @96dpi) lalu di-scale,
                          supaya proporsi teks & ornamen sama persis dengan template cetaknya.
                          Identitas sekolah diambil dari Alpine (bukan Blade) karena harus
-                         ikut berganti saat guru memilih unit MI/SMP.
+                         ikut berganti saat guru memilih unit MI/SD, SMP/MTs, atau SMA/SMK.
                          Tiap varian mencerminkan satu partial di rpp/partials/cover-*.blade.php;
                          kalau partial itu berubah, blok di sini ikut diperbarui. --}}
                     <div class="shrink-0 mx-auto sm:mx-0">

@@ -57,7 +57,7 @@
                             <label class="pwa-label" for="jenjang">Unit sekolah</label>
                             <select id="jenjang" name="jenjang" class="pwa-field" required>
                                 @foreach (\App\Models\SchoolSetting::JENJANG as $j)
-                                    <option value="{{ $j }}" @selected(old('jenjang', 'MI') === $j)>{{ $j }}</option>
+                                    <option value="{{ $j }}" @selected(old('jenjang', \App\Models\SchoolSetting::DEFAULT_JENJANG) === $j)>{{ $j }}</option>
                                 @endforeach
                             </select>
                             <p class="pwa-sub mt-1 text-[11px]">Menentukan logo dan nama sekolah di cover dokumen.</p>
@@ -93,12 +93,12 @@
                             <select id="fase" name="fase" class="pwa-field" required>
                                 <option value="">Pilih fase</option>
                                 @foreach ([
-                                    'A' => 'Fase A (Kelas 1-2 SD)',
-                                    'B' => 'Fase B (Kelas 3-4 SD)',
-                                    'C' => 'Fase C (Kelas 5-6 SD)',
-                                    'D' => 'Fase D (Kelas 7-9 SMP)',
-                                    'E' => 'Fase E (Kelas 10 SMA)',
-                                    'F' => 'Fase F (Kelas 11-12 SMA)',
+                                    'A' => 'Fase A (Kelas 1-2 MI/SD)',
+                                    'B' => 'Fase B (Kelas 3-4 MI/SD)',
+                                    'C' => 'Fase C (Kelas 5-6 MI/SD)',
+                                    'D' => 'Fase D (Kelas 7-9 SMP/MTs)',
+                                    'E' => 'Fase E (Kelas 10 SMA/SMK)',
+                                    'F' => 'Fase F (Kelas 11-12 SMA/SMK)',
                                     'RA' => 'RA (Raudhatul Athfal)',
                                     'MI Rendah' => 'MI Kelas 1-3',
                                     'MI Tinggi' => 'MI Kelas 4-6',

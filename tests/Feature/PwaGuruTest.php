@@ -17,7 +17,7 @@ class PwaGuruTest extends TestCase
     {
         return Rpp::create(array_merge([
             'user_id' => $user->id,
-            'jenjang' => 'MI',
+            'jenjang' => 'MI/SD',
             'nama_guru' => $user->name,
             'fase' => 'C',
             'mata_pelajaran' => 'Matematika',
@@ -83,7 +83,7 @@ class PwaGuruTest extends TestCase
     {
         $guru = User::factory()->create(['role' => 'guru']);
         $rpp = $this->rppFor($guru, ['content_result' => [
-            'informasi_umum' => ['mata_pelajaran' => 'Matematika', 'jenjang' => 'MI'],
+            'informasi_umum' => ['mata_pelajaran' => 'Matematika', 'jenjang' => 'MI/SD'],
             'komponen_inti' => [
                 'tujuan_pembelajaran' => ['Menjelaskan bilangan bulat', 'Menghitung operasi campuran'],
             ],
@@ -225,7 +225,7 @@ class PwaGuruTest extends TestCase
 
         $response = $this->actingAs($guru)->postJson(route('rpp.store'), [
             'from' => 'pwa',
-            'jenjang' => 'SMP',
+            'jenjang' => 'SMP/MTs',
             'nama_guru' => $guru->name,
             'mata_pelajaran' => 'IPA',
             'fase' => 'D',
@@ -238,7 +238,7 @@ class PwaGuruTest extends TestCase
 
         $rpp = Rpp::latest('id')->firstOrFail();
         $this->assertSame(route('pwa.rpp.show', $rpp), $response->json('redirect_url'));
-        $this->assertSame('SMP', $rpp->jenjang);
+        $this->assertSame('SMP/MTs', $rpp->jenjang);
         $this->assertSame('completed', $rpp->status);
         $this->assertSame('Zat dan perubahannya', $rpp->generation_input['topik']);
         Queue::assertNothingPushed();

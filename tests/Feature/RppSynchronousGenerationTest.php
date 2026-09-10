@@ -17,7 +17,7 @@ class RppSynchronousGenerationTest extends TestCase
     private function payload(array $extra = []): array
     {
         return array_merge([
-            'jenjang' => 'MI', 'nama_guru' => 'Bu Ratna', 'mata_pelajaran' => 'IPA',
+            'jenjang' => 'MI/SD', 'nama_guru' => 'Bu Ratna', 'mata_pelajaran' => 'IPA',
             'fase' => 'C', 'topik' => 'Ekosistem', 'alokasi_waktu' => '2 JP',
             'kurikulum' => 'Kurikulum Merdeka', 'tema' => 'biru', 'desain' => 'minimalis',
         ], $extra);
