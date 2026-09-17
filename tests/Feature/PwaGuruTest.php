@@ -180,9 +180,37 @@ class PwaGuruTest extends TestCase
         $this->assertFileExists(public_path('sw.js'));
         $this->assertFileExists(public_path('icons/icon-192.png'));
         $this->assertFileExists(public_path('icons/icon-512.png'));
+        $this->assertFileExists(public_path('icons/icon-192-maskable.png'));
+        $this->assertFileExists(public_path('icons/icon-512-maskable.png'));
+        $this->assertFileExists(public_path('icons/apple-touch-icon.png'));
+
+        $manifest = json_decode(file_get_contents(public_path('manifest.webmanifest')), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame('/app', $manifest['id']);
+        $this->assertSame('any', $manifest['orientation']);
+        $this->assertContains([
+            'src' => '/icons/icon-512-maskable.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'purpose' => 'maskable',
+        ], $manifest['icons']);
+
+        $this->assertSame([180, 180], array_slice(getimagesize(public_path('icons/apple-touch-icon.png')), 0, 2));
+        $this->assertSame([512, 512], array_slice(getimagesize(public_path('icons/icon-512-maskable.png')), 0, 2));
 
         // Halaman offline tidak butuh login (dipakai service worker)
         $this->get(route('pwa.offline'))->assertOk()->assertSee('Tidak ada koneksi');
+    }
+
+    public function test_shell_pwa_tidak_memblokir_zoom_dan_mengikuti_keyboard_mobile(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+
+        $this->actingAs($guru)->get(route('pwa.home'))
+            ->assertOk()
+            ->assertSee('interactive-widget=resizes-content', false)
+            ->assertSee('prefers-reduced-transparency', false)
+            ->assertDontSee('maximum-scale', false)
+            ->assertDontSee('user-scalable=no', false);
     }
 
     public function test_login_tetap_berada_di_dalam_jendela_pwa_standalone(): void

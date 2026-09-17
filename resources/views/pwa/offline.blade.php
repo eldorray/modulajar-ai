@@ -1,4 +1,4 @@
-<x-pwa-layout title="Offline" active="home">
+<x-pwa-layout title="Offline" active="home" :show-install-banner="false">
     <div class="pwa-card pop-in mt-10 p-7 text-center">
         <img src="{{ asset('logo.png') }}" alt="" class="float mx-auto mb-4 h-16 w-16 object-contain">
         <p class="text-[15px] font-bold">Tidak ada koneksi</p>

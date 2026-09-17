@@ -4,6 +4,7 @@
     'header' => null,
     // Modul yang dibuka menu "Detail". Kosong = pakai modul terakhir yang selesai.
     'detail' => null,
+    'showInstallBanner' => true,
 ])
 
 @php
@@ -15,20 +16,19 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <title>{{ $title }} — RPP Guru</title>
 
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <meta name="theme-color" content="#1552F0">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#082A7E">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#061A45">
+    <meta name="color-scheme" content="light">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RPP Guru">
-    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
     <link rel="icon" href="{{ asset('favicon.png') }}">
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:600,700,800|inter:400,500,600,700" rel="stylesheet">
 
     <script>
         // Tandai sesi standalone sedini mungkin supaya tautan desktop tidak berkedip.
@@ -45,7 +45,7 @@
             --ink: #0A1F44;
             --ink-soft: #3E5B87;
             --muted: #7D93B6;
-            --line: #E9EFFA;
+            --line: rgba(116, 145, 190, .18);
 
             /* Merek */
             --brand-900: #082A7E;
@@ -64,38 +64,46 @@
             --rose-50: #FEECEF;
 
             /* Bayangan */
-            --sh-card: 0 1px 2px rgba(10, 31, 68, .04), 0 14px 30px -18px rgba(10, 31, 68, .28);
-            --sh-soft: 0 8px 20px -14px rgba(10, 31, 68, .3);
-            --sh-brand: 0 12px 24px -12px rgba(21, 82, 240, .6);
+            --sh-card: 0 1px 1px rgba(10, 31, 68, .04), 0 18px 42px -26px rgba(10, 31, 68, .42);
+            --sh-soft: 0 10px 24px -18px rgba(10, 31, 68, .34);
+            --sh-brand: 0 14px 28px -14px rgba(21, 82, 240, .58);
+            --ease-out: cubic-bezier(.16, 1, .3, 1);
 
             background: #EEF3FD;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: 100%;
+            font-optical-sizing: auto;
+            overscroll-behavior-x: none;
         }
 
         .pwa-body {
-            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
             color: var(--ink);
-            background: linear-gradient(180deg, #F4F8FF 0%, #EDF3FD 40%, #E7EEFB 100%);
+            background:
+                radial-gradient(120% 55% at 50% -5%, rgba(75, 139, 255, .20), transparent 62%),
+                linear-gradient(180deg, #F5F8FE 0%, #EDF3FD 46%, #E7EEFA 100%);
             min-height: 100dvh;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: contain;
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
         }
 
         .pwa-display {
-            font-family: 'Plus Jakarta Sans', Inter, sans-serif;
-            letter-spacing: -.02em;
+            font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Display", "Segoe UI", sans-serif;
+            letter-spacing: -.025em;
         }
 
         /* ===== Hero ===== */
         .pwa-hero {
             position: relative;
             overflow: hidden;
-            border-radius: 0 0 30px 30px;
-            padding-top: max(.75rem, env(safe-area-inset-top));
+            border-radius: 0 0 2rem 2rem;
+            padding-top: calc(.5rem + env(safe-area-inset-top, 0px));
             background:
                 radial-gradient(140% 120% at 88% -10%, rgba(255, 255, 255, .30) 0%, rgba(255, 255, 255, 0) 45%),
                 radial-gradient(90% 90% at 8% 100%, rgba(124, 92, 255, .38) 0%, rgba(124, 92, 255, 0) 60%),
                 linear-gradient(152deg, var(--brand-900) 0%, var(--brand-700) 55%, var(--brand-500) 100%);
-            box-shadow: 0 20px 38px -24px rgba(8, 42, 126, .85);
+            box-shadow: 0 24px 54px -32px rgba(8, 42, 126, .9);
+            isolation: isolate;
         }
 
         .pwa-hero::before {
@@ -105,25 +113,39 @@
             height: 150px;
             border-radius: 50%;
             background: rgba(255, 255, 255, .10);
+            pointer-events: none;
         }
 
-        .pwa-hero-title { font-size: 21px; font-weight: 800; line-height: 1.15; }
-        .pwa-hero-eyebrow { font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, .82); }
+        .pwa-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .18);
+            pointer-events: none;
+        }
+
+        .pwa-hero-title { font-size: 21px; font-weight: 780; line-height: 1.12; letter-spacing: -.025em; }
+        .pwa-hero-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .01em; color: rgba(255, 255, 255, .84); }
 
         /* ===== Permukaan ===== */
         .pwa-card {
-            background: #fff;
+            background: rgba(255, 255, 255, .88);
+            border: 1px solid rgba(255, 255, 255, .78);
             border-radius: 20px;
             box-shadow: var(--sh-card);
+            backdrop-filter: blur(20px) saturate(155%);
+            -webkit-backdrop-filter: blur(20px) saturate(155%);
         }
 
         .pwa-sub { color: var(--muted); }
 
         .pwa-h2 {
-            font-family: 'Plus Jakarta Sans', Inter, sans-serif;
+            font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Display", "Segoe UI", sans-serif;
             font-size: 15px;
-            font-weight: 800;
-            letter-spacing: -.01em;
+            font-weight: 750;
+            letter-spacing: -.015em;
         }
 
         .pwa-chip-meta {
@@ -171,27 +193,13 @@
 
         /* ===== Animasi ===== */
         @keyframes pwaPopIn {
-            0% { opacity: 0; transform: translateY(16px) scale(.95); }
-            62% { opacity: 1; transform: translateY(-4px) scale(1.015); }
+            0% { opacity: 0; transform: translateY(10px) scale(.985); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         @keyframes pwaFabIn {
-            0% { opacity: 0; transform: translateY(26px) scale(.6); }
-            55% { opacity: 1; transform: translateY(-8px) scale(1.1); }
-            78% { transform: translateY(2px) scale(.97); }
+            0% { opacity: 0; transform: translateY(16px) scale(.82); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes pwaIdleBounce {
-            0%, 88%, 100% { transform: translateY(0); }
-            92% { transform: translateY(-7px); }
-            96% { transform: translateY(-2px); }
-        }
-
-        @keyframes pwaFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
         }
 
         @keyframes pwaGrow {
@@ -199,35 +207,61 @@
         }
 
         @keyframes pwaSlideUp {
-            0% { opacity: 0; transform: translateY(24px) scale(.97); }
-            65% { opacity: 1; transform: translateY(-5px) scale(1.012); }
+            0% { opacity: 0; transform: translateY(18px) scale(.985); filter: blur(8px); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .pop-in { animation: pwaPopIn .55s cubic-bezier(.34, 1.56, .5, 1) both; animation-delay: var(--d, 0ms); }
-        .slide-up { animation: pwaSlideUp .5s cubic-bezier(.34, 1.56, .5, 1) both; }
-        .float { animation: pwaFloat 4.5s ease-in-out infinite; }
-        .grow-bar { animation: pwaGrow .9s cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--d, 120ms); }
+        .pop-in { animation: pwaPopIn .42s var(--ease-out) both; animation-delay: var(--d, 0ms); }
+        .slide-up { animation: pwaSlideUp .38s var(--ease-out) both; }
+        .float { transform: translateZ(0); }
+        .grow-bar { animation: pwaGrow .7s var(--ease-out) both; animation-delay: var(--d, 120ms); }
 
-        .press { transition: transform .18s cubic-bezier(.34, 1.56, .5, 1), box-shadow .18s ease; }
-        .press:active { transform: scale(.955); }
+        .press {
+            touch-action: manipulation;
+            transition: transform 100ms ease-out, filter 140ms ease-out, box-shadow .2s var(--ease-out);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .press:active { transform: scale(.97); filter: brightness(.98); }
+
+        .pwa-root :where(a, button, input, select, textarea):focus-visible {
+            outline: 3px solid rgba(75, 139, 255, .48);
+            outline-offset: 3px;
+        }
+
+        .pwa-root :where(button, a, [role="button"]) {
+            touch-action: manipulation;
+        }
+
+        .pwa-root :where(button, [role="button"]) {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
 
         /* ===== Navigasi bawah ===== */
         .pwa-nav {
-            background: rgba(255, 255, 255, .94);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 -10px 30px -16px rgba(10, 31, 68, .35);
-            padding-bottom: env(safe-area-inset-bottom);
+            background: rgba(248, 251, 255, .78);
+            border-top: 1px solid rgba(255, 255, 255, .88);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: 0 -14px 36px -26px rgba(10, 31, 68, .52);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         .pwa-nav-item {
             color: #9BAECD;
             border-radius: 14px;
+            min-height: 3.25rem;
             padding: 6px 0 4px;
-            transition: color .2s ease, background .25s ease, transform .2s cubic-bezier(.34, 1.56, .5, 1);
+            touch-action: manipulation;
+            transition: color .18s ease-out, background .24s var(--ease-out), transform 100ms ease-out;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        .pwa-nav-item:active { transform: scale(.92); }
+        .pwa-nav-item:active { transform: scale(.94); }
 
         .pwa-nav-item[data-active="true"] {
             color: var(--brand-700);
@@ -237,7 +271,8 @@
         .pwa-fab {
             background: #fff;
             box-shadow: var(--sh-brand), 0 0 0 5px #fff, 0 0 0 6.5px rgba(21, 82, 240, .16);
-            animation: pwaFabIn .7s cubic-bezier(.34, 1.56, .5, 1) both, pwaIdleBounce 7s ease-in-out 1.6s infinite;
+            animation: pwaFabIn .5s var(--ease-out) both;
+            will-change: transform;
         }
 
         .pwa-fab::after {
@@ -258,10 +293,10 @@
             background: #F7FAFF;
             border-radius: 13px;
             padding: .78rem .9rem;
-            font-size: .94rem;
+            font-size: 1rem;
             font-weight: 500;
             color: var(--ink);
-            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+            transition: border-color .18s ease-out, box-shadow .24s var(--ease-out), background .18s ease-out;
         }
 
         .pwa-field::placeholder { color: #A9BBD6; font-weight: 400; }
@@ -291,7 +326,8 @@
             font-size: 12px;
             font-weight: 600;
             color: var(--ink-soft);
-            transition: all .2s cubic-bezier(.34, 1.56, .5, 1);
+            min-height: 2.75rem;
+            transition: color .18s ease-out, background .18s ease-out, border-color .18s ease-out, transform 100ms ease-out, box-shadow .24s var(--ease-out);
         }
 
         .pwa-chip:has(input:checked) {
@@ -308,22 +344,41 @@
 
         html.is-standalone [data-hide-standalone] { display: none !important; }
 
+        @media (hover: hover) and (pointer: fine) {
+            .press:hover { filter: brightness(.985); }
+            .pwa-nav-item:hover { color: var(--brand-700); background: rgba(237, 243, 255, .72); }
+        }
+
+        @media (prefers-reduced-transparency: reduce) {
+            .pwa-card, .pwa-nav {
+                background: #fff;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+        }
+
+        @media (prefers-contrast: more) {
+            .pwa-card { background: #fff; border-color: #8CA0BF; }
+            .pwa-nav { background: #fff; border-top-color: #60789E; }
+            .pwa-sub { color: #425A7E; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             .pop-in, .pwa-fab, .float, .slide-up, .grow-bar { animation: none !important; }
-            .press, .pwa-nav-item { transition: none; }
+            .press, .pwa-nav-item, .pwa-chip { transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 
 <body class="pwa-body antialiased">
-    <div class="mx-auto w-full max-w-[430px] pb-32">
+    <div class="mx-auto min-h-[100dvh] w-full max-w-[430px] pb-[calc(8rem+env(safe-area-inset-bottom,0px))]">
         @if ($header)
             <div class="pwa-hero px-5 pb-14 text-white">
                 {{ $header }}
             </div>
         @endif
 
-        <main class="px-5 {{ $header ? '-mt-9' : 'pt-6' }} space-y-3.5">
+        <main class="px-5 {{ $header ? '-mt-9' : 'pt-[calc(1.5rem+env(safe-area-inset-top,0px))]' }} space-y-3.5">
             @if (session('success'))
                 <div class="pop-in rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[12.5px] font-semibold text-emerald-700">
                     {{ session('success') }}
@@ -339,10 +394,12 @@
         </main>
     </div>
 
-    <x-install-banner variant="app" />
+    @if ($showInstallBanner)
+        <x-install-banner variant="app" />
+    @endif
 
     <!-- Navigasi bawah + tombol generate -->
-    <nav class="pwa-nav fixed bottom-0 left-0 right-0 z-30">
+    <nav class="pwa-nav fixed bottom-0 left-0 right-0 z-30" aria-label="Navigasi utama">
         <div class="mx-auto grid max-w-[430px] grid-cols-5 items-end gap-1 px-3 pt-2 pb-1.5">
             @php
                 $navItems = [
@@ -362,8 +419,9 @@
             @endphp
 
             @foreach ($navItems as $item)
-                <a href="{{ $item['url'] }}" class="pwa-nav-item flex flex-col items-center gap-0.5" data-active="{{ $active === $item['key'] ? 'true' : 'false' }}">
-                    <svg class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+                <a href="{{ $item['url'] }}" class="pwa-nav-item flex flex-col items-center gap-0.5" data-active="{{ $active === $item['key'] ? 'true' : 'false' }}"
+                    @if ($active === $item['key']) aria-current="page" @endif>
+                    <svg aria-hidden="true" class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}" />
                     </svg>
                     <span class="text-[10.5px] font-bold">{{ $item['label'] }}</span>
@@ -380,8 +438,9 @@
             @foreach ($navItemsRight as $item)
                 <a href="{{ $item['url'] }}" class="pwa-nav-item flex flex-col items-center gap-0.5"
                     data-active="{{ $active === $item['key'] ? 'true' : 'false' }}"
+                    @if ($active === $item['key']) aria-current="page" @endif
                     @if ($item['hideStandalone'] ?? false) data-hide-standalone @endif>
-                    <svg class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}" />
                     </svg>
                     <span class="text-[10.5px] font-bold">{{ $item['label'] }}</span>

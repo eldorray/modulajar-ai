@@ -74,6 +74,7 @@
             @foreach ($bagian as $key => $nilai)
                 <section class="pwa-card pop-in overflow-hidden" style="--d: {{ $loop->index * 55 }}ms">
                     <button type="button" @click="buka = (buka === '{{ $key }}' ? '' : '{{ $key }}')"
+                        :aria-expanded="buka === '{{ $key }}'" aria-controls="isi-{{ $loop->index }}"
                         class="press flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left">
                         <span class="flex items-center gap-2.5">
                             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[11px] font-extrabold"
@@ -88,7 +89,8 @@
                         </svg>
                     </button>
 
-                    <div x-show="buka === '{{ $key }}'" x-transition.origin.top class="border-t px-4 py-4" style="border-color: var(--line)">
+                    <div id="isi-{{ $loop->index }}" x-show="buka === '{{ $key }}'" x-transition.opacity.origin.top
+                        class="border-t px-4 py-4" style="border-color: var(--line)">
                         <x-pwa-content :data="$nilai" />
                     </div>
                 </section>

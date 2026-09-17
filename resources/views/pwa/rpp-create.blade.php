@@ -1,4 +1,4 @@
-<x-pwa-layout title="Buat Modul Ajar" active="rpp">
+<x-pwa-layout title="Buat Modul Ajar" active="rpp" :show-install-banner="false">
     <x-slot name="header">
         <div class="flex items-center gap-3 pt-3">
             <a href="{{ route('pwa.home') }}" class="press flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-4" x-data="{ open: 'identitas' }">
+    <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-4" x-data="{ open: 'identitas' }" novalidate>
         @csrf
         <input type="hidden" name="from" value="pwa">
 
@@ -35,6 +35,7 @@
         @foreach ($sections as $key => [$judul, $sub])
             <section class="pwa-card pop-in overflow-hidden" style="--d: {{ $loop->index * 70 }}ms">
                 <button type="button" @click="open = (open === '{{ $key }}' ? '' : '{{ $key }}')"
+                    :aria-expanded="open === '{{ $key }}'" aria-controls="bagian-{{ $key }}"
                     class="press flex w-full items-center justify-between px-4 py-4 text-left">
                     <span>
                         <span class="pwa-display block text-[14px] font-extrabold">{{ $judul }}</span>
@@ -46,7 +47,8 @@
                     </svg>
                 </button>
 
-                <div x-show="open === '{{ $key }}'" x-transition.origin.top class="space-y-4 border-t px-4 py-4" style="border-color: var(--line)">
+                <div id="bagian-{{ $key }}" data-rpp-section="{{ $key }}" x-show="open === '{{ $key }}'" x-transition.opacity.origin.top
+                    class="space-y-4 border-t px-4 py-4" style="border-color: var(--line)">
                     @if ($key === 'identitas')
                         <div>
                             <label class="pwa-label" for="nama_guru">Nama penyusun</label>
@@ -239,21 +241,27 @@
             </section>
         @endforeach
 
-        <button type="submit" class="pwa-display press sticky bottom-[92px] w-full rounded-2xl py-4 text-[15px] font-extrabold text-white"
-            style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)">
-            Generate Modul Ajar
+        <button id="rpp-submit" type="submit"
+            class="pwa-display press sticky w-full rounded-2xl py-4 text-[15px] font-extrabold text-white disabled:cursor-wait disabled:opacity-70"
+            style="bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)"
+            aria-describedby="rpp-submit-hint">
+            <span data-submit-label>Generate Modul Ajar</span>
         </button>
+        <p id="rpp-submit-hint" class="sr-only">Proses membutuhkan koneksi internet dan dapat memerlukan beberapa menit.</p>
     </form>
 
     <!-- Progress generate -->
-    <div x-data="pwaGenerate()" x-show="show" x-cloak
+    <div x-data="pwaGenerate()" x-show="show" x-cloak @keydown.escape.window="if (failed) reset()"
+        role="dialog" aria-modal="true" aria-labelledby="generate-title"
         class="fixed inset-0 z-50 flex items-end bg-[#08183A]/60 backdrop-blur-sm sm:items-center sm:justify-center">
-        <div class="slide-up w-full rounded-t-[26px] bg-white p-6 text-center sm:max-w-sm sm:rounded-[26px]">
+        <div class="slide-up w-full rounded-t-[28px] bg-white px-6 pb-6 pt-3 text-center sm:max-w-sm sm:rounded-[28px] sm:pt-6"
+            style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px))">
+            <div class="mx-auto mb-5 h-1.5 w-10 rounded-full bg-[#D7E0EF] sm:hidden" aria-hidden="true"></div>
             <template x-if="!done && !failed">
                 <div>
                     <img src="{{ asset('logo.png') }}" alt="" class="float mx-auto mb-4 h-16 w-16 object-contain">
-                    <h2 class="pwa-display text-[17px] font-extrabold">AI sedang menyusun</h2>
-                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="step"></p>
+                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold">AI sedang menyusun</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="step" aria-live="polite"></p>
                 </div>
             </template>
 
@@ -264,7 +272,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 class="pwa-display text-[17px] font-extrabold" style="color: var(--mint)">Modul ajar siap</h2>
+                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold" style="color: var(--mint)">Modul ajar siap</h2>
                     <p class="pwa-sub mt-1 text-[12.5px] font-medium">Membuka dokumen…</p>
                 </div>
             </template>
@@ -276,15 +284,16 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </div>
-                    <h2 class="pwa-display text-[17px] font-extrabold" style="color: var(--rose)">Generate gagal</h2>
-                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="message"></p>
-                    <button @click="reset()" class="press mt-5 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white" style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500))">Tutup</button>
+                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold" style="color: var(--rose)">Generate gagal</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="message" role="alert"></p>
+                    <button type="button" @click="reset()" class="press mt-5 min-h-12 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white" style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500))">Tutup</button>
                 </div>
             </template>
 
             <div class="mt-5" x-show="!failed">
-                <div class="h-2.5 w-full overflow-hidden rounded-full" style="background: #F1F5FD">
-                    <div class="h-full rounded-full transition-all duration-300" style="background: linear-gradient(90deg, var(--brand-700), var(--brand-500))"
+                <div class="h-2.5 w-full overflow-hidden rounded-full" style="background: #F1F5FD" role="progressbar"
+                    aria-label="Progres penyusunan modul" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(progress)">
+                    <div class="h-full rounded-full transition-[width] duration-300" style="background: linear-gradient(90deg, var(--brand-700), var(--brand-500))"
                         :style="'width: ' + progress + '%'"></div>
                 </div>
                 <p class="mt-2 text-[11.5px] font-extrabold" style="color: var(--brand-700)" x-text="Math.round(progress) + '%'"></p>
@@ -302,15 +311,39 @@
                 failed: false,
                 message: '',
                 timer: null,
+                submitButton: null,
 
                 init() {
+                    this.submitButton = document.getElementById('rpp-submit');
                     document.getElementById('rpp-form').addEventListener('submit', (event) => {
                         event.preventDefault();
+                        if (!event.target.checkValidity()) {
+                            this.revealInvalidField(event.target);
+                            return;
+                        }
                         this.submit(event.target);
                     });
                 },
 
+                revealInvalidField(form) {
+                    const invalid = form.querySelector(':invalid');
+                    if (!invalid) return;
+
+                    const section = invalid.closest('[data-rpp-section]');
+                    const trigger = section ? form.querySelector(`[aria-controls="${section.id}"]`) : null;
+                    if (trigger?.getAttribute('aria-expanded') !== 'true') trigger?.click();
+
+                    queueMicrotask(() => requestAnimationFrame(() => {
+                        invalid.focus({ preventScroll: true });
+                        invalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        invalid.reportValidity();
+                    }));
+                },
+
                 async submit(form) {
+                    if (this.submitButton?.disabled) return;
+
+                    this.setSubmitting(true);
                     this.show = true;
                     this.done = false;
                     this.failed = false;
@@ -323,12 +356,14 @@
                             body: new FormData(form),
                             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                         });
-                        const data = await response.json();
+                        const contentType = response.headers.get('content-type') || '';
+                        const data = contentType.includes('application/json') ? await response.json() : {};
 
                         if (response.ok && data.success && data.status === 'completed') {
                             this.finish(data.redirect_url);
                         } else {
-                            this.fail(data.error || 'Periksa kembali data yang diisi.');
+                            const validationError = Object.values(data.errors || {}).flat()[0];
+                            this.fail(validationError || data.error || data.message || 'Periksa kembali data yang diisi.');
                         }
                     } catch (error) {
                         this.fail('Koneksi terputus. Coba lagi setelah jaringan stabil.');
@@ -355,19 +390,32 @@
                     clearInterval(this.timer);
                     this.progress = 100;
                     this.done = true;
-                    setTimeout(() => window.location.href = url, 1200);
+                    navigator.vibrate?.(12);
+                    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    setTimeout(() => window.location.assign(url), reducedMotion ? 0 : 400);
                 },
 
                 fail(message) {
                     clearInterval(this.timer);
                     this.failed = true;
                     this.message = message;
+                    navigator.vibrate?.([18, 50, 18]);
+                    this.setSubmitting(false);
                 },
 
                 reset() {
                     this.show = false;
                     this.progress = 0;
                     this.failed = false;
+                    this.setSubmitting(false);
+                },
+
+                setSubmitting(submitting) {
+                    if (!this.submitButton) return;
+                    this.submitButton.disabled = submitting;
+                    this.submitButton.setAttribute('aria-busy', String(submitting));
+                    const label = this.submitButton.querySelector('[data-submit-label]');
+                    if (label) label.textContent = submitting ? 'Sedang menyusun…' : 'Generate Modul Ajar';
                 },
             };
         }
