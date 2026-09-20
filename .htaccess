@@ -20,10 +20,16 @@
 #   curl -I https://<domain>/.git/config
 # =============================================================================
 
-# --- Lapisan 1: tolak path sensitif, tanpa butuh mod_rewrite -----------------
+# --- Lapisan 1: tolak path sensitif ------------------------------------------
 
-# Direktori yang tidak boleh tersaji sama sekali.
-RedirectMatch 403 ^/+(app|bootstrap|config|database|docs|node_modules|openapi|resources|routes|scripts|storage|tests|ui-kit|vendor)(/|$)
+# Direktori sensitif: tolak HANYA kalau path-nya file nyata di disk.
+# Route Laravel yang kebetulan diawali segmen sama (mis. /app/akun) tidak ada
+# filenya di disk, jadi lolos dan diteruskan ke front controller.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    RewriteRule ^(app|bootstrap|config|database|docs|node_modules|openapi|resources|routes|scripts|storage|tests|ui-kit|vendor)(/|$) - [F,L]
+</IfModule>
 
 # Isi git dan berkas dotfile.
 RedirectMatch 403 ^/+\.(git|env|editorconfig|gitattributes|gitignore|superpowers)
@@ -45,7 +51,6 @@ Options -Indexes
 
 # --- Lapisan 2: arahkan sisanya ke public/ -----------------------------------
 <IfModule mod_rewrite.c>
-    RewriteEngine On
 
     # Request yang sudah menunjuk public/ dilayani apa adanya.
     RewriteCond %{REQUEST_URI} ^/+public/
