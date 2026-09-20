@@ -71,6 +71,11 @@ class SettingController extends Controller
         $settings->alamat = $validated['alamat'] ?? null;
         $settings->save();
 
+        if ($request->input('form_context') === 'pwa') {
+            return redirect()->route('pwa.kop', ['unit' => $unit])
+                ->with('success', "Pengaturan sekolah {$unit} berhasil disimpan!");
+        }
+
         return redirect()->route('settings.index', ['unit' => $unit])
             ->with('success', "Pengaturan sekolah {$unit} berhasil disimpan!");
     }
@@ -87,6 +92,11 @@ class SettingController extends Controller
             Storage::disk('public')->delete($settings->logo);
             $settings->logo = null;
             $settings->save();
+        }
+
+        if ($request->input('form_context') === 'pwa') {
+            return redirect()->route('pwa.kop', ['unit' => $unit])
+                ->with('success', 'Logo berhasil dihapus!');
         }
 
         return redirect()->route('settings.index', ['unit' => $unit])
@@ -107,6 +117,11 @@ class SettingController extends Controller
             $settings->save();
         }
 
+        if ($request->input('form_context') === 'pwa') {
+            return redirect()->route('pwa.kop', ['unit' => $unit])
+                ->with('success', 'Logo kanan berhasil dihapus!');
+        }
+
         return redirect()->route('settings.index', ['unit' => $unit])
             ->with('success', 'Logo kanan berhasil dihapus!');
     }
@@ -123,6 +138,11 @@ class SettingController extends Controller
             Storage::disk('public')->delete($settings->kop_surat);
             $settings->kop_surat = null;
             $settings->save();
+        }
+
+        if ($request->input('form_context') === 'pwa') {
+            return redirect()->route('pwa.kop', ['unit' => $unit])
+                ->with('success', 'Kop surat berhasil dihapus!');
         }
 
         return redirect()->route('settings.index', ['unit' => $unit])

@@ -26,6 +26,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('rpp/{rpp}', [GuruAppController::class, 'show'])->name('rpp.show');
         Route::get('rpp/{rpp}/detail', [GuruAppController::class, 'detail'])->name('rpp.detail');
         Route::get('akun', [GuruAppController::class, 'akun'])->name('akun');
+        Route::get('akun/profil', [GuruAppController::class, 'profil'])->name('profil');
+        Route::get('kop', [GuruAppController::class, 'kop'])->name('kop');
     });
 
     // Dashboard

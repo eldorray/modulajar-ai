@@ -1,50 +1,59 @@
 <x-pwa-layout title="Buat Modul Ajar" active="rpp" :show-install-banner="false">
     <x-slot name="header">
-        <div class="flex items-center gap-3 pt-3">
-            <a href="{{ route('pwa.home') }}" class="press flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <div class="relative z-10 flex items-center gap-3 pt-2">
+            <a href="{{ route('pwa.home') }}" class="press flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/12 backdrop-blur-md ring-1 ring-white/20 text-white" aria-label="Kembali ke beranda">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
             </a>
             <div>
-                <p class="pwa-hero-eyebrow">Generate dengan AI</p>
+                <p class="pwa-hero-eyebrow">Generator AI Cerdas</p>
                 <h1 class="pwa-display pwa-hero-title">Buat Modul Ajar</h1>
             </div>
         </div>
     </x-slot>
 
-    @if ($errors->any())
-        <div class="pop-in rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12.5px] font-semibold text-rose-700">
-            Periksa kembali kolom yang ditandai.
+    @if (isset($errors) && $errors->any())
+        <div class="pop-in rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12.5px] font-semibold text-rose-800 shadow-xs">
+            Periksa kembali kolom yang ditandai merah di bawah.
         </div>
     @endif
 
-    <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-4" x-data="{ open: 'identitas' }" novalidate>
+    <form id="rpp-form" action="{{ route('rpp.store') }}" method="POST" class="space-y-3.5" x-data="{ open: 'identitas' }" novalidate>
         @csrf
         <input type="hidden" name="from" value="pwa">
 
         @php
             $sections = [
-                'identitas' => ['Identitas penyusun', 'Nama, kepala sekolah, unit'],
-                'umum' => ['Informasi umum', 'Mapel, fase, kelas, semester'],
-                'inti' => ['Komponen inti', 'Topik, alokasi, model'],
-                'kurikulum' => ['Kurikulum & integrasi', 'Asesmen, nilai, tema warna'],
+                'identitas' => ['Identitas Penyusun', 'Nama guru, kepala sekolah, unit', '01'],
+                'umum' => ['Informasi Umum', 'Mapel, fase, kelas, semester', '02'],
+                'inti' => ['Komponen Inti', 'Topik, alokasi waktu, model belajar', '03'],
+                'kurikulum' => ['Kurikulum & Integrasi', 'Asesmen, nilai, tema dokumen', '04'],
             ];
         @endphp
 
-        @foreach ($sections as $key => [$judul, $sub])
-            <section class="pwa-card pop-in overflow-hidden" style="--d: {{ $loop->index * 70 }}ms">
+        @foreach ($sections as $key => [$judul, $sub, $stepNum])
+            <section class="pwa-card pop-in overflow-hidden transition-all duration-200" style="--d: {{ $loop->index * 40 }}ms"
+                :class="open === '{{ $key }}' ? 'border-blue-200 ring-2 ring-blue-500/10' : ''">
                 <button type="button" @click="open = (open === '{{ $key }}' ? '' : '{{ $key }}')"
                     :aria-expanded="open === '{{ $key }}'" aria-controls="bagian-{{ $key }}"
-                    class="press flex w-full items-center justify-between px-4 py-4 text-left">
-                    <span>
-                        <span class="pwa-display block text-[14px] font-extrabold">{{ $judul }}</span>
-                        <span class="pwa-sub block text-[11.5px] font-medium">{{ $sub }}</span>
+                    class="press flex w-full items-center justify-between p-4 text-left">
+                    <span class="flex items-center gap-3">
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[11px] font-extrabold"
+                            :class="open === '{{ $key }}' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'">
+                            {{ $stepNum }}
+                        </span>
+                        <span>
+                            <span class="pwa-display block text-[14px] font-extrabold text-slate-900">{{ $judul }}</span>
+                            <span class="pwa-sub block text-[11.5px] font-medium text-slate-500">{{ $sub }}</span>
+                        </span>
                     </span>
-                    <svg class="h-5 w-5 transition-transform duration-300" style="color: #A9BBD6" :class="open === '{{ $key }}' && 'rotate-180'"
-                        fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                    </svg>
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400">
+                        <svg class="h-4 w-4 transition-transform duration-300" :class="open === '{{ $key }}' && 'rotate-180 text-blue-600'"
+                            fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </span>
                 </button>
 
                 <div id="bagian-{{ $key }}" data-rpp-section="{{ $key }}" x-show="open === '{{ $key }}'" x-transition.opacity.origin.top
@@ -242,61 +251,66 @@
         @endforeach
 
         <button id="rpp-submit" type="submit"
-            class="pwa-display press sticky w-full rounded-2xl py-4 text-[15px] font-extrabold text-white disabled:cursor-wait disabled:opacity-70"
-            style="bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); background: linear-gradient(150deg, var(--brand-700), var(--brand-500)); box-shadow: var(--sh-brand)"
+            class="pwa-display press sticky w-full rounded-2xl py-4 text-[15px] font-extrabold text-white disabled:cursor-wait disabled:opacity-70 shadow-lg flex items-center justify-center gap-2"
+            style="bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #4F46E5 100%); box-shadow: 0 10px 25px -4px rgba(37, 99, 235, 0.45)"
             aria-describedby="rpp-submit-hint">
+            <svg class="h-5 w-5 text-blue-200" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+            </svg>
             <span data-submit-label>Generate Modul Ajar</span>
         </button>
         <p id="rpp-submit-hint" class="sr-only">Proses membutuhkan koneksi internet dan dapat memerlukan beberapa menit.</p>
     </form>
 
-    <!-- Progress generate -->
+    <!-- Progress Generate Bottom Sheet Modal -->
     <div x-data="pwaGenerate()" x-show="show" x-cloak @keydown.escape.window="if (failed) reset()"
         role="dialog" aria-modal="true" aria-labelledby="generate-title"
-        class="fixed inset-0 z-50 flex items-end bg-[#08183A]/60 backdrop-blur-sm sm:items-center sm:justify-center">
-        <div class="slide-up w-full rounded-t-[28px] bg-white px-6 pb-6 pt-3 text-center sm:max-w-sm sm:rounded-[28px] sm:pt-6"
-            style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px))">
-            <div class="mx-auto mb-5 h-1.5 w-10 rounded-full bg-[#D7E0EF] sm:hidden" aria-hidden="true"></div>
+        class="fixed inset-0 z-50 flex items-end bg-slate-950/60 backdrop-blur-md sm:items-center sm:justify-center">
+        <div class="pop-in w-full rounded-t-[32px] bg-white px-6 pb-6 pt-3 text-center shadow-2xl sm:max-w-sm sm:rounded-[28px] sm:pt-6"
+            style="padding-bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px))">
+            <div class="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden" aria-hidden="true"></div>
             <template x-if="!done && !failed">
                 <div>
-                    <img src="{{ asset('logo.png') }}" alt="" class="float mx-auto mb-4 h-16 w-16 object-contain">
-                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold">AI sedang menyusun</h2>
-                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="step" aria-live="polite"></p>
+                    <div class="relative mx-auto mb-4 flex h-18 w-18 items-center justify-center rounded-3xl bg-blue-50/80 border border-blue-100 p-3 shadow-inner">
+                        <img src="{{ asset('logo.png') }}" alt="" class="h-10 w-10 object-contain pulse-glow">
+                    </div>
+                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold text-slate-900">AI Sedang Menyusun Modul</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium text-slate-500" x-text="step" aria-live="polite"></p>
                 </div>
             </template>
 
             <template x-if="done">
                 <div>
-                    <div class="pop-in mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-                        <svg class="h-8 w-8 text-emerald-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                    <div class="pop-in mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 border border-emerald-100">
+                        <svg class="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold" style="color: var(--mint)">Modul ajar siap</h2>
-                    <p class="pwa-sub mt-1 text-[12.5px] font-medium">Membuka dokumen…</p>
+                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold text-emerald-700">Modul Ajar Siap!</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium text-slate-500">Membuka dokumen lengkap…</p>
                 </div>
             </template>
 
             <template x-if="failed">
                 <div>
-                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-50">
-                        <svg class="h-8 w-8 text-rose-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 border border-rose-100">
+                        <svg class="h-8 w-8 text-rose-600" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </div>
-                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold" style="color: var(--rose)">Generate gagal</h2>
-                    <p class="pwa-sub mt-1 text-[12.5px] font-medium" x-text="message" role="alert"></p>
-                    <button type="button" @click="reset()" class="press mt-5 min-h-12 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white" style="background: linear-gradient(150deg, var(--brand-700), var(--brand-500))">Tutup</button>
+                    <h2 id="generate-title" class="pwa-display text-[17px] font-extrabold text-rose-700">Generate Gagal</h2>
+                    <p class="pwa-sub mt-1 text-[12.5px] font-medium text-slate-500" x-text="message" role="alert"></p>
+                    <button type="button" @click="reset()" class="press mt-5 min-h-12 w-full rounded-2xl py-3 text-[13.5px] font-bold text-white shadow-md"
+                        style="background: linear-gradient(135deg, #1D4ED8, #2563EB); box-shadow: var(--sh-brand)">Tutup</button>
                 </div>
             </template>
 
             <div class="mt-5" x-show="!failed">
-                <div class="h-2.5 w-full overflow-hidden rounded-full" style="background: #F1F5FD" role="progressbar"
+                <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar"
                     aria-label="Progres penyusunan modul" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(progress)">
-                    <div class="h-full rounded-full transition-[width] duration-300" style="background: linear-gradient(90deg, var(--brand-700), var(--brand-500))"
-                        :style="'width: ' + progress + '%'"></div>
+                    <div class="h-full rounded-full transition-[width] duration-300" style="background: linear-gradient(90deg, #1D4ED8, #3B82F6)" :style="'width: ' + progress + '%'"></div>
                 </div>
-                <p class="mt-2 text-[11.5px] font-extrabold" style="color: var(--brand-700)" x-text="Math.round(progress) + '%'"></p>
+                <p class="mt-2 text-[12px] font-extrabold text-blue-600" x-text="Math.round(progress) + '%'"></p>
             </div>
         </div>
     </div>

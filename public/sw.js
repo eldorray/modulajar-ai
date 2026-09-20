@@ -1,5 +1,5 @@
 // Service worker PWA guru: shell cache untuk aset statis, network-first untuk halaman.
-const CACHE = 'rpp-guru-v2';
+const CACHE = 'rpp-guru-v3';
 const SHELL = [
     '/app/offline',
     '/manifest.webmanifest',

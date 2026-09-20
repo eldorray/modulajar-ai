@@ -109,6 +109,27 @@ class GuruAppController extends Controller
     }
 
     /**
+     * Form profil guru, versi PWA.
+     */
+    public function profil()
+    {
+        return view('pwa.profil', ['user' => Auth::user()]);
+    }
+
+    /**
+     * Pengaturan kop & identitas sekolah, versi PWA.
+     */
+    public function kop(\Illuminate\Http\Request $request)
+    {
+        $unit = SchoolSetting::normalizeJenjang($request->query('unit'));
+
+        return view('pwa.kop', [
+            'settings' => SchoolSetting::getSettings($unit),
+            'unit' => $unit,
+        ]);
+    }
+
+    /**
      * Halaman offline untuk service worker.
      */
     public function offline()
